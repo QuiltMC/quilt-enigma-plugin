@@ -1,0 +1,67 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.guardsquare:proguard-gradle:7.2.1'
+    }
+}
+
+plugins {
+    id 'java'
+}
+
+configurations {
+    enigmaRuntime
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name 'Quilt Repository'
+        url 'https://maven.quiltmc.org/repository/release'
+    }
+}
+
+dependencies {
+    enigmaRuntime "cuchaz:enigma:${enigma_version}"
+    enigmaRuntime "cuchaz:enigma-swing:${enigma_version}"
+    enigmaRuntime rootProject
+}
+
+var outputJar = file('output/obf.jar')
+var mappings = file('mappings/')
+var profile = file('profile.json')
+
+task testEnigma(type: JavaExec, dependsOn: "obfuscate") {
+    mainClass = "cuchaz.enigma.gui.Main"
+    classpath = configurations.enigmaRuntime
+
+    args('-jar', outputJar, '-mappings', mappings.getAbsolutePath(), '-profile', profile.getAbsolutePath())
+    doFirst {
+        mappings.mkdirs()
+    }
+}
+
+task obfuscate(type: proguard.gradle.ProGuardTask) {
+    verbose
+    injars jar
+    outjars outputJar
+
+    libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+    libraryjars sourceSets.main.compileClasspath
+
+    dontshrink()
+    dontoptimize()
+    keepclasseswithmembers 'public class * { \
+          public static void main(java.lang.String[]); \
+    }'
+    keepattributes 'SourceFile'
+    keepattributes '*Annotation*'
+    keepattributes 'InnerClasses'
+    keepattributes 'NestMembers'
+    keepattributes 'EnclosingMethod'
+    keepattributes 'Deprecated'
+    keepattributes 'Signature'
+    printmapping 'output/out.txt'
+}

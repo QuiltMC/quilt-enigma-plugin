@@ -1,0 +1,25 @@
+{
+  "services" : {
+    "name_proposal": [
+      {
+        "id": "enigma:specialized_method_name_proposer"
+      },
+      {
+        "id": "quiltmc:name_proposal",
+        "args": {
+          "disable_enum_fields": "false",
+          "disable_records": "false"
+        }
+      }
+    ],
+    "jar_indexer": [
+      {
+        "id": "quiltmc:jar_index",
+        "args": {
+          "disable_enum_fields": "false",
+          "disable_records": "false"
+        }
+      }
+    ]
+  }
+}
