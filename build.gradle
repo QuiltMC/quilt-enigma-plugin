@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+    id 'org.quiltmc.gradle.licenser' version '1.1.0'
+}
+
+version '1.0.0'
+group 'org.quiltmc'
+
+repositories {
+    mavenCentral()
+    maven {
+        name 'Quilt Repository'
+        url 'https://maven.quiltmc.org/repository/release'
+    }
+}
+
+dependencies {
+    implementation "org.ow2.asm:asm:9.2"
+    implementation "org.ow2.asm:asm-commons:9.2"
+    implementation "org.ow2.asm:asm-tree:9.2"
+    implementation "org.ow2.asm:asm-util:9.2"
+    implementation "cuchaz:enigma:${enigma_version}"
+
+    testImplementation "cuchaz:enigma-swing:${enigma_version}"
+    testImplementation "org.quiltmc:stitch:0.6.3"
+}
+
+license {
+    rule file('codeformat/FABRIC_MODIFIED_HEADER')
+    rule file('codeformat/HEADER')
+
+    include '**/*.java'
+}
