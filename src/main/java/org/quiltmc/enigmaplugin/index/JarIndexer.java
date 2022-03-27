@@ -24,15 +24,17 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.quiltmc.enigmaplugin.index.enumfields.EnumFieldsIndex;
 
+import java.util.List;
 import java.util.Set;
 
 public class JarIndexer implements JarIndexerService, Opcodes {
     public static final String DISABLE_RECORDS_ARG = "disable_records";
     public static final String DISABLE_ENUM_FIELDS_ARG = "disable_enum_fields";
     public static final String DISABLE_CODECS_ARG = "disable_codecs";
+    public static final String CUSTOM_CODECS_ARG = "custom_codecs";
     private final RecordIndex recordIndex = new RecordIndex();
     private final EnumFieldsIndex enumFieldsIndex = new EnumFieldsIndex();
-    private final CodecIndex codecFieldsIndex = new CodecIndex();
+    private final CodecIndex codecIndex = new CodecIndex();
     private boolean disableRecordIndexing = false;
     private boolean disableEnumFieldsIndexing = false;
     private boolean disableCodecsIndexing = false;
@@ -41,6 +43,9 @@ public class JarIndexer implements JarIndexerService, Opcodes {
         disableRecordIndexing = context.getArgument(DISABLE_RECORDS_ARG).map(Boolean::parseBoolean).orElse(false);
         disableEnumFieldsIndexing = context.getArgument(DISABLE_ENUM_FIELDS_ARG).map(Boolean::parseBoolean).orElse(false);
         disableCodecsIndexing = context.getArgument(DISABLE_CODECS_ARG).map(Boolean::parseBoolean).orElse(false);
+
+        List<String> codecs = context.getArgument(CUSTOM_CODECS_ARG).map(s -> List.of(s.split(",[\n ]*"))).orElse(List.of());
+        codecIndex.addCustomCodecs(codecs);
         return this;
     }
 
@@ -69,7 +74,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
             enumFieldsIndex.visitClassNode(node);
         }
         if (!disableCodecsIndexing) {
-            codecFieldsIndex.visitClassNode(node);
+            codecIndex.visitClassNode(node);
         }
     }
 
@@ -82,6 +87,6 @@ public class JarIndexer implements JarIndexerService, Opcodes {
     }
 
     public CodecIndex getCodecIndex() {
-        return this.codecFieldsIndex;
+        return this.codecIndex;
     }
 }

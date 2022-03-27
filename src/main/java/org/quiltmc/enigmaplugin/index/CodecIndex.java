@@ -22,22 +22,24 @@ import org.objectweb.asm.tree.analysis.SourceInterpreter;
 import org.objectweb.asm.tree.analysis.SourceValue;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class CodecIndex implements Opcodes {
     private static final List<MethodInfo> CODEC_FIELD_METHODS = List.of(
-            new MethodInfo("com/mojang/serialization/codecs/PrimitiveCodec", "fieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;"),     
-            new MethodInfo("com/mojang/serialization/Codec", "fieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;")
+            new MethodInfo("fieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;")
     );
     private static final List<MethodInfo> CODEC_OPTIONAL_FIELD_METHODS = List.of(
-            new MethodInfo("com/mojang/serialization/codecs/PrimitiveCodec", "optionalFieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;"),
-            new MethodInfo("com/mojang/serialization/codecs/PrimitiveCodec", "optionalFieldOf", "(Ljava/lang/String;Ljava/lang/Object;)Lcom/mojang/serialization/MapCodec;"),
-            new MethodInfo("com/mojang/serialization/Codec", "optionalFieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;"),
-            new MethodInfo("com/mojang/serialization/Codec", "optionalFieldOf", "(Ljava/lang/String;Ljava/lang/Object;)Lcom/mojang/serialization/MapCodec;")
+            new MethodInfo("optionalFieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;"),
+            new MethodInfo("optionalFieldOf", "(Ljava/lang/String;Ljava/lang/Object;)Lcom/mojang/serialization/MapCodec;")
     );
-    private static final MethodInfo FOR_GETTER_METHOD = new MethodInfo("com/mojang/serialization/MapCodec", "forGetter", "(Ljava/util/function/Function;)Lcom/mojang/serialization/codecs/RecordCodecBuilder;");
+    private static final List<String> BUILTIN_CODEC_CLASSES = List.of("com/mojang/serialization/codecs/PrimitiveCodec", "com/mojang/serialization/Codec");
+    private static final MethodInfo FOR_GETTER_METHOD = new MethodInfo("forGetter", "(Ljava/util/function/Function;)Lcom/mojang/serialization/codecs/RecordCodecBuilder;");
+    private static final String FOR_GETTER_METHOD_OWNER = "com/mojang/serialization/MapCodec";
     private final Analyzer<SourceValue> analyzer;
+    private final Set<String> customCodecClasses = new HashSet<>();
 
     private final Map<FieldEntry, String> fieldNames = new HashMap<>();
     private final Map<MethodEntry, String> methodNames = new HashMap<>();
@@ -46,8 +48,13 @@ public class CodecIndex implements Opcodes {
         analyzer = new Analyzer<>(new SourceInterpreter());
     }
 
-    private static boolean isCodecFieldMethod(MethodInsnNode mInsn) {
-        return CODEC_FIELD_METHODS.stream().anyMatch(m -> m.matches(mInsn)) || CODEC_OPTIONAL_FIELD_METHODS.stream().anyMatch(m -> m.matches(mInsn));
+    public void addCustomCodecs(List<String> customCodecClasses) {
+        this.customCodecClasses.addAll(customCodecClasses);
+    }
+
+    private boolean isCodecFieldMethod(MethodInsnNode mInsn) {
+        return (BUILTIN_CODEC_CLASSES.contains(mInsn.owner) || customCodecClasses.contains(mInsn.owner))
+                && (CODEC_FIELD_METHODS.stream().anyMatch(m -> m.matches(mInsn)) || CODEC_OPTIONAL_FIELD_METHODS.stream().anyMatch(m -> m.matches(mInsn)));
     }
 
     private static String toCamelCase(String s) {
@@ -114,7 +121,7 @@ public class CodecIndex implements Opcodes {
                     }
 
                     AbstractInsnNode insn2 = instructions.get(j);
-                    if (insn2 instanceof MethodInsnNode mInsn2 && FOR_GETTER_METHOD.matches(mInsn2)) {
+                    if (insn2 instanceof MethodInsnNode mInsn2 && mInsn2.owner.equals(FOR_GETTER_METHOD_OWNER) && FOR_GETTER_METHOD.matches(mInsn2)) {
                         // System.out.println("Found forGetter call " + mInsn2.getOpcode() + " (" + j + ")");
                         AbstractInsnNode getterInsn = instructions.get(j - 1);
                         if (!(getterInsn instanceof InvokeDynamicInsnNode getterInvokeInsn)) {
@@ -197,9 +204,9 @@ public class CodecIndex implements Opcodes {
         return methodNames.get(method);
     }
 
-    record MethodInfo(String owner, String name, String desc) {
+    record MethodInfo(String name, String desc) {
         public boolean matches(MethodInsnNode insn) {
-            return insn.owner.equals(owner) && insn.name.equals(name) && insn.desc.equals(desc);
+            return insn.name.equals(name) && insn.desc.equals(desc);
         }
     }
 }

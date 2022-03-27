@@ -36,4 +36,10 @@ public class CodecTest {
     public Optional<Float> getFactor() {
         return this.factor;
     }
+
+    record ExampleRecord(int value) {
+        public static final Codec<ExampleRecord> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.INT.fieldOf("v").forGetter(r -> r.value)
+        ).apply(instance, ExampleRecord::new));
+    }
 }
