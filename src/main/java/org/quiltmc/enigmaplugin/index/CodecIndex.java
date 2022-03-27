@@ -27,10 +27,14 @@ import java.util.Map;
 
 public class CodecIndex implements Opcodes {
     private static final List<MethodInfo> CODEC_FIELD_METHODS = List.of(
-            new MethodInfo("com/mojang/serialization/codecs/PrimitiveCodec", "fieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;")
+            new MethodInfo("com/mojang/serialization/codecs/PrimitiveCodec", "fieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;"),     
+            new MethodInfo("com/mojang/serialization/Codec", "fieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;")
     );
     private static final List<MethodInfo> CODEC_OPTIONAL_FIELD_METHODS = List.of(
-            new MethodInfo("com/mojang/serialization/codecs/PrimitiveCodec", "optionalFieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;")
+            new MethodInfo("com/mojang/serialization/codecs/PrimitiveCodec", "optionalFieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;"),
+            new MethodInfo("com/mojang/serialization/codecs/PrimitiveCodec", "optionalFieldOf", "(Ljava/lang/String;Ljava/lang/Object;)Lcom/mojang/serialization/MapCodec;"),
+            new MethodInfo("com/mojang/serialization/Codec", "optionalFieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;"),
+            new MethodInfo("com/mojang/serialization/Codec", "optionalFieldOf", "(Ljava/lang/String;Ljava/lang/Object;)Lcom/mojang/serialization/MapCodec;")
     );
     private static final MethodInfo FOR_GETTER_METHOD = new MethodInfo("com/mojang/serialization/MapCodec", "forGetter", "(Ljava/util/function/Function;)Lcom/mojang/serialization/codecs/RecordCodecBuilder;");
     private final Analyzer<SourceValue> analyzer;
@@ -71,7 +75,7 @@ public class CodecIndex implements Opcodes {
         for (int i = 1; i < instructions.size() && i < frames.length - 1; i++) {
             AbstractInsnNode insn = instructions.get(i);
             if (insn instanceof MethodInsnNode mInsn && isCodecFieldMethod((MethodInsnNode) insn)) {
-                System.out.println(mInsn.getOpcode() + " " + mInsn.owner + "." + mInsn.name + " " + mInsn.desc + " in " + parent.name + "." + node.name + " " + node.desc + " (" + i + ")");
+                // System.out.println(mInsn.getOpcode() + " " + mInsn.owner + "." + mInsn.name + " " + mInsn.desc + " in " + parent.name + "." + node.name + " " + node.desc + " (" + i + ")");
                 Frame<SourceValue> frame = frames[i];
 
                 // Find the field name in the stack
@@ -81,7 +85,7 @@ public class CodecIndex implements Opcodes {
                     for (AbstractInsnNode insn2 : value.insns) {
                         if (insn2 instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String) {
                             name = (String) ldcInsn.cst;
-                            System.out.println("Found name \"" + name + "\"");
+                            // System.out.println("Found name \"" + name + "\"");
                             break stackFor;
                         }
                     }
@@ -111,13 +115,13 @@ public class CodecIndex implements Opcodes {
 
                     AbstractInsnNode insn2 = instructions.get(j);
                     if (insn2 instanceof MethodInsnNode mInsn2 && FOR_GETTER_METHOD.matches(mInsn2)) {
-                        System.out.println("Found forGetter call " + mInsn2.getOpcode() + " (" + j + ")");
+                        // System.out.println("Found forGetter call " + mInsn2.getOpcode() + " (" + j + ")");
                         AbstractInsnNode getterInsn = instructions.get(j - 1);
                         if (!(getterInsn instanceof InvokeDynamicInsnNode getterInvokeInsn)) {
                             continue;
                         }
 
-                        System.out.println("Found getter call " + getterInvokeInsn.bsm + " (" + (j - 1) + ")");
+                        // System.out.println("Found getter call " + getterInvokeInsn.bsm + " (" + (j - 1) + ")");
                         visitGetterInvokeDynamicInsn(parent, getterInvokeInsn, name);
                         break;
                     }
