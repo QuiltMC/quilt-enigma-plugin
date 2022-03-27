@@ -29,18 +29,23 @@ import java.util.Optional;
 public class NameProposerService implements NameProposalService {
     public static final String DISABLE_RECORDS_ARG = "disable_records";
     public static final String DISABLE_ENUM_FIELDS_ARG = "disable_enum_fields";
+    public static final String DISABLE_CODECS_ARG = "disable_codecs";
     private final List<NameProposer<?>> nameProposers;
 
     public NameProposerService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
         nameProposers = new ArrayList<>();
         boolean disableRecords = context.getArgument(DISABLE_RECORDS_ARG).map(Boolean::parseBoolean).orElse(false);
         boolean disableEnumFields = context.getArgument(DISABLE_ENUM_FIELDS_ARG).map(Boolean::parseBoolean).orElse(false);
+        boolean disableCodecs = context.getArgument(DISABLE_CODECS_ARG).map(Boolean::parseBoolean).orElse(false);
 
         if (!disableRecords) {
             nameProposers.add(new RecordComponentNameProposer(indexer.getRecordIndex()));
         }
         if (!disableEnumFields) {
             nameProposers.add(new EnumFieldNameProposer(indexer.getEnumFieldsIndex()));
+        }
+        if (!disableCodecs) {
+            nameProposers.add(new CodecNameProposer(indexer.getCodecIndex()));
         }
     }
 

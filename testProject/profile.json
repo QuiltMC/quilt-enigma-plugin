@@ -8,7 +8,8 @@
         "id": "quiltmc:name_proposal",
         "args": {
           "disable_enum_fields": "false",
-          "disable_records": "false"
+          "disable_records": "false",
+          "disable_codecs": "false"
         }
       }
     ],
@@ -17,7 +18,8 @@
         "id": "quiltmc:jar_index",
         "args": {
           "disable_enum_fields": "false",
-          "disable_records": "false"
+          "disable_records": "false",
+          "disable_codecs": "false"
         }
       }
     ]

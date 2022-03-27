@@ -29,14 +29,18 @@ import java.util.Set;
 public class JarIndexer implements JarIndexerService, Opcodes {
     public static final String DISABLE_RECORDS_ARG = "disable_records";
     public static final String DISABLE_ENUM_FIELDS_ARG = "disable_enum_fields";
+    public static final String DISABLE_CODECS_ARG = "disable_codecs";
     private final RecordIndex recordIndex = new RecordIndex();
     private final EnumFieldsIndex enumFieldsIndex = new EnumFieldsIndex();
+    private final CodecIndex codecFieldsIndex = new CodecIndex();
     private boolean disableRecordIndexing = false;
     private boolean disableEnumFieldsIndexing = false;
+    private boolean disableCodecsIndexing = false;
 
     public JarIndexer withContext(EnigmaServiceContext<JarIndexerService> context) {
         disableRecordIndexing = context.getArgument(DISABLE_RECORDS_ARG).map(Boolean::parseBoolean).orElse(false);
         disableEnumFieldsIndexing = context.getArgument(DISABLE_ENUM_FIELDS_ARG).map(Boolean::parseBoolean).orElse(false);
+        disableCodecsIndexing = context.getArgument(DISABLE_CODECS_ARG).map(Boolean::parseBoolean).orElse(false);
         return this;
     }
 
@@ -64,6 +68,9 @@ public class JarIndexer implements JarIndexerService, Opcodes {
         if (!disableEnumFieldsIndexing) {
             enumFieldsIndex.visitClassNode(node);
         }
+        if (!disableCodecsIndexing) {
+            codecFieldsIndex.visitClassNode(node);
+        }
     }
 
     public RecordIndex getRecordIndex() {
@@ -72,5 +79,9 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 
     public EnumFieldsIndex getEnumFieldsIndex() {
         return this.enumFieldsIndex;
+    }
+
+    public CodecIndex getCodecIndex() {
+        return this.codecFieldsIndex;
     }
 }
