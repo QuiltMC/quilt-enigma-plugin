@@ -115,7 +115,11 @@ public class FieldNameFinder implements Opcodes {
                             last = name.substring(separator + 1);
                         }
 
-                        name = first + "_" + last;
+                        if (first.endsWith("s")) {
+                            first = first.substring(0, first.length() - 1);
+                        }
+
+                        name = last + "_" + first;
                     }
 
                     // Check if the name is usable, replace invalid characters, convert camel case to snake case
