@@ -74,6 +74,8 @@ public class CodecIndex implements Opcodes {
     }
 
     private static String toCamelCase(String s) {
+        // Make sure the first letter is lower case
+        s = Character.toLowerCase(s.charAt(0)) + s.substring(1);
         while (s.contains("_")) {
             s = s.replaceFirst("_[a-z]", String.valueOf(Character.toUpperCase(s.charAt(s.indexOf('_') + 1))));
         }
