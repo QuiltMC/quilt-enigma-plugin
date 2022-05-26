@@ -51,7 +51,21 @@ public class CodecIndex implements Opcodes {
             new MethodInfo("optionalFieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;"),
             new MethodInfo("optionalFieldOf", "(Ljava/lang/String;Ljava/lang/Object;)Lcom/mojang/serialization/MapCodec;")
     );
-    private static final List<String> BUILTIN_CODEC_CLASSES = List.of("com/mojang/serialization/codecs/PrimitiveCodec", "com/mojang/serialization/Codec");
+    private static final List<String> BUILTIN_CODEC_CLASSES = List.of(
+            "com/mojang/serialization/codecs/BaseMapCodec",
+            "com/mojang/serialization/codecs/CompoundListCodec",
+            "com/mojang/serialization/codecs/EitherCodec",
+            "com/mojang/serialization/codecs/KeyDispatchCodec",
+            "com/mojang/serialization/codecs/ListCodec",
+            "com/mojang/serialization/codecs/OptionalFieldCodec",
+            "com/mojang/serialization/codecs/PairCodec",
+            "com/mojang/serialization/codecs/PairMapCodec",
+            "com/mojang/serialization/codecs/PrimitiveCodec",
+            "com/mojang/serialization/codecs/SimpleMapCodec",
+            "com/mojang/serialization/codecs/UnboundedMapCodec",
+            "com/mojang/serialization/codecs/",
+            "com/mojang/serialization/Codec"
+    );
     private static final MethodInfo FOR_GETTER_METHOD = new MethodInfo("forGetter", "(Ljava/util/function/Function;)Lcom/mojang/serialization/codecs/RecordCodecBuilder;");
     private static final String FOR_GETTER_METHOD_OWNER = "com/mojang/serialization/MapCodec";
     private final Analyzer<SourceValue> analyzer;
@@ -99,7 +113,7 @@ public class CodecIndex implements Opcodes {
         InsnList instructions = node.instructions;
         for (int i = 1; i < instructions.size() && i < frames.length - 1; i++) {
             AbstractInsnNode insn = instructions.get(i);
-            if (insn instanceof MethodInsnNode mInsn && isCodecFieldMethod((MethodInsnNode) insn)) {
+            if (insn instanceof MethodInsnNode mInsn && isCodecFieldMethod(mInsn)) {
                 // System.out.println(mInsn.getOpcode() + " " + mInsn.owner + "." + mInsn.name + " " + mInsn.desc + " in " + parent.name + "." + node.name + " " + node.desc + " (" + i + ")");
                 Frame<SourceValue> frame = frames[i];
 
@@ -192,7 +206,7 @@ public class CodecIndex implements Opcodes {
                 if (insn2 instanceof FieldInsnNode fInsn && fInsn.owner.equals(parent.name)) {
                     fieldInsn = fieldInsn == null ? (FieldInsnNode) insn2 : null;
                 } else if (insn2 instanceof MethodInsnNode mInsn && mInsn.owner.equals(parent.name)) {
-                    methodInsn = methodInsn == null ? (MethodInsnNode) insn2 : null;
+                    methodInsn = methodInsn == null ? mInsn : null;
                 }
             }
 
