@@ -8,7 +8,7 @@ import java.util.Optional;
 public class CodecTest {
     public static final Codec<CodecTest> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.INT.fieldOf("value").forGetter(CodecTest::getValue),
-            Codec.DOUBLE.fieldOf("scale").forGetter(test -> test.getScale()),
+            Codec.DOUBLE.fieldOf("scale").orElse(1.0).forGetter(test -> test.getScale()),
             Codec.FLOAT.optionalFieldOf("factor").forGetter(CodecTest::getFactor),
             Codec.LONG.fieldOf("seed").forGetter(test -> test.seed)
     ).apply(instance, CodecTest::new));

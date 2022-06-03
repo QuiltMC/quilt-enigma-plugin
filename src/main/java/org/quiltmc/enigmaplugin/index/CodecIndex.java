@@ -23,6 +23,7 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
@@ -53,6 +54,7 @@ public class CodecIndex implements Opcodes {
     );
     private static final List<String> BUILTIN_CODEC_CLASSES = List.of(
             "com/mojang/serialization/codecs/BaseMapCodec",
+            "com/mojang/serialization/MapCodec",
             "com/mojang/serialization/codecs/CompoundListCodec",
             "com/mojang/serialization/codecs/EitherCodec",
             "com/mojang/serialization/codecs/KeyDispatchCodec",
@@ -82,8 +84,12 @@ public class CodecIndex implements Opcodes {
         this.customCodecClasses.addAll(customCodecClasses);
     }
 
+    private boolean isCodecClass(String className) {
+        return BUILTIN_CODEC_CLASSES.contains(className) || customCodecClasses.contains(className);
+    }
+
     private boolean isCodecFieldMethod(MethodInsnNode mInsn) {
-        return (BUILTIN_CODEC_CLASSES.contains(mInsn.owner) || customCodecClasses.contains(mInsn.owner))
+        return isCodecClass(mInsn.owner)
                 && (CODEC_FIELD_METHODS.stream().anyMatch(m -> m.matches(mInsn)) || CODEC_OPTIONAL_FIELD_METHODS.stream().anyMatch(m -> m.matches(mInsn)));
     }
 
@@ -134,14 +140,16 @@ public class CodecIndex implements Opcodes {
                     continue;
                 }
 
+                MethodInsnNode codecFieldInsn = mInsn;
                 // Find a forGetter call
                 for (int j = i + 2; j < instructions.size(); j++) {
+                    // Make sure the codec field is still in the stack
                     Frame<SourceValue> frame2 = frames[j];
                     boolean hasCodec = false;
                     for (int k = 0; k < frame2.getStackSize(); k++) {
                         SourceValue value = frame2.getStack(k);
                         for (AbstractInsnNode insn2 : value.insns) {
-                            if (insn2 == mInsn) {
+                            if (insn2 == codecFieldInsn) {
                                 hasCodec = true;
                                 break;
                             }
@@ -153,16 +161,26 @@ public class CodecIndex implements Opcodes {
                     }
 
                     AbstractInsnNode insn2 = instructions.get(j);
-                    if (insn2 instanceof MethodInsnNode mInsn2 && mInsn2.owner.equals(FOR_GETTER_METHOD_OWNER) && FOR_GETTER_METHOD.matches(mInsn2)) {
-                        // System.out.println("Found forGetter call " + mInsn2.getOpcode() + " (" + j + ")");
-                        AbstractInsnNode getterInsn = instructions.get(j - 1);
-                        if (!(getterInsn instanceof InvokeDynamicInsnNode getterInvokeInsn)) {
-                            continue;
-                        }
+                    if (insn2 instanceof MethodInsnNode mInsn2) {
+                        if (mInsn2.owner.equals(FOR_GETTER_METHOD_OWNER) && FOR_GETTER_METHOD.matches(mInsn2)) {
+                            // System.out.println("Found forGetter call " + mInsn2.getOpcode() + " (" + j + ")");
+                            AbstractInsnNode getterInsn = instructions.get(j - 1);
+                            if (!(getterInsn instanceof InvokeDynamicInsnNode getterInvokeInsn)) {
+                                continue;
+                            }
 
-                        // System.out.println("Found getter call " + getterInvokeInsn.bsm + " (" + (j - 1) + ")");
-                        visitGetterInvokeDynamicInsn(parent, getterInvokeInsn, name);
-                        break;
+                            // System.out.println("Found getter call " + getterInvokeInsn.bsm + " (" + (j - 1) + ")");
+                            visitGetterInvokeDynamicInsn(parent, getterInvokeInsn, name);
+                            break;
+                        } else {
+                            // Update the codec field insn if needed
+                            Type ret = Type.getReturnType(mInsn2.desc);
+                            if (mInsn2.getOpcode() != INVOKESTATIC && ret.getSort() == Type.OBJECT && isCodecClass(ret.getInternalName())) {
+                                // TODO: Check if the codec is used in the method
+                                // System.out.println("Found codec field call " + mInsn2.getOpcode() + " (" + j + ")");
+                                codecFieldInsn = mInsn2;
+                            }
+                        }
                     }
                 }
             }
