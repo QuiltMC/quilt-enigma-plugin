@@ -236,6 +236,22 @@ public class CodecIndex implements Opcodes {
         return methodNames.get(method);
     }
 
+    protected Map<FieldEntry, String> getFieldNames() {
+        return fieldNames;
+    }
+
+    protected Map<MethodEntry, String> getMethodNames() {
+        return methodNames;
+    }
+
+    protected boolean hasCustomCodecs() {
+        return !this.customCodecClasses.isEmpty();
+    }
+
+    protected Set<String> getCustomCodecs() {
+        return this.customCodecClasses;
+    }
+
     record MethodInfo(String name, String desc) {
         public boolean matches(MethodInsnNode insn) {
             return insn.name.equals(name) && insn.desc.equals(desc);
