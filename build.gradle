@@ -1,10 +1,10 @@
 plugins {
     id 'java'
     id 'maven-publish'
-    id 'org.quiltmc.gradle.licenser' version '1.1.0'
+    id 'org.quiltmc.gradle.licenser' version '1.1.1'
 }
 
-version '1.0.1'
+version '1.0.2'
 group 'org.quiltmc'
 
 sourceCompatibility = JavaVersion.VERSION_17
