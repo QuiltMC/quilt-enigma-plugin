@@ -54,7 +54,6 @@ public class CodecIndex implements Opcodes {
     );
     private static final List<String> BUILTIN_CODEC_CLASSES = List.of(
             "com/mojang/serialization/codecs/BaseMapCodec",
-            "com/mojang/serialization/MapCodec",
             "com/mojang/serialization/codecs/CompoundListCodec",
             "com/mojang/serialization/codecs/EitherCodec",
             "com/mojang/serialization/codecs/KeyDispatchCodec",
@@ -65,9 +64,9 @@ public class CodecIndex implements Opcodes {
             "com/mojang/serialization/codecs/PrimitiveCodec",
             "com/mojang/serialization/codecs/SimpleMapCodec",
             "com/mojang/serialization/codecs/UnboundedMapCodec",
-            "com/mojang/serialization/codecs/",
-            "com/mojang/serialization/Codec"
-    );
+            "com/mojang/serialization/Codec",
+            "com/mojang/serialization/MapCodec"
+            );
     private static final MethodInfo FOR_GETTER_METHOD = new MethodInfo("forGetter", "(Ljava/util/function/Function;)Lcom/mojang/serialization/codecs/RecordCodecBuilder;");
     private static final String FOR_GETTER_METHOD_OWNER = "com/mojang/serialization/MapCodec";
     private final Analyzer<SourceValue> analyzer;
