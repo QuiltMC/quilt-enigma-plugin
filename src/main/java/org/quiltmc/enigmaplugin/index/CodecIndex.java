@@ -145,6 +145,10 @@ public class CodecIndex implements Opcodes {
                 for (int j = i + 1; j < instructions.size(); j++) {
                     // Make sure the codec field is still in the stack
                     Frame<SourceValue> frame2 = frames[j];
+                    if (frame2 == null) {
+                        continue;
+                    }
+
                     int fieldIndex = -1;
                     for (int k = 0; k < frame2.getStackSize(); k++) {
                         SourceValue value = frame2.getStack(k);
