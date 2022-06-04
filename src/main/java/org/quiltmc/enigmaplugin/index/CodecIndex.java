@@ -145,18 +145,18 @@ public class CodecIndex implements Opcodes {
                 for (int j = i + 2; j < instructions.size(); j++) {
                     // Make sure the codec field is still in the stack
                     Frame<SourceValue> frame2 = frames[j];
-                    boolean hasCodec = false;
+                    int fieldIndex = -1;
                     for (int k = 0; k < frame2.getStackSize(); k++) {
                         SourceValue value = frame2.getStack(k);
                         for (AbstractInsnNode insn2 : value.insns) {
                             if (insn2 == codecFieldInsn) {
-                                hasCodec = true;
+                                fieldIndex = k;
                                 break;
                             }
                         }
                     }
 
-                    if (!hasCodec) {
+                    if (fieldIndex == -1) {
                         break;
                     }
 
@@ -174,11 +174,36 @@ public class CodecIndex implements Opcodes {
                             break;
                         } else {
                             // Update the codec field insn if needed
-                            Type ret = Type.getReturnType(mInsn2.desc);
-                            if (mInsn2.getOpcode() != INVOKESTATIC && ret.getSort() == Type.OBJECT && isCodecClass(ret.getInternalName())) {
-                                // TODO: Check if the codec is used in the method
+                            Type type = Type.getMethodType(mInsn2.desc);
+                            Type ret = type.getReturnType();
+                            if (ret.getSort() != Type.OBJECT || !isCodecClass(ret.getInternalName())) {
+                                continue;
+                            }
+
+                            boolean hasThis = mInsn2.getOpcode() != INVOKESTATIC;
+                            int argsSize = type.getArgumentsAndReturnSizes() >> 2;
+                            // Skip the first argument (automatically-added 'this' pointer) if the method doesn't have one (is static)
+                            int offset = (hasThis ? 0 : 1) + frame2.getStackSize() - argsSize;
+
+                            // The first argument 'this' may be our field
+                            if (hasThis && fieldIndex == offset) {
                                 // System.out.println("Found codec field call " + mInsn2.getOpcode() + " (" + j + ")");
                                 codecFieldInsn = mInsn2;
+                                continue;
+                            }
+
+                            Type[] args = type.getArgumentTypes();
+                            for (int k = 0; k < args.length; k++) {
+                                if (args[k].getSort() != Type.OBJECT || !isCodecClass(args[k].getInternalName())) {
+                                    continue;
+                                }
+
+                                // Offset by one slot if there's a 'this' pointer
+                                if (fieldIndex == offset + k + (hasThis ? 1 : 0)) {
+                                    // System.out.println("Found codec field call " + mInsn2.getOpcode() + " (" + j + ")");
+                                    codecFieldInsn = mInsn2;
+                                    break;
+                                }
                             }
                         }
                     }
