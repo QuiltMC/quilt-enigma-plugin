@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class RecordIndex implements Opcodes {
     private static final Handle TO_STRING_HANDLE = new Handle(H_INVOKESTATIC, "java/lang/runtime/ObjectMethods", "bootstrap", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;", false);
@@ -299,6 +300,27 @@ public class RecordIndex implements Opcodes {
 
     public String getAccessorMethodName(ClassEntry parent, MethodEntry method) {
         return records.containsKey(parent) ? records.get(parent).getAccessorMethodName(method) : null;
+    }
+
+    protected Map<FieldEntry, String> getAllFieldNames() {
+        return records.keySet().stream().flatMap(c -> getFieldNames(c).entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    protected Map<MethodEntry, String> getAllMethodNames() {
+        return records.keySet().stream().flatMap(c -> getMethodNames(c).entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    protected Map<FieldEntry, String> getFieldNames(ClassEntry parent) {
+        return records.containsKey(parent) ? records.get(parent).fieldNames : null;
+    }
+
+    protected Map<MethodEntry, String> getMethodNames(ClassEntry parent) {
+        if (!records.containsKey(parent)) {
+            return null;
+        }
+
+        RecordComponentData data = records.get(parent);
+        return data.fieldAccessorMethods.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> data.getName(e.getValue())));
     }
 
     static class RecordComponentData {

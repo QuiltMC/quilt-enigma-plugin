@@ -16,52 +16,47 @@
 
 package org.quiltmc.enigmaplugin.index;
 
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 
-public class CodecIndexTest {
+public class RecordIndexTest {
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.err.println("Usage: CodecIndexTest <path> [<customCodec>...]");
+            System.err.println("Usage: RecordIndexTest <path>");
             System.exit(1);
         }
 
         ClassNode node = IndexTestUtil.getClassNode(args[0]);
 
-        CodecIndex index = new CodecIndex();
-        if (args.length > 1) {
-            List<String> customCodecs = Arrays.asList(args).subList(1, args.length);
-            index.addCustomCodecs(customCodecs);
-        }
+        RecordIndex index = new RecordIndex();
 
         index.visitClassNode(node);
 
         dumpIndex(index);
     }
 
-    private static void dumpIndex(CodecIndex index) {
-        System.out.println("CodecIndex");
-        if (index.hasCustomCodecs()) {
-            System.out.println("  Custom codecs:");
-            for (String codec : index.getCustomCodecs()) {
-                System.out.println("    " + codec);
-            }
-        }
+    private static void dumpIndex(RecordIndex index) {
+        System.out.println("RecordIndex");
 
+        Map<FieldEntry, String> fieldNames = index.getAllFieldNames();
         System.out.println("\nFields:\n");
-        if (index.getFieldNames().isEmpty()) {
+        System.out.println("  " + fieldNames.size() + " fields");
+        if (fieldNames.isEmpty()) {
             System.out.println("  No fields");
         } else {
-            index.getFieldNames().forEach(((field, s) -> System.out.println(field + " " + s)));
+            fieldNames.forEach(((field, s) -> System.out.println(field + " " + s)));
         }
 
+        Map<MethodEntry, String> methodNames = index.getAllMethodNames();
         System.out.println("\nMethods:\n");
-        if (index.getMethodNames().isEmpty()) {
+        System.out.println("  " + methodNames.size() + " methods");
+        if (methodNames.isEmpty()) {
             System.out.println("  No methods");
         } else {
-            index.getMethodNames().forEach(((method, s) -> System.out.println(method + " " + s)));
+            methodNames.forEach(((method, s) -> System.out.println(method + " " + s)));
         }
     }
 }
