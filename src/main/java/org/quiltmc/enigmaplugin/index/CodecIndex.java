@@ -125,7 +125,7 @@ public class CodecIndex implements Opcodes {
 
                 // Find the field name in the stack
                 String name = null;
-                stackFor: for (int j = 0; j < frame.getStackSize(); j++) {
+                stackFor: for (int j = frame.getStackSize() - 1; j >= 0; j--) {// Start searching from the top of the stack
                     SourceValue value = frame.getStack(j);
                     for (AbstractInsnNode insn2 : value.insns) {
                         if (insn2 instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String) {
@@ -142,7 +142,7 @@ public class CodecIndex implements Opcodes {
 
                 MethodInsnNode codecFieldInsn = mInsn;
                 // Find a forGetter call
-                for (int j = i + 2; j < instructions.size(); j++) {
+                for (int j = i + 1; j < instructions.size(); j++) {
                     // Make sure the codec field is still in the stack
                     Frame<SourceValue> frame2 = frames[j];
                     int fieldIndex = -1;
