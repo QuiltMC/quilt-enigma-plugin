@@ -22,30 +22,31 @@ import cuchaz.enigma.api.service.JarIndexerService;
 import cuchaz.enigma.classprovider.ClassProvider;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
+import org.quiltmc.enigmaplugin.Arguments;
 import org.quiltmc.enigmaplugin.index.enumfields.EnumFieldsIndex;
 
 import java.util.List;
 import java.util.Set;
 
 public class JarIndexer implements JarIndexerService, Opcodes {
-    public static final String DISABLE_RECORDS_ARG = "disable_records";
-    public static final String DISABLE_ENUM_FIELDS_ARG = "disable_enum_fields";
-    public static final String DISABLE_CODECS_ARG = "disable_codecs";
-    public static final String CUSTOM_CODECS_ARG = "custom_codecs";
     private final RecordIndex recordIndex = new RecordIndex();
     private final EnumFieldsIndex enumFieldsIndex = new EnumFieldsIndex();
     private final CodecIndex codecIndex = new CodecIndex();
+    private final LoggerIndex loggerIndex = new LoggerIndex();
     private boolean disableRecordIndexing = false;
     private boolean disableEnumFieldsIndexing = false;
     private boolean disableCodecsIndexing = false;
+    private boolean disableLoggerIndexing = false;
 
     public JarIndexer withContext(EnigmaServiceContext<JarIndexerService> context) {
-        disableRecordIndexing = context.getArgument(DISABLE_RECORDS_ARG).map(Boolean::parseBoolean).orElse(false);
-        disableEnumFieldsIndexing = context.getArgument(DISABLE_ENUM_FIELDS_ARG).map(Boolean::parseBoolean).orElse(false);
-        disableCodecsIndexing = context.getArgument(DISABLE_CODECS_ARG).map(Boolean::parseBoolean).orElse(false);
+        this.disableRecordIndexing = Arguments.isDisabled(context, Arguments.DISABLE_RECORDS);
+        this.disableEnumFieldsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_ENUM_FIELDS);
+        this.disableCodecsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CODECS);
+        this.disableLoggerIndexing = Arguments.isDisabled(context, Arguments.DISABLE_LOGGER);
 
-        List<String> codecs = context.getArgument(CUSTOM_CODECS_ARG).map(s -> List.of(s.split(",[\n ]*"))).orElse(List.of());
-        codecIndex.addCustomCodecs(codecs);
+        List<String> codecs = context.getArgument(Arguments.CUSTOM_CODECS).map(s -> List.of(s.split(",[\n ]*")))
+                .orElse(List.of());
+        this.codecIndex.addCustomCodecs(codecs);
         return this;
     }
 
@@ -76,6 +77,9 @@ public class JarIndexer implements JarIndexerService, Opcodes {
         if (!disableCodecsIndexing) {
             codecIndex.visitClassNode(node);
         }
+        if (!this.disableLoggerIndexing) {
+            loggerIndex.visitClassNode(node);
+        }
     }
 
     public RecordIndex getRecordIndex() {
@@ -88,5 +92,9 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 
     public CodecIndex getCodecIndex() {
         return this.codecIndex;
+    }
+
+    public LoggerIndex getLoggerIndex() {
+        return this.loggerIndex;
     }
 }

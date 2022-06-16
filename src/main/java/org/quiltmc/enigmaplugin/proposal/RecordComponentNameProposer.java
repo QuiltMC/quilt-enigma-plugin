@@ -17,18 +17,12 @@
 package org.quiltmc.enigmaplugin.proposal;
 
 import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.MethodDescriptor;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.translation.representation.entry.*;
 import org.quiltmc.enigmaplugin.index.RecordIndex;
 
 import java.util.Optional;
 
 public class RecordComponentNameProposer implements NameProposer<Entry<?>> {
-    private static final MethodDescriptor EQUALS_DESCRIPTOR = new MethodDescriptor("(Ljava/lang/Object;)Z");
     private final RecordIndex index;
 
     public RecordComponentNameProposer(RecordIndex index) {
@@ -44,9 +38,7 @@ public class RecordComponentNameProposer implements NameProposer<Entry<?>> {
             MethodEntry parent = localVariableEntry.getParent();
             if (parent != null) {
                 String methodName = parent.getName();
-                if (methodName.equals("equals") && parent.getDesc().equals(EQUALS_DESCRIPTOR)) {
-                    return Optional.of("o");
-                } else if (methodName.equals("<init>")) {
+                if (methodName.equals("<init>")) {
                     ClassEntry parentClass = parent.getParent();
                     if (parent.getDesc().toString().equals(index.getCanonicalConstructorDescriptor(parentClass))) {
                         return Optional.ofNullable(index.getInitParamName(parentClass, localVariableEntry.getIndex()));
