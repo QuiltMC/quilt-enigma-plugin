@@ -20,32 +20,28 @@ import cuchaz.enigma.api.service.EnigmaServiceContext;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import org.quiltmc.enigmaplugin.Arguments;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class NameProposerService implements NameProposalService {
-    public static final String DISABLE_RECORDS_ARG = "disable_records";
-    public static final String DISABLE_ENUM_FIELDS_ARG = "disable_enum_fields";
-    public static final String DISABLE_CODECS_ARG = "disable_codecs";
-    private final List<NameProposer<?>> nameProposers;
+    private final List<NameProposer<?>> nameProposers = new ArrayList<>();
 
     public NameProposerService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
-        nameProposers = new ArrayList<>();
-        boolean disableRecords = context.getArgument(DISABLE_RECORDS_ARG).map(Boolean::parseBoolean).orElse(false);
-        boolean disableEnumFields = context.getArgument(DISABLE_ENUM_FIELDS_ARG).map(Boolean::parseBoolean).orElse(false);
-        boolean disableCodecs = context.getArgument(DISABLE_CODECS_ARG).map(Boolean::parseBoolean).orElse(false);
+        this.addIfEnabled(context, Arguments.DISABLE_RECORDS, () -> new RecordComponentNameProposer(indexer.getRecordIndex()));
+        this.addIfEnabled(context, Arguments.DISABLE_ENUM_FIELDS, () -> new EnumFieldNameProposer(indexer.getEnumFieldsIndex()));
+        this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
+        this.addIfEnabled(context, Arguments.DISABLE_LOGGER, () -> new LoggerNameProposer(indexer.getLoggerIndex()));
+        this.addIfEnabled(context, Arguments.DISABLE_CODECS, () -> new CodecNameProposer(indexer.getCodecIndex()));
+    }
 
-        if (!disableRecords) {
-            nameProposers.add(new RecordComponentNameProposer(indexer.getRecordIndex()));
-        }
-        if (!disableEnumFields) {
-            nameProposers.add(new EnumFieldNameProposer(indexer.getEnumFieldsIndex()));
-        }
-        if (!disableCodecs) {
-            nameProposers.add(new CodecNameProposer(indexer.getCodecIndex()));
+    private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer<?>> factory) {
+        if (!Arguments.isDisabled(context, name)) {
+            this.nameProposers.add(factory.get());
         }
     }
 

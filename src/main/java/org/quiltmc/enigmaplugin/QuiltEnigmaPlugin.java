@@ -33,7 +33,7 @@ public class QuiltEnigmaPlugin implements EnigmaPlugin {
 
     @Override
     public void init(EnigmaPluginContext ctx) {
-        JarIndexer indexer = new JarIndexer();
+        var indexer = new JarIndexer();
         ctx.registerService(SERVICE_ID_PREFIX + INDEX_SERVICE_NAME, JarIndexerService.TYPE, indexer::withContext);
         ctx.registerService(SERVICE_ID_PREFIX + NAME_PROPOSAL_SERVICE_NAME, NameProposalService.TYPE, ctx1 -> new NameProposerService(indexer, ctx1));
         ctx.registerService(SERVICE_ID_PREFIX + OBFUSCATION_SERVICE_NAME, ObfuscationTestService.TYPE, NameObfuscationTestService::new);
