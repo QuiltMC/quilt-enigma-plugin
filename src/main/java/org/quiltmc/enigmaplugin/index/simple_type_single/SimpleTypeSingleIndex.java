@@ -24,6 +24,7 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -72,6 +73,7 @@ public class SimpleTypeSingleIndex implements Opcodes {
         return this.parameters.get(paramEntry);
     }
 
+    @TestOnly
     public List<ParameterEntry> getParamsOf(MethodEntry methodEntry) {
         var params = new ArrayList<ParameterEntry>();
 

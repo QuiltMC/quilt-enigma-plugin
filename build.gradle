@@ -27,6 +27,7 @@ dependencies {
     implementation "org.ow2.asm:asm-util:9.3"
     implementation "cuchaz:enigma:${enigma_version}"
     implementation "org.quiltmc:quilt-json5:1.0.1"
+    implementation "org.jetbrains:annotations:23.0.0"
 
     testImplementation "cuchaz:enigma-swing:${enigma_version}"
 }
