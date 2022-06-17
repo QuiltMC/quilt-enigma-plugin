@@ -29,6 +29,7 @@ public class Arguments {
     public static final String DISABLE_LOGGER = "disable_logger";
     public static final String DISABLE_CODECS = "disable_codecs";
     public static final String CUSTOM_CODECS = "custom_codecs";
+    public static final String SIMPLE_TYPE_FIELD_NAMES_PATH = "simple_type_field_names_path";
 
     public static <T extends EnigmaService> boolean isDisabled(EnigmaServiceContext<T> context, String arg) {
         return context.getArgument(arg).map(Boolean::parseBoolean).orElse(false);

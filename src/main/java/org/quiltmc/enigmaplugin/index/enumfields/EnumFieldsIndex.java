@@ -21,6 +21,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.quiltmc.enigmaplugin.index.Index;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,11 +30,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class EnumFieldsIndex implements Opcodes {
+public class EnumFieldsIndex implements Index {
     private final Map<String, Set<String>> enumFields = new HashMap<>();
     private final Map<String, List<MethodNode>> enumStaticInitializers = new HashMap<>();
     private Map<FieldEntry, String> fieldNames;
 
+    @Override
     public void visitClassNode(ClassNode node) {
         for (FieldNode field : node.fields) {
             if ((field.access & ACC_ENUM) != 0) {
