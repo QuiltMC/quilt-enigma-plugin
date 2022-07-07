@@ -22,29 +22,14 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Handle;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.InvokeDynamicInsnNode;
-import org.objectweb.asm.tree.LdcInsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.analysis.Analyzer;
-import org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.objectweb.asm.tree.analysis.Frame;
-import org.objectweb.asm.tree.analysis.SourceInterpreter;
-import org.objectweb.asm.tree.analysis.SourceValue;
+import org.objectweb.asm.tree.*;
+import org.objectweb.asm.tree.analysis.*;
+import org.quiltmc.enigmaplugin.util.CasingUtil;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-public class CodecIndex implements Opcodes {
+public class CodecIndex implements Index {
     private static final List<MethodInfo> CODEC_FIELD_METHODS = List.of(
             new MethodInfo("fieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;")
     );
@@ -66,7 +51,7 @@ public class CodecIndex implements Opcodes {
             "com/mojang/serialization/codecs/UnboundedMapCodec",
             "com/mojang/serialization/Codec",
             "com/mojang/serialization/MapCodec"
-            );
+    );
     private static final MethodInfo FOR_GETTER_METHOD = new MethodInfo("forGetter", "(Ljava/util/function/Function;)Lcom/mojang/serialization/codecs/RecordCodecBuilder;");
     private static final String FOR_GETTER_METHOD_OWNER = "com/mojang/serialization/MapCodec";
     private final Analyzer<SourceValue> analyzer;
@@ -92,19 +77,11 @@ public class CodecIndex implements Opcodes {
                 && (CODEC_FIELD_METHODS.stream().anyMatch(m -> m.matches(mInsn)) || CODEC_OPTIONAL_FIELD_METHODS.stream().anyMatch(m -> m.matches(mInsn)));
     }
 
-    private static String toCamelCase(String s) {
-        // Make sure the first letter is lower case
-        s = Character.toLowerCase(s.charAt(0)) + s.substring(1);
-        while (s.contains("_")) {
-            s = s.replaceFirst("_[a-z]", String.valueOf(Character.toUpperCase(s.charAt(s.indexOf('_') + 1))));
-        }
-        return s;
-    }
-
+    @Override
     public void visitClassNode(ClassNode node) {
         for (MethodNode method : node.methods) {
             try {
-                visitMethodNode(node, method);
+                this.visitMethodNode(node, method);
             } catch (Exception e) {
                 System.err.println("Error visiting method " + method.name + method.desc + " in class " + node.name);
                 e.printStackTrace();
@@ -124,7 +101,8 @@ public class CodecIndex implements Opcodes {
 
                 // Find the field name in the stack
                 String name = null;
-                stackFor: for (int j = frame.getStackSize() - 1; j >= 0; j--) {// Start searching from the top of the stack
+                stackFor:
+                for (int j = frame.getStackSize() - 1; j >= 0; j--) {// Start searching from the top of the stack
                     SourceValue value = frame.getStack(j);
                     for (AbstractInsnNode insn2 : value.insns) {
                         if (insn2 instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String) {
@@ -226,7 +204,7 @@ public class CodecIndex implements Opcodes {
         }
 
         ClassEntry parentEntry = new ClassEntry(parent.name);
-        String camelCaseName = toCamelCase(name);
+        String camelCaseName = CasingUtil.toCamelCase(name);
         String getterName = "get" + camelCaseName.substring(0, 1).toUpperCase() + camelCaseName.substring(1);
         if (getterHandle.getTag() == H_INVOKEVIRTUAL) {
             MethodEntry entry = new MethodEntry(parentEntry, getterHandle.getName(), new MethodDescriptor(getterHandle.getDesc()));

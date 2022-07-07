@@ -24,6 +24,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.quiltmc.enigmaplugin.Arguments;
 import org.quiltmc.enigmaplugin.index.enumfields.EnumFieldsIndex;
+import org.quiltmc.enigmaplugin.index.simple_type_single.SimpleTypeSingleIndex;
 
 import java.util.List;
 import java.util.Set;
@@ -33,6 +34,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
     private final EnumFieldsIndex enumFieldsIndex = new EnumFieldsIndex();
     private final CodecIndex codecIndex = new CodecIndex();
     private final LoggerIndex loggerIndex = new LoggerIndex();
+    private final SimpleTypeSingleIndex simpleTypeSingleIndex = new SimpleTypeSingleIndex();
     private boolean disableRecordIndexing = false;
     private boolean disableEnumFieldsIndexing = false;
     private boolean disableCodecsIndexing = false;
@@ -47,6 +49,9 @@ public class JarIndexer implements JarIndexerService, Opcodes {
         List<String> codecs = context.getArgument(Arguments.CUSTOM_CODECS).map(s -> List.of(s.split(",[\n ]*")))
                 .orElse(List.of());
         this.codecIndex.addCustomCodecs(codecs);
+
+        this.simpleTypeSingleIndex.loadRegistry(context.getArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
+                .map(context::getPath).orElse(null));
         return this;
     }
 
@@ -55,13 +60,16 @@ public class JarIndexer implements JarIndexerService, Opcodes {
         for (String className : scope) {
             ClassNode node = classProvider.get(className);
             if (node != null) {
-                visitClassNode(node);
+                this.visitClassNode(node);
+                this.simpleTypeSingleIndex.visitClassNode(classProvider, node);
             }
         }
 
         if (!disableEnumFieldsIndexing) {
             enumFieldsIndex.findFieldNames();
         }
+
+        this.simpleTypeSingleIndex.dropCache();
     }
 
     private void visitClassNode(ClassNode node) {
@@ -96,5 +104,9 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 
     public LoggerIndex getLoggerIndex() {
         return this.loggerIndex;
+    }
+
+    public SimpleTypeSingleIndex getSimpleTypeSingleIndex() {
+        return this.simpleTypeSingleIndex;
     }
 }

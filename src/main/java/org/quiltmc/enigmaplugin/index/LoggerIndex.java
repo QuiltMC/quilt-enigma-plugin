@@ -19,18 +19,18 @@ package org.quiltmc.enigmaplugin.index;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.quiltmc.enigmaplugin.util.AsmUtil;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class LoggerIndex implements Opcodes {
+public class LoggerIndex implements Index {
     private static final String LOGGER_TYPE = "Lorg/slf4j/Logger;";
 
     private final Set<FieldEntry> fields = new HashSet<>();
 
+    @Override
     public void visitClassNode(ClassNode parent) {
         var parentEntry = new ClassEntry(parent.name);
 

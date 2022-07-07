@@ -37,6 +37,10 @@ public class NameProposerService implements NameProposalService {
         this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
         this.addIfEnabled(context, Arguments.DISABLE_LOGGER, () -> new LoggerNameProposer(indexer.getLoggerIndex()));
         this.addIfEnabled(context, Arguments.DISABLE_CODECS, () -> new CodecNameProposer(indexer.getCodecIndex()));
+
+        if (indexer.getSimpleTypeSingleIndex().isEnabled()) {
+            this.nameProposers.add(new SimpleTypeFieldNameProposer(indexer.getSimpleTypeSingleIndex()));
+        }
     }
 
     private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer<?>> factory) {

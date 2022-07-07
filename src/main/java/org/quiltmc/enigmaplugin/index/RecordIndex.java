@@ -38,7 +38,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class RecordIndex implements Opcodes {
+public class RecordIndex implements Index {
     private static final Handle TO_STRING_HANDLE = new Handle(H_INVOKESTATIC, "java/lang/runtime/ObjectMethods", "bootstrap", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;", false);
     private static final Handle HASH_CODE_HANDLE = new Handle(H_INVOKESTATIC, "java/lang/runtime/ObjectMethods", "bootstrap", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;", false);
     private static final Handle EQUALS_HANDLE = new Handle(H_INVOKESTATIC, "java/lang/runtime/ObjectMethods", "bootstrap", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;", false);
@@ -172,6 +172,7 @@ public class RecordIndex implements Opcodes {
         return null;
     }
 
+    @Override
     public void visitClassNode(ClassNode node) {
         ClassEntry classEntry = getClassEntry(node);
         if (records.containsKey(classEntry) && records.get(classEntry).hasComponents()) {
