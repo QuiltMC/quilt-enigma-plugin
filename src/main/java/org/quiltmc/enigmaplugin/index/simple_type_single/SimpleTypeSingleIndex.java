@@ -34,7 +34,7 @@ import org.objectweb.asm.tree.ParameterNode;
 import org.quiltmc.enigmaplugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Name;
 import org.quiltmc.enigmaplugin.util.AsmUtil;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -47,13 +47,13 @@ public class SimpleTypeSingleIndex implements Opcodes {
     private final Map<ClassNode, Map<String, FieldBuildingEntry>> fieldCache = new HashMap<>();
     private SimpleTypeFieldNamesRegistry registry;
 
-    public void loadRegistry(String path) {
+    public void loadRegistry(Path path) {
         if (path == null) {
             this.registry = null;
             return;
         }
 
-        this.registry = new SimpleTypeFieldNamesRegistry(Paths.get(path));
+        this.registry = new SimpleTypeFieldNamesRegistry(path);
         this.registry.read();
     }
 

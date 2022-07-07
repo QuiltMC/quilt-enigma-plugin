@@ -50,7 +50,8 @@ public class JarIndexer implements JarIndexerService, Opcodes {
                 .orElse(List.of());
         this.codecIndex.addCustomCodecs(codecs);
 
-        this.simpleTypeSingleIndex.loadRegistry(context.getArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH).orElse(null));
+        this.simpleTypeSingleIndex.loadRegistry(context.getArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
+                .map(context::getPath).orElse(null));
         return this;
     }
 
