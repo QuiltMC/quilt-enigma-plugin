@@ -193,7 +193,9 @@ public class SimpleTypeSingleIndex implements Opcodes {
                                                                           Type[] argTypes) {
         var knownParameters = new HashMap<String, ParameterBuildingEntry>();
 
-        for (int index = 0; index < method.parameters.size(); index++) {
+        for (int index = 0, lvtIndex = 0; index < method.parameters.size(); index++) {
+            if (index > 0) lvtIndex += argTypes[index - 1].getSize();
+
             if (bannedTypes.contains(argTypes[index])) continue;
 
             ParameterNode node = method.parameters.get(index);
@@ -214,7 +216,7 @@ public class SimpleTypeSingleIndex implements Opcodes {
                     Name foundFallback = entry.findFallback(fallback -> !knownParameters.containsKey(fallback.local()));
 
                     if (foundFallback != null) {
-                        knownParameters.put(foundFallback.local(), new ParameterBuildingEntry(node, index, entry));
+                        knownParameters.put(foundFallback.local(), new ParameterBuildingEntry(node, lvtIndex, entry));
 
                         if (!existingEntry.isNull() && existingEntry.entry().exclusive()) {
                             Name replacement = existingEntry.entry().findFallback(
@@ -233,7 +235,7 @@ public class SimpleTypeSingleIndex implements Opcodes {
                         knownParameters.put(entry.name().local(), ParameterBuildingEntry.createNull(entry));
                     }
                 } else {
-                    knownParameters.put(entry.name().local(), new ParameterBuildingEntry(node, index, entry));
+                    knownParameters.put(entry.name().local(), new ParameterBuildingEntry(node, lvtIndex, entry));
                 }
             }
         }
