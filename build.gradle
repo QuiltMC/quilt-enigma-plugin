@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'maven-publish'
-    id 'org.quiltmc.gradle.licenser' version '1.1.1'
+    id 'org.quiltmc.gradle.licenser' version '1.+'
 }
 
 version '1.2.1'
@@ -21,13 +21,13 @@ repositories {
 }
 
 dependencies {
-    implementation "org.ow2.asm:asm:9.3"
-    implementation "org.ow2.asm:asm-commons:9.3"
-    implementation "org.ow2.asm:asm-tree:9.3"
-    implementation "org.ow2.asm:asm-util:9.3"
+    implementation "org.ow2.asm:asm:${project.asm}"
+    implementation "org.ow2.asm:asm-commons:${project.asm}"
+    implementation "org.ow2.asm:asm-tree:${project.asm}"
+    implementation "org.ow2.asm:asm-util:${project.asm}"
     implementation "cuchaz:enigma:${enigma_version}"
-    implementation "org.quiltmc:quilt-json5:1.0.1"
-    implementation "org.jetbrains:annotations:23.0.0"
+    implementation "org.quiltmc:quilt-json5:${project.quilt_json5}"
+    implementation "org.jetbrains:annotations:${project.annotations}"
 
     testImplementation "cuchaz:enigma-swing:${enigma_version}"
 }
