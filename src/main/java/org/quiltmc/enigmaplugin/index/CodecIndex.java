@@ -105,15 +105,15 @@ public class CodecIndex implements Index {
                 for (int j = frame.getStackSize() - 1; j >= 0; j--) {// Start searching from the top of the stack
                     SourceValue value = frame.getStack(j);
                     for (AbstractInsnNode insn2 : value.insns) {
-                        if (insn2 instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String) {
-                            name = (String) ldcInsn.cst;
+                        if (insn2 instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String s && !s.isBlank()) {
+                            name = s;
                             // System.out.println("Found name \"" + name + "\"");
                             break stackFor;
                         }
                     }
                 }
 
-                if (name == null) {
+                if (name == null || name.isBlank()) {
                     continue;
                 }
 
