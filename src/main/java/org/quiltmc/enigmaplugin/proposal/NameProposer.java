@@ -29,6 +29,6 @@ public interface NameProposer<E extends Entry<?>> {
 	E upcast(Entry<?> entry);
 
 	default Optional<String> proposeName(Entry<?> entry, EntryRemapper remapper) {
-		return doProposeName(upcast(entry), remapper);
+		return this.doProposeName(this.upcast(entry), remapper);
 	}
 }

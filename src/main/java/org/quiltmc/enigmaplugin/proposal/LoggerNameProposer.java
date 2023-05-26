@@ -19,6 +19,7 @@ package org.quiltmc.enigmaplugin.proposal;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigmaplugin.index.JarIndexer;
 import org.quiltmc.enigmaplugin.index.LoggerIndex;
 
 import java.util.Optional;
@@ -26,8 +27,8 @@ import java.util.Optional;
 public class LoggerNameProposer implements NameProposer<FieldEntry> {
 	private final LoggerIndex index;
 
-	public LoggerNameProposer(LoggerIndex index) {
-		this.index = index;
+	public LoggerNameProposer(JarIndexer index) {
+		this.index = index.getLoggerIndex();
 	}
 
 	@Override

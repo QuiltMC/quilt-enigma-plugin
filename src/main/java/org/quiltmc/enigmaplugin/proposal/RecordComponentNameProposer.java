@@ -18,6 +18,7 @@ package org.quiltmc.enigmaplugin.proposal;
 
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.*;
+import org.quiltmc.enigmaplugin.index.JarIndexer;
 import org.quiltmc.enigmaplugin.index.RecordIndex;
 
 import java.util.Optional;
@@ -25,8 +26,8 @@ import java.util.Optional;
 public class RecordComponentNameProposer implements NameProposer<Entry<?>> {
 	private final RecordIndex index;
 
-	public RecordComponentNameProposer(RecordIndex index) {
-		this.index = index;
+	public RecordComponentNameProposer(JarIndexer index) {
+		this.index = index.getRecordIndex();
 	}
 
 	@Override

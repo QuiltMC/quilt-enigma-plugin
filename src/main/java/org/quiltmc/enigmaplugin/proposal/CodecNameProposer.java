@@ -21,14 +21,15 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigmaplugin.index.CodecIndex;
+import org.quiltmc.enigmaplugin.index.JarIndexer;
 
 import java.util.Optional;
 
 public class CodecNameProposer implements NameProposer<Entry<?>> {
 	private final CodecIndex index;
 
-	public CodecNameProposer(CodecIndex index) {
-		this.index = index;
+	public CodecNameProposer(JarIndexer index) {
+		this.index = index.getCodecIndex();
 	}
 
 	@Override

@@ -19,6 +19,7 @@ package org.quiltmc.enigmaplugin.proposal;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigmaplugin.index.JarIndexer;
 import org.quiltmc.enigmaplugin.index.enumfields.EnumFieldsIndex;
 
 import java.util.Optional;
@@ -26,8 +27,8 @@ import java.util.Optional;
 public class EnumFieldNameProposer implements NameProposer<FieldEntry> {
 	private final EnumFieldsIndex enumIndex;
 
-	public EnumFieldNameProposer(EnumFieldsIndex enumIndex) {
-		this.enumIndex = enumIndex;
+	public EnumFieldNameProposer(JarIndexer index) {
+		this.enumIndex = index.getEnumFieldsIndex();
 	}
 
 	@Override

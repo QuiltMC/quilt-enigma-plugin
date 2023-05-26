@@ -26,26 +26,31 @@ import org.quiltmc.enigmaplugin.index.JarIndexer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class NameProposerService implements NameProposalService {
 	private final List<NameProposer<?>> nameProposers = new ArrayList<>();
 
 	public NameProposerService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
-		this.addIfEnabled(context, Arguments.DISABLE_RECORDS, () -> new RecordComponentNameProposer(indexer.getRecordIndex()));
-		this.addIfEnabled(context, Arguments.DISABLE_ENUM_FIELDS, () -> new EnumFieldNameProposer(indexer.getEnumFieldsIndex()));
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_RECORDS, RecordComponentNameProposer::new);
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_ENUM_FIELDS, EnumFieldNameProposer::new);
 		this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
-		this.addIfEnabled(context, Arguments.DISABLE_LOGGER, () -> new LoggerNameProposer(indexer.getLoggerIndex()));
-		this.addIfEnabled(context, Arguments.DISABLE_CODECS, () -> new CodecNameProposer(indexer.getCodecIndex()));
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_LOGGER, LoggerNameProposer::new);
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_CODECS, CodecNameProposer::new);
 
 		if (indexer.getSimpleTypeSingleIndex().isEnabled()) {
-			this.nameProposers.add(new SimpleTypeFieldNameProposer(indexer.getSimpleTypeSingleIndex()));
+			this.nameProposers.add(new SimpleTypeFieldNameProposer(indexer));
 		}
 	}
 
 	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer<?>> factory) {
+		this.addIfEnabled(context, null, name, indexer -> factory.get());
+	}
+
+	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, JarIndexer indexer, String name, Function<JarIndexer, NameProposer<?>> factory) {
 		if (!Arguments.isDisabled(context, name)) {
-			this.nameProposers.add(factory.get());
+			this.nameProposers.add(factory.apply(indexer));
 		}
 	}
 

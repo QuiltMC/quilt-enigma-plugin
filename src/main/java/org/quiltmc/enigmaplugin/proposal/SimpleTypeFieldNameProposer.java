@@ -20,6 +20,7 @@ import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
+import org.quiltmc.enigmaplugin.index.JarIndexer;
 import org.quiltmc.enigmaplugin.index.simple_type_single.SimpleTypeSingleIndex;
 import org.quiltmc.enigmaplugin.index.simple_type_single.SimpleTypeSingleIndex.ParameterEntry;
 
@@ -28,8 +29,8 @@ import java.util.Optional;
 public class SimpleTypeFieldNameProposer implements NameProposer<Entry<?>> {
 	private final SimpleTypeSingleIndex index;
 
-	public SimpleTypeFieldNameProposer(SimpleTypeSingleIndex index) {
-		this.index = index;
+	public SimpleTypeFieldNameProposer(JarIndexer index) {
+		this.index = index.getSimpleTypeSingleIndex();
 	}
 
 	@Override

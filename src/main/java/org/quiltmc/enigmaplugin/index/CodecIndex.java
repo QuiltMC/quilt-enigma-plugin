@@ -93,9 +93,10 @@ public class CodecIndex implements Index {
 	private void visitMethodNode(ClassNode parent, MethodNode node) throws AnalyzerException {
 		Frame<SourceValue>[] frames = analyzer.analyze(parent.name, node);
 		InsnList instructions = node.instructions;
+
 		for (int i = 1; i < instructions.size() && i < frames.length - 1; i++) {
 			AbstractInsnNode insn = instructions.get(i);
-			if (insn instanceof MethodInsnNode mInsn && isCodecFieldMethod(mInsn)) {
+			if (insn instanceof MethodInsnNode mInsn && this.isCodecFieldMethod(mInsn)) {
 				// System.out.println(mInsn.getOpcode() + " " + mInsn.owner + "." + mInsn.name + " " + mInsn.desc + " in " + parent.name + "." + node.name + " " + node.desc + " (" + i + ")");
 				Frame<SourceValue> frame = frames[i];
 
@@ -151,7 +152,7 @@ public class CodecIndex implements Index {
 							}
 
 							// System.out.println("Found getter call " + getterInvokeInsn.bsm + " (" + (j - 1) + ")");
-							visitGetterInvokeDynamicInsn(parent, getterInvokeInsn, name);
+							this.visitGetterInvokeDynamicInsn(parent, getterInvokeInsn, name);
 							break;
 						} else {
 							// Update the codec field insn if needed
@@ -175,7 +176,7 @@ public class CodecIndex implements Index {
 
 							Type[] args = type.getArgumentTypes();
 							for (int k = 0; k < args.length; k++) {
-								if (args[k].getSort() != Type.OBJECT || !isCodecClass(args[k].getInternalName())) {
+								if (args[k].getSort() != Type.OBJECT || !this.isCodecClass(args[k].getInternalName())) {
 									continue;
 								}
 
@@ -203,11 +204,11 @@ public class CodecIndex implements Index {
 			return;
 		}
 
-		ClassEntry parentEntry = new ClassEntry(parent.name);
+		var parentEntry = new ClassEntry(parent.name);
 		String camelCaseName = CasingUtil.toCamelCase(name);
 		String getterName = "get" + camelCaseName.substring(0, 1).toUpperCase() + camelCaseName.substring(1);
 		if (getterHandle.getTag() == H_INVOKEVIRTUAL) {
-			MethodEntry entry = new MethodEntry(parentEntry, getterHandle.getName(), new MethodDescriptor(getterHandle.getDesc()));
+			var entry = new MethodEntry(parentEntry, getterHandle.getName(), new MethodDescriptor(getterHandle.getDesc()));
 			methodNames.put(entry, getterName);
 		} else if (getterHandle.getTag() == H_INVOKESTATIC) {
 			MethodNode method = null;
@@ -235,10 +236,10 @@ public class CodecIndex implements Index {
 			}
 
 			if (fieldInsn != null) {
-				FieldEntry entry = new FieldEntry(parentEntry, fieldInsn.name, new TypeDescriptor(fieldInsn.desc));
+				var entry = new FieldEntry(parentEntry, fieldInsn.name, new TypeDescriptor(fieldInsn.desc));
 				fieldNames.put(entry, camelCaseName);
 			} else if (methodInsn != null) {
-				MethodEntry entry = new MethodEntry(parentEntry, methodInsn.name, new MethodDescriptor(methodInsn.desc));
+				var entry = new MethodEntry(parentEntry, methodInsn.name, new MethodDescriptor(methodInsn.desc));
 				methodNames.put(entry, getterName);
 			}
 		}

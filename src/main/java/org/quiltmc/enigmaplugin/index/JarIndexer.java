@@ -65,25 +65,25 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 			}
 		}
 
-		if (!disableEnumFieldsIndexing) {
-			enumFieldsIndex.findFieldNames();
+		if (!this.disableEnumFieldsIndexing) {
+			this.enumFieldsIndex.findFieldNames();
 		}
 
 		this.simpleTypeSingleIndex.dropCache();
 	}
 
 	private void visitClassNode(ClassNode node) {
-		if (!disableRecordIndexing) {
+		if (!this.disableRecordIndexing) {
 			if ((node.access & ACC_RECORD) != 0 || node.superName.equals("java/lang/Record")) {
-				recordIndex.visitClassNode(node);
+				this.recordIndex.visitClassNode(node);
 			}
 		}
 
-		if (!disableEnumFieldsIndexing) {
-			enumFieldsIndex.visitClassNode(node);
+		if (!this.disableEnumFieldsIndexing) {
+			this.enumFieldsIndex.visitClassNode(node);
 		}
-		if (!disableCodecsIndexing) {
-			codecIndex.visitClassNode(node);
+		if (!this.disableCodecsIndexing) {
+			this.codecIndex.visitClassNode(node);
 		}
 		if (!this.disableLoggerIndexing) {
 			loggerIndex.visitClassNode(node);
