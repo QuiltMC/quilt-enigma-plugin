@@ -17,7 +17,10 @@
 package org.quiltmc.enigmaplugin.proposal;
 
 import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 import org.quiltmc.enigmaplugin.index.RecordIndex;
 
@@ -31,21 +34,10 @@ public class RecordComponentNameProposer implements NameProposer<Entry<?>> {
 	}
 
 	@Override
-	public Optional<String> doProposeName(Entry<?> entry, EntryRemapper remapper) {
+	public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
 		if (entry instanceof FieldEntry fieldEntry) {
 			ClassEntry parent = fieldEntry.getParent();
 			return Optional.ofNullable(index.getFieldName(parent, fieldEntry));
-		} else if (entry instanceof LocalVariableEntry localVariableEntry) {
-			MethodEntry parent = localVariableEntry.getParent();
-			if (parent != null) {
-				String methodName = parent.getName();
-				if (methodName.equals("<init>")) {
-					ClassEntry parentClass = parent.getParent();
-					if (parent.getDesc().toString().equals(index.getCanonicalConstructorDescriptor(parentClass))) {
-						return Optional.ofNullable(index.getInitParamName(parentClass, localVariableEntry.getIndex()));
-					}
-				}
-			}
 		} else if (entry instanceof MethodEntry methodEntry) {
 			ClassEntry parent = methodEntry.getParent();
 			return Optional.ofNullable(index.getAccessorMethodName(parent, methodEntry));
@@ -59,13 +51,6 @@ public class RecordComponentNameProposer implements NameProposer<Entry<?>> {
 		ClassEntry classEntry;
 		if (entry instanceof FieldEntry fieldEntry) {
 			classEntry = fieldEntry.getParent();
-		} else if (entry instanceof LocalVariableEntry localVariableEntry) {
-			MethodEntry parent = localVariableEntry.getParent();
-			if (parent == null) {
-				return false;
-			}
-
-			classEntry = parent.getParent();
 		} else if (entry instanceof MethodEntry methodEntry) {
 			classEntry = methodEntry.getParent();
 		} else {

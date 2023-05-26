@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 QuiltMC
+ * Copyright 2023 QuiltMC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,31 +19,35 @@ package org.quiltmc.enigmaplugin.proposal;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
+import org.quiltmc.enigmaplugin.index.ConstructorParametersIndex;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
-import org.quiltmc.enigmaplugin.index.LoggerIndex;
 
 import java.util.Optional;
 
-public class LoggerNameProposer implements NameProposer<FieldEntry> {
-	private final LoggerIndex index;
+public class ConstructorParamsNameProposer implements NameProposer<LocalVariableEntry> {
+	private final ConstructorParametersIndex index;
 
-	public LoggerNameProposer(JarIndexer index) {
-		this.index = index.getLoggerIndex();
+	public ConstructorParamsNameProposer(JarIndexer index) {
+		this.index = index.getConstructorParametersIndex();
 	}
 
 	@Override
-	public Optional<String> doProposeName(FieldEntry entry, NameProposerService service,EntryRemapper remapper) {
-		return Optional.of("LOGGER");
+	public Optional<String> doProposeName(LocalVariableEntry entry, NameProposerService service, EntryRemapper remapper) {
+		FieldEntry linkedField = this.index.getLinkedField(entry);
+
+		var newName = service.getMappedFieldName(remapper, linkedField);
+
+		return Optional.ofNullable(newName);
 	}
 
 	@Override
 	public boolean canPropose(Entry<?> entry) {
-		return entry instanceof FieldEntry fieldEntry
-				&& this.index.hasField(fieldEntry);
+		return entry instanceof LocalVariableEntry paramEntry && this.index.getLinkedField(paramEntry) != null;
 	}
 
 	@Override
-	public FieldEntry upcast(Entry<?> entry) {
-		return (FieldEntry) entry;
+	public LocalVariableEntry upcast(Entry<?> entry) {
+		return (LocalVariableEntry) entry;
 	}
 }

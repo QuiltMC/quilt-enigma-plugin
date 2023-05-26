@@ -28,7 +28,7 @@ public class EqualsNameProposer implements NameProposer<LocalVariableEntry> {
 	private static final MethodDescriptor EQUALS_DESCRIPTOR = new MethodDescriptor("(Ljava/lang/Object;)Z");
 
 	@Override
-	public Optional<String> doProposeName(LocalVariableEntry entry, EntryRemapper remapper) {
+	public Optional<String> doProposeName(LocalVariableEntry entry, NameProposerService service,EntryRemapper remapper) {
 		return Optional.of("o");
 	}
 

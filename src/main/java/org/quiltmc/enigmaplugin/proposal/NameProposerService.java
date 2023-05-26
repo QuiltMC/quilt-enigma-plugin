@@ -20,16 +20,19 @@ import cuchaz.enigma.api.service.EnigmaServiceContext;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigmaplugin.Arguments;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class NameProposerService implements NameProposalService {
+	/**
+	 * Represents a cache of the successful proposed field names.
+	 */
+	private final Map<FieldEntry, String> namedFields = new WeakHashMap<>();
 	private final List<NameProposer<?>> nameProposers = new ArrayList<>();
 
 	public NameProposerService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
@@ -42,6 +45,9 @@ public class NameProposerService implements NameProposalService {
 		if (indexer.getSimpleTypeSingleIndex().isEnabled()) {
 			this.nameProposers.add(new SimpleTypeFieldNameProposer(indexer));
 		}
+
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_CONSTRUCTOR_PARAMS, ConstructorParamsNameProposer::new);
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_GETTER_SETTER, GetterSetterNameProposer::new);
 	}
 
 	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer<?>> factory) {
@@ -54,13 +60,27 @@ public class NameProposerService implements NameProposalService {
 		}
 	}
 
+	public String getMappedFieldName(EntryRemapper remapper, FieldEntry field) {
+		var deobfedField = remapper.extendedDeobfuscate(field);
+
+		if (deobfedField != null && deobfedField.isDeobfuscated()) {
+			return deobfedField.getValue().getName();
+		} else {
+			return this.namedFields.get(field);
+		}
+	}
+
 	@Override
 	public Optional<String> proposeName(Entry<?> obfEntry, EntryRemapper remapper) {
 		Optional<String> name;
 		for (NameProposer<?> proposer : nameProposers) {
 			if (proposer.canPropose(obfEntry)) {
-				name = proposer.proposeName(obfEntry, remapper);
+				name = proposer.proposeName(obfEntry, this, remapper);
 				if (name.isPresent()) {
+					if (obfEntry instanceof FieldEntry fieldEntry) {
+						this.namedFields.put(fieldEntry, name.get());
+					}
+
 					return name;
 				}
 			}
