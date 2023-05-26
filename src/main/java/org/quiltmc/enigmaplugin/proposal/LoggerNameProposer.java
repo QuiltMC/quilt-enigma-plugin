@@ -32,7 +32,7 @@ public class LoggerNameProposer implements NameProposer<FieldEntry> {
 	}
 
 	@Override
-	public Optional<String> doProposeName(FieldEntry entry, NameProposerService service,EntryRemapper remapper) {
+	public Optional<String> doProposeName(FieldEntry entry, NameProposerService service, EntryRemapper remapper) {
 		return Optional.of("LOGGER");
 	}
 
