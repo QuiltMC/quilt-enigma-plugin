@@ -15,4 +15,4 @@ limitations under the License.
 
 ;;match_from: \/\/ ?[Ff][Aa][Bb][Rr][Ii][Cc]
 ;;match_from:  \* Copyright (\(c\) )?2016, 2017, 2018, 2019 FabricMC
-;;year_display: list
+;;year_display: creation_only

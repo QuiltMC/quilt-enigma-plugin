@@ -20,5 +20,5 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
 public interface Index extends Opcodes {
-    void visitClassNode(ClassNode classNode);
+	void visitClassNode(ClassNode classNode);
 }

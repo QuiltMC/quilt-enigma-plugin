@@ -24,17 +24,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class IndexTestUtil {
-    public static ClassNode getClassNode(String arg) {
-        Path path = Path.of(arg);
-        ClassNode node = new ClassNode();
-        try {
-            byte[] classFile = Files.readAllBytes(path);
-            ClassReader reader = new ClassReader(classFile);
-            reader.accept(node, 0);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read class file", e);
-        }
+	public static ClassNode getClassNode(String arg) {
+		Path path = Path.of(arg);
+		ClassNode node = new ClassNode();
+		try {
+			byte[] classFile = Files.readAllBytes(path);
+			ClassReader reader = new ClassReader(classFile);
+			reader.accept(node, 0);
+		} catch (IOException e) {
+			throw new RuntimeException("Failed to read class file", e);
+		}
 
-        return node;
-    }
+		return node;
+	}
 }

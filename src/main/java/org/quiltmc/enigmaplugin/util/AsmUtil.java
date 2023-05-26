@@ -19,17 +19,17 @@ package org.quiltmc.enigmaplugin.util;
 import org.objectweb.asm.tree.FieldNode;
 
 public class AsmUtil {
-    public static boolean maskMatch(int value, int... masks) {
-        boolean matched = true;
+	public static boolean maskMatch(int value, int... masks) {
+		boolean matched = true;
 
-        for (int mask : masks) {
-            matched &= (value & mask) != 0;
-        }
+		for (int mask : masks) {
+			matched &= (value & mask) != 0;
+		}
 
-        return matched;
-    }
+		return matched;
+	}
 
-    public static boolean matchAccess(FieldNode node, int... masks) {
-        return maskMatch(node.access, masks);
-    }
+	public static boolean matchAccess(FieldNode node, int... masks) {
+		return maskMatch(node.access, masks);
+	}
 }

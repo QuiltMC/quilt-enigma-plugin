@@ -24,24 +24,24 @@ import org.quiltmc.enigmaplugin.index.enumfields.EnumFieldsIndex;
 import java.util.Optional;
 
 public class EnumFieldNameProposer implements NameProposer<FieldEntry> {
-    private final EnumFieldsIndex enumIndex;
+	private final EnumFieldsIndex enumIndex;
 
-    public EnumFieldNameProposer(EnumFieldsIndex enumIndex) {
-        this.enumIndex = enumIndex;
-    }
+	public EnumFieldNameProposer(EnumFieldsIndex enumIndex) {
+		this.enumIndex = enumIndex;
+	}
 
-    @Override
-    public Optional<String> doProposeName(FieldEntry entry, EntryRemapper remapper) {
-        return Optional.ofNullable(enumIndex.getName(entry));
-    }
+	@Override
+	public Optional<String> doProposeName(FieldEntry entry, EntryRemapper remapper) {
+		return Optional.ofNullable(enumIndex.getName(entry));
+	}
 
-    @Override
-    public boolean canPropose(Entry<?> entry) {
-        return entry instanceof FieldEntry;
-    }
+	@Override
+	public boolean canPropose(Entry<?> entry) {
+		return entry instanceof FieldEntry;
+	}
 
-    @Override
-    public FieldEntry upcast(Entry<?> entry) {
-        return (FieldEntry) entry;
-    }
+	@Override
+	public FieldEntry upcast(Entry<?> entry) {
+		return (FieldEntry) entry;
+	}
 }

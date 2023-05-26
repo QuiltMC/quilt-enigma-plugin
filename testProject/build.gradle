@@ -1,38 +1,38 @@
 buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.guardsquare:proguard-gradle:7.2.1'
-    }
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath 'com.guardsquare:proguard-gradle:7.2.1'
+	}
 }
 
 plugins {
-    id 'java'
+	id 'java'
 }
 
 configurations {
-    enigmaRuntime
+	enigmaRuntime
 }
 
 repositories {
-    mavenCentral()
-    maven {
-        name 'Quilt Repository'
-        url 'https://maven.quiltmc.org/repository/release'
-    }
-    maven {
-        name 'Minecraft Libraries'
-        url 'https://libraries.minecraft.net'
-    }
+	mavenCentral()
+	maven {
+		name 'Quilt Repository'
+		url 'https://maven.quiltmc.org/repository/release'
+	}
+	maven {
+		name 'Minecraft Libraries'
+		url 'https://libraries.minecraft.net'
+	}
 }
 
 dependencies {
-    implementation "com.mojang:datafixerupper:4.1.27"
+	implementation "com.mojang:datafixerupper:4.1.27"
 
-    enigmaRuntime "cuchaz:enigma:${enigma_version}"
-    enigmaRuntime "cuchaz:enigma-swing:${enigma_version}"
-    enigmaRuntime rootProject
+	enigmaRuntime "cuchaz:enigma:${enigma_version}"
+	enigmaRuntime "cuchaz:enigma-swing:${enigma_version}"
+	enigmaRuntime rootProject
 }
 
 var outputJar = file('output/obf.jar')
@@ -40,34 +40,34 @@ var mappings = file('mappings/')
 var profile = file('profile.json')
 
 task testEnigma(type: JavaExec, dependsOn: "obfuscate") {
-    mainClass = "cuchaz.enigma.gui.Main"
-    classpath = configurations.enigmaRuntime
+	mainClass = "cuchaz.enigma.gui.Main"
+	classpath = configurations.enigmaRuntime
 
-    args('-jar', outputJar, '-mappings', mappings.getAbsolutePath(), '-profile', profile.getAbsolutePath())
-    doFirst {
-        mappings.mkdirs()
-    }
+	args('-jar', outputJar, '-mappings', mappings.getAbsolutePath(), '-profile', profile.getAbsolutePath())
+	doFirst {
+		mappings.mkdirs()
+	}
 }
 
 task obfuscate(type: proguard.gradle.ProGuardTask) {
-    verbose
-    injars jar
-    outjars outputJar
+	verbose
+	injars jar
+	outjars outputJar
 
-    libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
-    libraryjars sourceSets.main.compileClasspath
+	libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+	libraryjars sourceSets.main.compileClasspath
 
-    dontshrink()
-    dontoptimize()
-    keepclasseswithmembers 'public class * { \
-          public static void main(java.lang.String[]); \
-    }'
-    keepattributes 'SourceFile'
-    keepattributes '*Annotation*'
-    keepattributes 'InnerClasses'
-    keepattributes 'NestMembers'
-    keepattributes 'EnclosingMethod'
-    keepattributes 'Deprecated'
-    keepattributes 'Signature'
-    printmapping 'output/out.txt'
+	dontshrink()
+	dontoptimize()
+	keepclasseswithmembers 'public class * {\
+\t\tpublic static void main(java.lang.String[]);\
+\t}'
+	keepattributes 'SourceFile'
+	keepattributes '*Annotation*'
+	keepattributes 'InnerClasses'
+	keepattributes 'NestMembers'
+	keepattributes 'EnclosingMethod'
+	keepattributes 'Deprecated'
+	keepattributes 'Signature'
+	printmapping 'output/out.txt'
 }

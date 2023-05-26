@@ -22,46 +22,46 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CodecIndexTest {
-    public static void main(String[] args) {
-        if (args.length < 1) {
-            System.err.println("Usage: CodecIndexTest <path> [<customCodec>...]");
-            System.exit(1);
-        }
+	public static void main(String[] args) {
+		if (args.length < 1) {
+			System.err.println("Usage: CodecIndexTest <path> [<customCodec>...]");
+			System.exit(1);
+		}
 
-        ClassNode node = IndexTestUtil.getClassNode(args[0]);
+		ClassNode node = IndexTestUtil.getClassNode(args[0]);
 
-        CodecIndex index = new CodecIndex();
-        if (args.length > 1) {
-            List<String> customCodecs = Arrays.asList(args).subList(1, args.length);
-            index.addCustomCodecs(customCodecs);
-        }
+		CodecIndex index = new CodecIndex();
+		if (args.length > 1) {
+			List<String> customCodecs = Arrays.asList(args).subList(1, args.length);
+			index.addCustomCodecs(customCodecs);
+		}
 
-        index.visitClassNode(node);
+		index.visitClassNode(node);
 
-        dumpIndex(index);
-    }
+		dumpIndex(index);
+	}
 
-    private static void dumpIndex(CodecIndex index) {
-        System.out.println("CodecIndex");
-        if (index.hasCustomCodecs()) {
-            System.out.println("  Custom codecs:");
-            for (String codec : index.getCustomCodecs()) {
-                System.out.println("    " + codec);
-            }
-        }
+	private static void dumpIndex(CodecIndex index) {
+		System.out.println("CodecIndex");
+		if (index.hasCustomCodecs()) {
+			System.out.println("  Custom codecs:");
+			for (String codec : index.getCustomCodecs()) {
+				System.out.println("    " + codec);
+			}
+		}
 
-        System.out.println("\nFields:\n");
-        if (index.getFieldNames().isEmpty()) {
-            System.out.println("  No fields");
-        } else {
-            index.getFieldNames().forEach(((field, s) -> System.out.println(field + " " + s)));
-        }
+		System.out.println("\nFields:\n");
+		if (index.getFieldNames().isEmpty()) {
+			System.out.println("  No fields");
+		} else {
+			index.getFieldNames().forEach(((field, s) -> System.out.println(field + " " + s)));
+		}
 
-        System.out.println("\nMethods:\n");
-        if (index.getMethodNames().isEmpty()) {
-            System.out.println("  No methods");
-        } else {
-            index.getMethodNames().forEach(((method, s) -> System.out.println(method + " " + s)));
-        }
-    }
+		System.out.println("\nMethods:\n");
+		if (index.getMethodNames().isEmpty()) {
+			System.out.println("  No methods");
+		} else {
+			index.getMethodNames().forEach(((method, s) -> System.out.println(method + " " + s)));
+		}
+	}
 }

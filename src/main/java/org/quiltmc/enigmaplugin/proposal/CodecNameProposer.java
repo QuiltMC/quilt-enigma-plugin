@@ -25,29 +25,29 @@ import org.quiltmc.enigmaplugin.index.CodecIndex;
 import java.util.Optional;
 
 public class CodecNameProposer implements NameProposer<Entry<?>> {
-    private final CodecIndex index;
+	private final CodecIndex index;
 
-    public CodecNameProposer(CodecIndex index) {
-        this.index = index;
-    }
+	public CodecNameProposer(CodecIndex index) {
+		this.index = index;
+	}
 
-    @Override
-    public Optional<String> doProposeName(Entry<?> entry, EntryRemapper remapper) {
-        if (entry instanceof FieldEntry field && index.hasField(field)) {
-            return Optional.ofNullable(index.getFieldName(field));
-        } else if (entry instanceof MethodEntry method && index.hasMethod(method)) {
-            return Optional.ofNullable(index.getMethodName(method));
-        }
-        return Optional.empty();
-    }
+	@Override
+	public Optional<String> doProposeName(Entry<?> entry, EntryRemapper remapper) {
+		if (entry instanceof FieldEntry field && index.hasField(field)) {
+			return Optional.ofNullable(index.getFieldName(field));
+		} else if (entry instanceof MethodEntry method && index.hasMethod(method)) {
+			return Optional.ofNullable(index.getMethodName(method));
+		}
+		return Optional.empty();
+	}
 
-    @Override
-    public boolean canPropose(Entry<?> entry) {
-        return entry instanceof FieldEntry || entry instanceof MethodEntry;
-    }
+	@Override
+	public boolean canPropose(Entry<?> entry) {
+		return entry instanceof FieldEntry || entry instanceof MethodEntry;
+	}
 
-    @Override
-    public Entry<?> upcast(Entry<?> entry) {
-        return entry;
-    }
+	@Override
+	public Entry<?> upcast(Entry<?> entry) {
+		return entry;
+	}
 }

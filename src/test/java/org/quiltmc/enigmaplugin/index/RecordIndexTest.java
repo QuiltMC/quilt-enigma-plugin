@@ -23,40 +23,40 @@ import org.objectweb.asm.tree.ClassNode;
 import java.util.Map;
 
 public class RecordIndexTest {
-    public static void main(String[] args) {
-        if (args.length < 1) {
-            System.err.println("Usage: RecordIndexTest <path>");
-            System.exit(1);
-        }
+	public static void main(String[] args) {
+		if (args.length < 1) {
+			System.err.println("Usage: RecordIndexTest <path>");
+			System.exit(1);
+		}
 
-        ClassNode node = IndexTestUtil.getClassNode(args[0]);
+		ClassNode node = IndexTestUtil.getClassNode(args[0]);
 
-        RecordIndex index = new RecordIndex();
+		RecordIndex index = new RecordIndex();
 
-        index.visitClassNode(node);
+		index.visitClassNode(node);
 
-        dumpIndex(index);
-    }
+		dumpIndex(index);
+	}
 
-    private static void dumpIndex(RecordIndex index) {
-        System.out.println("RecordIndex");
+	private static void dumpIndex(RecordIndex index) {
+		System.out.println("RecordIndex");
 
-        Map<FieldEntry, String> fieldNames = index.getAllFieldNames();
-        System.out.println("\nFields:\n");
-        System.out.println("  " + fieldNames.size() + " fields");
-        if (fieldNames.isEmpty()) {
-            System.out.println("  No fields");
-        } else {
-            fieldNames.forEach(((field, s) -> System.out.println(field + " " + s)));
-        }
+		Map<FieldEntry, String> fieldNames = index.getAllFieldNames();
+		System.out.println("\nFields:\n");
+		System.out.println("  " + fieldNames.size() + " fields");
+		if (fieldNames.isEmpty()) {
+			System.out.println("  No fields");
+		} else {
+			fieldNames.forEach(((field, s) -> System.out.println(field + " " + s)));
+		}
 
-        Map<MethodEntry, String> methodNames = index.getAllMethodNames();
-        System.out.println("\nMethods:\n");
-        System.out.println("  " + methodNames.size() + " methods");
-        if (methodNames.isEmpty()) {
-            System.out.println("  No methods");
-        } else {
-            methodNames.forEach(((method, s) -> System.out.println(method + " " + s)));
-        }
-    }
+		Map<MethodEntry, String> methodNames = index.getAllMethodNames();
+		System.out.println("\nMethods:\n");
+		System.out.println("  " + methodNames.size() + " methods");
+		if (methodNames.isEmpty()) {
+			System.out.println("  No methods");
+		} else {
+			methodNames.forEach(((method, s) -> System.out.println(method + " " + s)));
+		}
+	}
 }

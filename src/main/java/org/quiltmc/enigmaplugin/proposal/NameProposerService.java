@@ -29,38 +29,38 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public class NameProposerService implements NameProposalService {
-    private final List<NameProposer<?>> nameProposers = new ArrayList<>();
+	private final List<NameProposer<?>> nameProposers = new ArrayList<>();
 
-    public NameProposerService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
-        this.addIfEnabled(context, Arguments.DISABLE_RECORDS, () -> new RecordComponentNameProposer(indexer.getRecordIndex()));
-        this.addIfEnabled(context, Arguments.DISABLE_ENUM_FIELDS, () -> new EnumFieldNameProposer(indexer.getEnumFieldsIndex()));
-        this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
-        this.addIfEnabled(context, Arguments.DISABLE_LOGGER, () -> new LoggerNameProposer(indexer.getLoggerIndex()));
-        this.addIfEnabled(context, Arguments.DISABLE_CODECS, () -> new CodecNameProposer(indexer.getCodecIndex()));
+	public NameProposerService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
+		this.addIfEnabled(context, Arguments.DISABLE_RECORDS, () -> new RecordComponentNameProposer(indexer.getRecordIndex()));
+		this.addIfEnabled(context, Arguments.DISABLE_ENUM_FIELDS, () -> new EnumFieldNameProposer(indexer.getEnumFieldsIndex()));
+		this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
+		this.addIfEnabled(context, Arguments.DISABLE_LOGGER, () -> new LoggerNameProposer(indexer.getLoggerIndex()));
+		this.addIfEnabled(context, Arguments.DISABLE_CODECS, () -> new CodecNameProposer(indexer.getCodecIndex()));
 
-        if (indexer.getSimpleTypeSingleIndex().isEnabled()) {
-            this.nameProposers.add(new SimpleTypeFieldNameProposer(indexer.getSimpleTypeSingleIndex()));
-        }
-    }
+		if (indexer.getSimpleTypeSingleIndex().isEnabled()) {
+			this.nameProposers.add(new SimpleTypeFieldNameProposer(indexer.getSimpleTypeSingleIndex()));
+		}
+	}
 
-    private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer<?>> factory) {
-        if (!Arguments.isDisabled(context, name)) {
-            this.nameProposers.add(factory.get());
-        }
-    }
+	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer<?>> factory) {
+		if (!Arguments.isDisabled(context, name)) {
+			this.nameProposers.add(factory.get());
+		}
+	}
 
-    @Override
-    public Optional<String> proposeName(Entry<?> obfEntry, EntryRemapper remapper) {
-        Optional<String> name;
-        for (NameProposer<?> proposer : nameProposers) {
-            if (proposer.canPropose(obfEntry)) {
-                name = proposer.proposeName(obfEntry, remapper);
-                if (name.isPresent()) {
-                    return name;
-                }
-            }
-        }
+	@Override
+	public Optional<String> proposeName(Entry<?> obfEntry, EntryRemapper remapper) {
+		Optional<String> name;
+		for (NameProposer<?> proposer : nameProposers) {
+			if (proposer.canPropose(obfEntry)) {
+				name = proposer.proposeName(obfEntry, remapper);
+				if (name.isPresent()) {
+					return name;
+				}
+			}
+		}
 
-        return Optional.empty();
-    }
+		return Optional.empty();
+	}
 }

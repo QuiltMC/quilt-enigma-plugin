@@ -23,15 +23,15 @@ import cuchaz.enigma.api.service.EnigmaServiceContext;
  * Contains all the keys of the arguments used by this plugin.
  */
 public class Arguments {
-    public static final String DISABLE_RECORDS = "disable_records";
-    public static final String DISABLE_ENUM_FIELDS = "disable_enum_fields";
-    public static final String DISABLE_EQUALS = "disable_equals";
-    public static final String DISABLE_LOGGER = "disable_logger";
-    public static final String DISABLE_CODECS = "disable_codecs";
-    public static final String CUSTOM_CODECS = "custom_codecs";
-    public static final String SIMPLE_TYPE_FIELD_NAMES_PATH = "simple_type_field_names_path";
+	public static final String DISABLE_RECORDS = "disable_records";
+	public static final String DISABLE_ENUM_FIELDS = "disable_enum_fields";
+	public static final String DISABLE_EQUALS = "disable_equals";
+	public static final String DISABLE_LOGGER = "disable_logger";
+	public static final String DISABLE_CODECS = "disable_codecs";
+	public static final String CUSTOM_CODECS = "custom_codecs";
+	public static final String SIMPLE_TYPE_FIELD_NAMES_PATH = "simple_type_field_names_path";
 
-    public static <T extends EnigmaService> boolean isDisabled(EnigmaServiceContext<T> context, String arg) {
-        return context.getArgument(arg).map(Boolean::parseBoolean).orElse(false);
-    }
+	public static <T extends EnigmaService> boolean isDisabled(EnigmaServiceContext<T> context, String arg) {
+		return context.getArgument(arg).map(Boolean::parseBoolean).orElse(false);
+	}
 }

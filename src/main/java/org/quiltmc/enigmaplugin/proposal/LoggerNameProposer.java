@@ -24,25 +24,25 @@ import org.quiltmc.enigmaplugin.index.LoggerIndex;
 import java.util.Optional;
 
 public class LoggerNameProposer implements NameProposer<FieldEntry> {
-    private final LoggerIndex index;
+	private final LoggerIndex index;
 
-    public LoggerNameProposer(LoggerIndex index) {
-        this.index = index;
-    }
+	public LoggerNameProposer(LoggerIndex index) {
+		this.index = index;
+	}
 
-    @Override
-    public Optional<String> doProposeName(FieldEntry entry, EntryRemapper remapper) {
-        return Optional.of("LOGGER");
-    }
+	@Override
+	public Optional<String> doProposeName(FieldEntry entry, EntryRemapper remapper) {
+		return Optional.of("LOGGER");
+	}
 
-    @Override
-    public boolean canPropose(Entry<?> entry) {
-        return entry instanceof FieldEntry fieldEntry
-                && this.index.hasField(fieldEntry);
-    }
+	@Override
+	public boolean canPropose(Entry<?> entry) {
+		return entry instanceof FieldEntry fieldEntry
+				&& this.index.hasField(fieldEntry);
+	}
 
-    @Override
-    public FieldEntry upcast(Entry<?> entry) {
-        return (FieldEntry) entry;
-    }
+	@Override
+	public FieldEntry upcast(Entry<?> entry) {
+		return (FieldEntry) entry;
+	}
 }

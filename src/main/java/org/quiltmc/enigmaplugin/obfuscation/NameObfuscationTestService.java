@@ -25,40 +25,40 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 public class NameObfuscationTestService implements ObfuscationTestService {
-    private static final String DEFAULT_PACKAGE = "net/minecraft/unmapped";
-    private static final String DEFAULT_CLASS_PREFIX = "C_";
-    private static final String DEFAULT_FIELD_PREFIX = "f_";
-    private static final String DEFAULT_METHOD_PREFIX = "m_";
-    @SuppressWarnings("FieldCanBeLocal")
-    private final String packagePrefix;
-    private final String classPrefix;
-    private final String fieldPrefix;
-    private final String methodPrefix;
-    private final String classPackagePrefix;
+	private static final String DEFAULT_PACKAGE = "net/minecraft/unmapped";
+	private static final String DEFAULT_CLASS_PREFIX = "C_";
+	private static final String DEFAULT_FIELD_PREFIX = "f_";
+	private static final String DEFAULT_METHOD_PREFIX = "m_";
+	@SuppressWarnings("FieldCanBeLocal")
+	private final String packagePrefix;
+	private final String classPrefix;
+	private final String fieldPrefix;
+	private final String methodPrefix;
+	private final String classPackagePrefix;
 
-    public NameObfuscationTestService(EnigmaServiceContext<ObfuscationTestService> context) {
-        packagePrefix = context.getArgument("package").orElse(DEFAULT_PACKAGE) + "/";
-        classPrefix = context.getArgument("classPrefix").orElse(DEFAULT_CLASS_PREFIX);
-        fieldPrefix = context.getArgument("fieldPrefix").orElse(DEFAULT_FIELD_PREFIX);
-        methodPrefix = context.getArgument("methodPrefix").orElse(DEFAULT_METHOD_PREFIX);
+	public NameObfuscationTestService(EnigmaServiceContext<ObfuscationTestService> context) {
+		packagePrefix = context.getArgument("package").orElse(DEFAULT_PACKAGE) + "/";
+		classPrefix = context.getArgument("classPrefix").orElse(DEFAULT_CLASS_PREFIX);
+		fieldPrefix = context.getArgument("fieldPrefix").orElse(DEFAULT_FIELD_PREFIX);
+		methodPrefix = context.getArgument("methodPrefix").orElse(DEFAULT_METHOD_PREFIX);
 
-        classPackagePrefix = packagePrefix + classPrefix;
-    }
+		classPackagePrefix = packagePrefix + classPrefix;
+	}
 
-    @Override
-    public boolean testDeobfuscated(Entry<?> entry) {
-        if (entry instanceof ClassEntry classEntry) {
-            String[] parts = classEntry.getFullName().split("\\$");
+	@Override
+	public boolean testDeobfuscated(Entry<?> entry) {
+		if (entry instanceof ClassEntry classEntry) {
+			String[] parts = classEntry.getFullName().split("\\$");
 
-            String lastPart = parts[parts.length - 1];
-            return !lastPart.startsWith(classPrefix) && !lastPart.startsWith(classPackagePrefix);
-        } else if (entry instanceof FieldEntry) {
-            return !entry.getName().startsWith(fieldPrefix);
-        } else if (entry instanceof MethodEntry) {
-            return !entry.getName().startsWith(methodPrefix);
-        } else {
-            // unknown type
-            return false;
-        }
-    }
+			String lastPart = parts[parts.length - 1];
+			return !lastPart.startsWith(classPrefix) && !lastPart.startsWith(classPackagePrefix);
+		} else if (entry instanceof FieldEntry) {
+			return !entry.getName().startsWith(fieldPrefix);
+		} else if (entry instanceof MethodEntry) {
+			return !entry.getName().startsWith(methodPrefix);
+		} else {
+			// unknown type
+			return false;
+		}
+	}
 }

@@ -26,31 +26,31 @@ import org.quiltmc.enigmaplugin.index.simple_type_single.SimpleTypeSingleIndex.P
 import java.util.Optional;
 
 public class SimpleTypeFieldNameProposer implements NameProposer<Entry<?>> {
-    private final SimpleTypeSingleIndex index;
+	private final SimpleTypeSingleIndex index;
 
-    public SimpleTypeFieldNameProposer(SimpleTypeSingleIndex index) {
-        this.index = index;
-    }
+	public SimpleTypeFieldNameProposer(SimpleTypeSingleIndex index) {
+		this.index = index;
+	}
 
-    @Override
-    public Optional<String> doProposeName(Entry<?> entry, EntryRemapper remapper) {
-        if (entry instanceof FieldEntry fieldEntry) {
-            return Optional.ofNullable(this.index.getField(fieldEntry));
-        } else if (entry instanceof LocalVariableEntry localVariableEntry) {
-            var paramEntry = ParameterEntry.fromLocalVariableEntry(localVariableEntry);
-            return Optional.ofNullable(this.index.getParam(paramEntry));
-        }
+	@Override
+	public Optional<String> doProposeName(Entry<?> entry, EntryRemapper remapper) {
+		if (entry instanceof FieldEntry fieldEntry) {
+			return Optional.ofNullable(this.index.getField(fieldEntry));
+		} else if (entry instanceof LocalVariableEntry localVariableEntry) {
+			var paramEntry = ParameterEntry.fromLocalVariableEntry(localVariableEntry);
+			return Optional.ofNullable(this.index.getParam(paramEntry));
+		}
 
-        return Optional.empty();
-    }
+		return Optional.empty();
+	}
 
-    @Override
-    public boolean canPropose(Entry<?> entry) {
-        return entry instanceof FieldEntry || entry instanceof LocalVariableEntry;
-    }
+	@Override
+	public boolean canPropose(Entry<?> entry) {
+		return entry instanceof FieldEntry || entry instanceof LocalVariableEntry;
+	}
 
-    @Override
-    public Entry<?> upcast(Entry<?> entry) {
-        return entry;
-    }
+	@Override
+	public Entry<?> upcast(Entry<?> entry) {
+		return entry;
+	}
 }

@@ -27,140 +27,140 @@ import java.util.*;
 import java.util.function.Predicate;
 
 public class SimpleTypeFieldNamesRegistry {
-    private final Path path;
-    /**
-     * Using a {@link LinkedHashMap} to ensure we keep the read order.
-     */
-    private final Map<String, Entry> entries = new LinkedHashMap<>();
+	private final Path path;
+	/**
+	 * Using a {@link LinkedHashMap} to ensure we keep the read order.
+	 */
+	private final Map<String, Entry> entries = new LinkedHashMap<>();
 
-    public SimpleTypeFieldNamesRegistry(Path path) {
-        this.path = path;
-    }
+	public SimpleTypeFieldNamesRegistry(Path path) {
+		this.path = path;
+	}
 
-    public @Nullable Entry getEntry(String type) {
-        return this.entries.get(type);
-    }
+	public @Nullable Entry getEntry(String type) {
+		return this.entries.get(type);
+	}
 
-    public void read() {
-        try (var reader = JsonReader.json5(this.path)) {
-            if (reader.peek() != JsonToken.BEGIN_OBJECT) {
-                return;
-            }
+	public void read() {
+		try (var reader = JsonReader.json5(this.path)) {
+			if (reader.peek() != JsonToken.BEGIN_OBJECT) {
+				return;
+			}
 
-            reader.beginObject();
+			reader.beginObject();
 
-            while (reader.hasNext()) {
-                String type = reader.nextName();
+			while (reader.hasNext()) {
+				String type = reader.nextName();
 
-                switch (reader.peek()) {
-                    case STRING -> {
-                        String localName = reader.nextString();
-                        this.entries.put(type, new Entry(type, localName, CasingUtil.toScreamingSnakeCase(localName)));
-                    }
-                    case BEGIN_OBJECT -> {
-                        String localName = null;
-                        String staticName = null;
-                        boolean exclusive = false;
-                        List<Name> fallback = Collections.emptyList();
+				switch (reader.peek()) {
+					case STRING -> {
+						String localName = reader.nextString();
+						this.entries.put(type, new Entry(type, localName, CasingUtil.toScreamingSnakeCase(localName)));
+					}
+					case BEGIN_OBJECT -> {
+						String localName = null;
+						String staticName = null;
+						boolean exclusive = false;
+						List<Name> fallback = Collections.emptyList();
 
-                        reader.beginObject();
+						reader.beginObject();
 
-                        while (reader.hasNext()) {
-                            String key = reader.nextName();
+						while (reader.hasNext()) {
+							String key = reader.nextName();
 
-                            switch (key) {
-                                case "local_name" -> localName = reader.nextString();
-                                case "static_name" -> staticName = reader.nextString();
-                                case "exclusive" -> exclusive = reader.nextBoolean();
-                                case "fallback" -> {
-                                    reader.beginArray();
+							switch (key) {
+								case "local_name" -> localName = reader.nextString();
+								case "static_name" -> staticName = reader.nextString();
+								case "exclusive" -> exclusive = reader.nextBoolean();
+								case "fallback" -> {
+									reader.beginArray();
 
-                                    fallback = this.collectFallbacks(reader, type);
+									fallback = this.collectFallbacks(reader, type);
 
-                                    reader.endArray();
-                                }
-                                default -> reader.skipValue();
-                            }
-                        }
+									reader.endArray();
+								}
+								default -> reader.skipValue();
+							}
+						}
 
-                        reader.endObject();
+						reader.endObject();
 
-                        if (localName == null) {
-                            System.err.println("Failed parsing local name for type " + type);
-                            break;
-                        }
+						if (localName == null) {
+							System.err.println("Failed parsing local name for type " + type);
+							break;
+						}
 
-                        if (staticName == null) staticName = CasingUtil.toScreamingSnakeCase(localName);
+						if (staticName == null) staticName = CasingUtil.toScreamingSnakeCase(localName);
 
-                        this.entries.put(type, new Entry(type, new Name(localName, staticName), exclusive, fallback));
-                    }
-                    default -> reader.skipValue();
-                }
-            }
+						this.entries.put(type, new Entry(type, new Name(localName, staticName), exclusive, fallback));
+					}
+					default -> reader.skipValue();
+				}
+			}
 
-            reader.endObject();
-        } catch (IOException e) {
-            System.err.println("Failed to read simple type field names registry.");
-            e.printStackTrace();
-        }
-    }
+			reader.endObject();
+		} catch (IOException e) {
+			System.err.println("Failed to read simple type field names registry.");
+			e.printStackTrace();
+		}
+	}
 
-    private List<Name> collectFallbacks(JsonReader reader, String type) throws IOException {
-        var list = new ArrayList<Name>();
+	private List<Name> collectFallbacks(JsonReader reader, String type) throws IOException {
+		var list = new ArrayList<Name>();
 
-        while (reader.hasNext()) {
-            switch (reader.peek()) {
-                case STRING -> {
-                    String name = reader.nextString();
-                    list.add(new Name(name, CasingUtil.toScreamingSnakeCase(name)));
-                }
-                case BEGIN_OBJECT -> {
-                    String localName = null;
-                    String staticName = null;
-                    reader.beginObject();
+		while (reader.hasNext()) {
+			switch (reader.peek()) {
+				case STRING -> {
+					String name = reader.nextString();
+					list.add(new Name(name, CasingUtil.toScreamingSnakeCase(name)));
+				}
+				case BEGIN_OBJECT -> {
+					String localName = null;
+					String staticName = null;
+					reader.beginObject();
 
-                    while (reader.hasNext()) {
-                        String key = reader.nextName();
+					while (reader.hasNext()) {
+						String key = reader.nextName();
 
-                        switch (key) {
-                            case "local_name" -> localName = reader.nextString();
-                            case "static_name" -> staticName = reader.nextString();
-                            default -> reader.skipValue();
-                        }
-                    }
+						switch (key) {
+							case "local_name" -> localName = reader.nextString();
+							case "static_name" -> staticName = reader.nextString();
+							default -> reader.skipValue();
+						}
+					}
 
-                    reader.endObject();
+					reader.endObject();
 
-                    if (localName == null) {
-                        System.err.println("Failed parsing fallback local name for type " + type);
-                        break;
-                    }
+					if (localName == null) {
+						System.err.println("Failed parsing fallback local name for type " + type);
+						break;
+					}
 
-                    if (staticName == null) staticName = CasingUtil.toScreamingSnakeCase(localName);
+					if (staticName == null) staticName = CasingUtil.toScreamingSnakeCase(localName);
 
-                    list.add(new Name(localName, staticName));
-                }
-            }
-        }
+					list.add(new Name(localName, staticName));
+				}
+			}
+		}
 
-        return list;
-    }
+		return list;
+	}
 
-    public record Entry(String type, Name name, boolean exclusive, List<Name> fallback) {
-        public Entry(String type, String localName, String staticName) {
-            this(type, new Name(localName, staticName), false, Collections.emptyList());
-        }
+	public record Entry(String type, Name name, boolean exclusive, List<Name> fallback) {
+		public Entry(String type, String localName, String staticName) {
+			this(type, new Name(localName, staticName), false, Collections.emptyList());
+		}
 
-        public @Nullable Name findFallback(Predicate<Name> predicate) {
-            for (var fallback : this.fallback) {
-                if (predicate.test(fallback))
-                    return fallback;
-            }
+		public @Nullable Name findFallback(Predicate<Name> predicate) {
+			for (var fallback : this.fallback) {
+				if (predicate.test(fallback))
+					return fallback;
+			}
 
-            return null;
-        }
-    }
+			return null;
+		}
+	}
 
-    public record Name(String local, String staticName) {
-    }
+	public record Name(String local, String staticName) {
+	}
 }

@@ -17,32 +17,32 @@
 package org.quiltmc.enigmaplugin.util;
 
 public class CasingUtil {
-    public static String toCamelCase(String name) {
-        // Make sure the first letter is lower case
-        name = Character.toLowerCase(name.charAt(0)) + name.substring(1);
-        while (name.contains("_")) {
-            name = name.replaceFirst("_[a-z]", String.valueOf(Character.toUpperCase(name.charAt(name.indexOf('_') + 1))));
-        }
-        return name;
-    }
+	public static String toCamelCase(String name) {
+		// Make sure the first letter is lower case
+		name = Character.toLowerCase(name.charAt(0)) + name.substring(1);
+		while (name.contains("_")) {
+			name = name.replaceFirst("_[a-z]", String.valueOf(Character.toUpperCase(name.charAt(name.indexOf('_') + 1))));
+		}
+		return name;
+	}
 
-    public static String toScreamingSnakeCase(String name) {
-        var builder = new StringBuilder();
+	public static String toScreamingSnakeCase(String name) {
+		var builder = new StringBuilder();
 
-        for (int i = 0; i < name.length(); i++) {
-            char c = name.charAt(i);
+		for (int i = 0; i < name.length(); i++) {
+			char c = name.charAt(i);
 
-            if (c == '_') {
-                builder.append(c);
-            } else {
-                if (Character.isUpperCase(c) && i != 0) {
-                    builder.append('_');
-                }
+			if (c == '_') {
+				builder.append(c);
+			} else {
+				if (Character.isUpperCase(c) && i != 0) {
+					builder.append('_');
+				}
 
-                builder.append(Character.toUpperCase(c));
-            }
-        }
+				builder.append(Character.toUpperCase(c));
+			}
+		}
 
-        return builder.toString();
-    }
+		return builder.toString();
+	}
 }

@@ -30,83 +30,83 @@ import java.util.List;
 import java.util.Set;
 
 public class JarIndexer implements JarIndexerService, Opcodes {
-    private final RecordIndex recordIndex = new RecordIndex();
-    private final EnumFieldsIndex enumFieldsIndex = new EnumFieldsIndex();
-    private final CodecIndex codecIndex = new CodecIndex();
-    private final LoggerIndex loggerIndex = new LoggerIndex();
-    private final SimpleTypeSingleIndex simpleTypeSingleIndex = new SimpleTypeSingleIndex();
-    private boolean disableRecordIndexing = false;
-    private boolean disableEnumFieldsIndexing = false;
-    private boolean disableCodecsIndexing = false;
-    private boolean disableLoggerIndexing = false;
+	private final RecordIndex recordIndex = new RecordIndex();
+	private final EnumFieldsIndex enumFieldsIndex = new EnumFieldsIndex();
+	private final CodecIndex codecIndex = new CodecIndex();
+	private final LoggerIndex loggerIndex = new LoggerIndex();
+	private final SimpleTypeSingleIndex simpleTypeSingleIndex = new SimpleTypeSingleIndex();
+	private boolean disableRecordIndexing = false;
+	private boolean disableEnumFieldsIndexing = false;
+	private boolean disableCodecsIndexing = false;
+	private boolean disableLoggerIndexing = false;
 
-    public JarIndexer withContext(EnigmaServiceContext<JarIndexerService> context) {
-        this.disableRecordIndexing = Arguments.isDisabled(context, Arguments.DISABLE_RECORDS);
-        this.disableEnumFieldsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_ENUM_FIELDS);
-        this.disableCodecsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CODECS);
-        this.disableLoggerIndexing = Arguments.isDisabled(context, Arguments.DISABLE_LOGGER);
+	public JarIndexer withContext(EnigmaServiceContext<JarIndexerService> context) {
+		this.disableRecordIndexing = Arguments.isDisabled(context, Arguments.DISABLE_RECORDS);
+		this.disableEnumFieldsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_ENUM_FIELDS);
+		this.disableCodecsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CODECS);
+		this.disableLoggerIndexing = Arguments.isDisabled(context, Arguments.DISABLE_LOGGER);
 
-        List<String> codecs = context.getArgument(Arguments.CUSTOM_CODECS).map(s -> List.of(s.split(",[\n ]*")))
-                .orElse(List.of());
-        this.codecIndex.addCustomCodecs(codecs);
+		List<String> codecs = context.getArgument(Arguments.CUSTOM_CODECS).map(s -> List.of(s.split(",[\n ]*")))
+				.orElse(List.of());
+		this.codecIndex.addCustomCodecs(codecs);
 
-        this.simpleTypeSingleIndex.loadRegistry(context.getArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
-                .map(context::getPath).orElse(null));
-        return this;
-    }
+		this.simpleTypeSingleIndex.loadRegistry(context.getArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
+				.map(context::getPath).orElse(null));
+		return this;
+	}
 
-    @Override
-    public void acceptJar(Set<String> scope, ClassProvider classProvider, JarIndex jarIndex) {
-        for (String className : scope) {
-            ClassNode node = classProvider.get(className);
-            if (node != null) {
-                this.visitClassNode(node);
-                this.simpleTypeSingleIndex.visitClassNode(classProvider, node);
-            }
-        }
+	@Override
+	public void acceptJar(Set<String> scope, ClassProvider classProvider, JarIndex jarIndex) {
+		for (String className : scope) {
+			ClassNode node = classProvider.get(className);
+			if (node != null) {
+				this.visitClassNode(node);
+				this.simpleTypeSingleIndex.visitClassNode(classProvider, node);
+			}
+		}
 
-        if (!disableEnumFieldsIndexing) {
-            enumFieldsIndex.findFieldNames();
-        }
+		if (!disableEnumFieldsIndexing) {
+			enumFieldsIndex.findFieldNames();
+		}
 
-        this.simpleTypeSingleIndex.dropCache();
-    }
+		this.simpleTypeSingleIndex.dropCache();
+	}
 
-    private void visitClassNode(ClassNode node) {
-        if (!disableRecordIndexing) {
-            if ((node.access & ACC_RECORD) != 0 || node.superName.equals("java/lang/Record")) {
-                recordIndex.visitClassNode(node);
-            }
-        }
+	private void visitClassNode(ClassNode node) {
+		if (!disableRecordIndexing) {
+			if ((node.access & ACC_RECORD) != 0 || node.superName.equals("java/lang/Record")) {
+				recordIndex.visitClassNode(node);
+			}
+		}
 
-        if (!disableEnumFieldsIndexing) {
-            enumFieldsIndex.visitClassNode(node);
-        }
-        if (!disableCodecsIndexing) {
-            codecIndex.visitClassNode(node);
-        }
-        if (!this.disableLoggerIndexing) {
-            loggerIndex.visitClassNode(node);
-        }
-    }
+		if (!disableEnumFieldsIndexing) {
+			enumFieldsIndex.visitClassNode(node);
+		}
+		if (!disableCodecsIndexing) {
+			codecIndex.visitClassNode(node);
+		}
+		if (!this.disableLoggerIndexing) {
+			loggerIndex.visitClassNode(node);
+		}
+	}
 
-    public RecordIndex getRecordIndex() {
-        return this.recordIndex;
-    }
+	public RecordIndex getRecordIndex() {
+		return this.recordIndex;
+	}
 
-    public EnumFieldsIndex getEnumFieldsIndex() {
-        return this.enumFieldsIndex;
-    }
+	public EnumFieldsIndex getEnumFieldsIndex() {
+		return this.enumFieldsIndex;
+	}
 
-    public CodecIndex getCodecIndex() {
-        return this.codecIndex;
-    }
+	public CodecIndex getCodecIndex() {
+		return this.codecIndex;
+	}
 
-    public LoggerIndex getLoggerIndex() {
-        return this.loggerIndex;
-    }
+	public LoggerIndex getLoggerIndex() {
+		return this.loggerIndex;
+	}
 
-    public SimpleTypeSingleIndex getSimpleTypeSingleIndex() {
-        return this.simpleTypeSingleIndex;
-    }
+	public SimpleTypeSingleIndex getSimpleTypeSingleIndex() {
+		return this.simpleTypeSingleIndex;
+	}
 }

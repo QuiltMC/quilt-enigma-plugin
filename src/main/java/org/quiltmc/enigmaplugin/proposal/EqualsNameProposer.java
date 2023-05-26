@@ -25,30 +25,30 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import java.util.Optional;
 
 public class EqualsNameProposer implements NameProposer<LocalVariableEntry> {
-    private static final MethodDescriptor EQUALS_DESCRIPTOR = new MethodDescriptor("(Ljava/lang/Object;)Z");
+	private static final MethodDescriptor EQUALS_DESCRIPTOR = new MethodDescriptor("(Ljava/lang/Object;)Z");
 
-    @Override
-    public Optional<String> doProposeName(LocalVariableEntry entry, EntryRemapper remapper) {
-        return Optional.of("o");
-    }
+	@Override
+	public Optional<String> doProposeName(LocalVariableEntry entry, EntryRemapper remapper) {
+		return Optional.of("o");
+	}
 
-    @Override
-    public boolean canPropose(Entry<?> entry) {
-        if (entry instanceof LocalVariableEntry localVar) {
-            MethodEntry parent = localVar.getParent();
-            if (parent == null) {
-                return false;
-            }
+	@Override
+	public boolean canPropose(Entry<?> entry) {
+		if (entry instanceof LocalVariableEntry localVar) {
+			MethodEntry parent = localVar.getParent();
+			if (parent == null) {
+				return false;
+			}
 
-            String methodName = parent.getName();
-            return methodName.equals("equals") && parent.getDesc().equals(EQUALS_DESCRIPTOR);
-        }
+			String methodName = parent.getName();
+			return methodName.equals("equals") && parent.getDesc().equals(EQUALS_DESCRIPTOR);
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    @Override
-    public LocalVariableEntry upcast(Entry<?> entry) {
-        return (LocalVariableEntry) entry;
-    }
+	@Override
+	public LocalVariableEntry upcast(Entry<?> entry) {
+		return (LocalVariableEntry) entry;
+	}
 }
