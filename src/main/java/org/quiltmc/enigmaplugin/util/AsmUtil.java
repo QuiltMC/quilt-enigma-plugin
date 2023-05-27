@@ -99,7 +99,7 @@ public class AsmUtil {
 
 		var fieldInsnNode = (FieldInsnNode) putFieldNode;
 
-		int expectedReturnOpcode = switch (fieldInsnNode.desc) {
+		int expectedLoadOpcode = switch (fieldInsnNode.desc) {
 			case "I" -> Opcodes.ILOAD;
 			case "L" -> Opcodes.LLOAD;
 			case "F" -> Opcodes.FLOAD;
@@ -107,7 +107,7 @@ public class AsmUtil {
 			default -> Opcodes.ALOAD;
 		};
 
-		if (node.instructions.get(1).getOpcode() != expectedReturnOpcode) return Optional.empty();
+		if (node.instructions.get(1).getOpcode() != expectedLoadOpcode) return Optional.empty();
 
 		if (fieldInsnNode.owner.equals(classNode.name)) {
 			return getField(classNode, fieldInsnNode.name, fieldInsnNode.desc);

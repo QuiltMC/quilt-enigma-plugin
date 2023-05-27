@@ -24,6 +24,7 @@ import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
+import org.quiltmc.enigmaplugin.util.Descriptors;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +45,9 @@ public class ConstructorParametersIndex implements Index {
 		var classEntry = new ClassEntry(classNode.name);
 		var methodEntry = new MethodEntry(classEntry, constructorNode.name, new MethodDescriptor(constructorNode.desc));
 
+		var parameters = Descriptors.getParameters(constructorNode);
+		if (parameters.size() == 0) return;
+
 		/*if (this.callToCanonical(classNode, constructorNode)) {
 			// @TODO Handle non-canonical constructors one day, as not every field will be present.
 		}*/
@@ -59,6 +63,9 @@ public class ConstructorParametersIndex implements Index {
 
 				if (previousInst.getOpcode() >= Opcodes.ILOAD && previousInst.getOpcode() <= Opcodes.ALOAD) {
 					var loadInst = (VarInsnNode) previousInst;
+
+					if (parameters.get(parameters.size() - 1).lvtIndex() < loadInst.var)
+						continue; // This load opcode does not correspond to a parameter.
 
 					var param = new LocalVariableEntry(methodEntry, loadInst.var, "", true, null);
 					var field = new FieldEntry(classEntry, fieldInst.name, new TypeDescriptor(fieldInst.desc));
@@ -88,8 +95,5 @@ public class ConstructorParametersIndex implements Index {
 		}
 
 		return false;
-	}
-
-	public record Entry(FieldEntry field, LocalVariableEntry constructorParam) {
 	}
 }
