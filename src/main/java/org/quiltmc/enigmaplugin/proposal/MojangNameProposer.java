@@ -19,7 +19,7 @@ public class MojangNameProposer implements NameProposer<Entry<?>> {
     }
 
     @Override
-    public Optional<String> doProposeName(Entry<?> entry, EntryRemapper remapper) {
+    public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
         String name = entry.getName();
         if (remapper.getDeobfMapping(entry).targetName() == null
                 && (entry instanceof FieldEntry && !name.startsWith("f_")
