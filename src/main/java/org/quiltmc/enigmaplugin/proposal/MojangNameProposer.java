@@ -21,7 +21,6 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-import org.quiltmc.enigmaplugin.index.JarIndexer;
 
 import java.util.Optional;
 
@@ -30,10 +29,6 @@ import java.util.Optional;
  * This is useful to avoid situations where we simply click "mark as deobf" to name something.
  */
 public class MojangNameProposer implements NameProposer<Entry<?>> {
-    @SuppressWarnings("unused")
-    public MojangNameProposer(JarIndexer indexer) {
-    }
-
     @Override
     public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
         String name = entry.getName();
