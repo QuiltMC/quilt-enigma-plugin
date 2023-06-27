@@ -25,6 +25,7 @@ import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import org.objectweb.asm.tree.analysis.*;
+import org.quiltmc.enigmaplugin.util.AsmUtil;
 import org.quiltmc.enigmaplugin.util.CasingUtil;
 
 import java.util.*;
@@ -158,7 +159,7 @@ public class CodecIndex implements Index {
 							// Update the codec field insn if needed
 							Type type = Type.getMethodType(mInsn2.desc);
 							Type ret = type.getReturnType();
-							if (ret.getSort() != Type.OBJECT || !isCodecClass(ret.getInternalName())) {
+							if (ret.getSort() != Type.OBJECT || !this.isCodecClass(ret.getInternalName())) {
 								continue;
 							}
 
@@ -210,6 +211,13 @@ public class CodecIndex implements Index {
 		if (getterHandle.getTag() == H_INVOKEVIRTUAL) {
 			var entry = new MethodEntry(parentEntry, getterHandle.getName(), new MethodDescriptor(getterHandle.getDesc()));
 			methodNames.put(entry, getterName);
+
+			AsmUtil.getMethod(parent, getterHandle.getName(), getterHandle.getDesc())
+					.flatMap(m -> AsmUtil.getFieldFromGetter(parent, m))
+					.ifPresent(f -> {
+						var fieldEntry = new FieldEntry(parentEntry, f.name, new TypeDescriptor(f.desc));
+						this.fieldNames.put(fieldEntry, camelCaseName);
+					});
 		} else if (getterHandle.getTag() == H_INVOKESTATIC) {
 			MethodNode method = null;
 			for (MethodNode m : parent.methods) {
@@ -241,6 +249,13 @@ public class CodecIndex implements Index {
 			} else if (methodInsn != null) {
 				var entry = new MethodEntry(parentEntry, methodInsn.name, new MethodDescriptor(methodInsn.desc));
 				methodNames.put(entry, getterName);
+
+				AsmUtil.getMethod(parent, methodInsn.name, methodInsn.desc)
+						.flatMap(m -> AsmUtil.getFieldFromGetter(parent, m))
+						.ifPresent(f -> {
+							var fieldEntry = new FieldEntry(parentEntry, f.name, new TypeDescriptor(f.desc));
+							this.fieldNames.put(fieldEntry, camelCaseName);
+						});
 			}
 		}
 	}

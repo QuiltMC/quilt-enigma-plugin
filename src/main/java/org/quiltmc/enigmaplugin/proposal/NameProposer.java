@@ -22,13 +22,13 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import java.util.Optional;
 
 public interface NameProposer<E extends Entry<?>> {
-	Optional<String> doProposeName(E entry, EntryRemapper remapper);
+	Optional<String> doProposeName(E entry, NameProposerService service, EntryRemapper remapper);
 
 	boolean canPropose(Entry<?> entry);
 
 	E upcast(Entry<?> entry);
 
-	default Optional<String> proposeName(Entry<?> entry, EntryRemapper remapper) {
-		return this.doProposeName(this.upcast(entry), remapper);
+	default Optional<String> proposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
+		return this.doProposeName(this.upcast(entry), service, remapper);
 	}
 }

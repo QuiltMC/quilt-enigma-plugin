@@ -13,7 +13,7 @@ public class CodecTest {
 			Codec.LONG.fieldOf("seed").forGetter(test -> test.seed)
 	).apply(instance, CodecTest::new));
 
-	private final int value;
+	private int value;
 	private final double scale;
 	private final Optional<Float> factor;
 	public long seed;
@@ -25,8 +25,16 @@ public class CodecTest {
 		this.seed = seed;
 	}
 
+	public CodecTest() {
+		this(1, 2.0, Optional.empty(), 0);
+	}
+
 	public int getValue() {
 		return this.value;
+	}
+
+	public void setValue(int value) {
+		this.value = value;
 	}
 
 	public double getScale() {

@@ -35,16 +35,22 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 	private final CodecIndex codecIndex = new CodecIndex();
 	private final LoggerIndex loggerIndex = new LoggerIndex();
 	private final SimpleTypeSingleIndex simpleTypeSingleIndex = new SimpleTypeSingleIndex();
+	private final ConstructorParametersIndex constructorParametersIndex = new ConstructorParametersIndex();
+	private final GetterSetterIndex getterSetterIndex = new GetterSetterIndex();
 	private boolean disableRecordIndexing = false;
 	private boolean disableEnumFieldsIndexing = false;
 	private boolean disableCodecsIndexing = false;
 	private boolean disableLoggerIndexing = false;
+	private boolean disableConstructorParametersIndexing = false;
+	private boolean disableGetterSetterIndexing = false;
 
 	public JarIndexer withContext(EnigmaServiceContext<JarIndexerService> context) {
 		this.disableRecordIndexing = Arguments.isDisabled(context, Arguments.DISABLE_RECORDS);
 		this.disableEnumFieldsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_ENUM_FIELDS);
 		this.disableCodecsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CODECS);
 		this.disableLoggerIndexing = Arguments.isDisabled(context, Arguments.DISABLE_LOGGER);
+		this.disableConstructorParametersIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CONSTRUCTOR_PARAMS);
+		this.disableGetterSetterIndexing = Arguments.isDisabled(context, Arguments.DISABLE_GETTER_SETTER);
 
 		List<String> codecs = context.getArgument(Arguments.CUSTOM_CODECS).map(s -> List.of(s.split(",[\n ]*")))
 				.orElse(List.of());
@@ -73,8 +79,10 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 	}
 
 	private void visitClassNode(ClassNode node) {
+		boolean isRecord = (node.access & ACC_RECORD) != 0 || node.superName.equals("java/lang/Record");
+
 		if (!this.disableRecordIndexing) {
-			if ((node.access & ACC_RECORD) != 0 || node.superName.equals("java/lang/Record")) {
+			if (isRecord) {
 				this.recordIndex.visitClassNode(node);
 			}
 		}
@@ -86,7 +94,13 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 			this.codecIndex.visitClassNode(node);
 		}
 		if (!this.disableLoggerIndexing) {
-			loggerIndex.visitClassNode(node);
+			this.loggerIndex.visitClassNode(node);
+		}
+		if (!this.disableConstructorParametersIndexing) {
+			this.constructorParametersIndex.visitClassNode(node);
+		}
+		if (!this.disableGetterSetterIndexing) {
+			this.getterSetterIndex.visitClassNode(node);
 		}
 	}
 
@@ -108,5 +122,13 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 
 	public SimpleTypeSingleIndex getSimpleTypeSingleIndex() {
 		return this.simpleTypeSingleIndex;
+	}
+
+	public ConstructorParametersIndex getConstructorParametersIndex() {
+		return this.constructorParametersIndex;
+	}
+
+	public GetterSetterIndex getGetterSetterIndex() {
+		return this.getterSetterIndex;
 	}
 }

@@ -33,6 +33,7 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.ParameterNode;
 import org.quiltmc.enigmaplugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Name;
 import org.quiltmc.enigmaplugin.util.AsmUtil;
+import org.quiltmc.enigmaplugin.util.Descriptors;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -107,12 +108,12 @@ public class SimpleTypeSingleIndex implements Opcodes {
 
 			var methodDescriptor = new MethodDescriptor(method.desc);
 			var methodEntry = new MethodEntry(parentEntry, method.name, methodDescriptor);
-			var argTypes = Type.getArgumentTypes(method.desc);
+			var parameters = Descriptors.getParameters(method);
 
 			var types = new HashMap<Type, Integer>();
 
-			for (var type : argTypes) {
-				types.compute(type, (t, old) -> {
+			for (var param : parameters) {
+				types.compute(param.type(), (t, old) -> {
 					if (old == null) return 0;
 					else return old + 1;
 				});
@@ -123,7 +124,7 @@ public class SimpleTypeSingleIndex implements Opcodes {
 				if (amount > 1) bannedTypes.add(type);
 			});
 
-			this.collectMatchingParameters(method, bannedTypes, argTypes).forEach((name, param) -> {
+			this.collectMatchingParameters(method, bannedTypes, parameters).forEach((name, param) -> {
 				if (!param.isNull()) {
 					boolean isStatic = AsmUtil.maskMatch(method.access, ACC_STATIC);
 					var paramEntry = new ParameterEntry(methodEntry, param.index() + (isStatic ? 0 : 1));
@@ -190,16 +191,16 @@ public class SimpleTypeSingleIndex implements Opcodes {
 	}
 
 	private Map<String, ParameterBuildingEntry> collectMatchingParameters(MethodNode method, Set<Type> bannedTypes,
-			Type[] argTypes) {
+			List<Descriptors.ParameterEntry> parameters) {
 		var knownParameters = new HashMap<String, ParameterBuildingEntry>();
 
 		for (int index = 0, lvtIndex = 0; index < method.parameters.size(); index++) {
-			if (index > 0) lvtIndex += argTypes[index - 1].getSize();
+			if (index > 0) lvtIndex += parameters.get(index - 1).getSize();
 
-			if (bannedTypes.contains(argTypes[index])) continue;
+			if (bannedTypes.contains(parameters.get(index).type())) continue;
 
 			ParameterNode node = method.parameters.get(index);
-			String desc = argTypes[index].getDescriptor();
+			String desc = parameters.get(index).getDescriptor();
 			if (desc.charAt(0) != 'L') continue;
 			String type = desc.substring(1, desc.length() - 1);
 

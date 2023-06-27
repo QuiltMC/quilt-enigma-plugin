@@ -34,7 +34,7 @@ public class SimpleTypeFieldNameProposer implements NameProposer<Entry<?>> {
 	}
 
 	@Override
-	public Optional<String> doProposeName(Entry<?> entry, EntryRemapper remapper) {
+	public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
 		if (entry instanceof FieldEntry fieldEntry) {
 			return Optional.ofNullable(this.index.getField(fieldEntry));
 		} else if (entry instanceof LocalVariableEntry localVariableEntry) {
