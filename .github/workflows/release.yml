@@ -4,6 +4,9 @@ on: [workflow_dispatch] # Manual trigger
 
 jobs:
   build:
+    strategy:
+      matrix:
+        java: [ 17, 19 ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
