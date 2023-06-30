@@ -35,7 +35,7 @@ public class MojangNameProposer implements NameProposer<Entry<?>> {
         if (remapper.getDeobfMapping(entry).targetName() == null
                 && (entry instanceof FieldEntry && !name.startsWith("f_")
                 || entry instanceof MethodEntry && !name.startsWith("m_")
-                || entry instanceof ClassEntry && !name.startsWith("C_"))) {
+                || entry instanceof ClassEntry classEntry && !classEntry.getSimpleName().startsWith("C_"))) {
             return Optional.of(name);
         }
 
