@@ -9,7 +9,8 @@
         "args": {
           "disable_enum_fields": "false",
           "disable_records": "false",
-          "disable_codecs": "false"
+          "disable_codecs": "false",
+          "disable_map_non_hashed": "true"
         }
       }
     ],

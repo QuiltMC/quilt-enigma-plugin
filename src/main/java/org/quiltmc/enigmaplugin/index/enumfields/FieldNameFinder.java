@@ -72,13 +72,14 @@ public class FieldNameFinder implements Opcodes {
 					}
 
 					// Search for a name within the frame
+					Frame<SourceValue> frame = frames[i - 1];
 					String name = null;
 					stackFor:
-					for (int j = 0; j < frames[i - 1].getStackSize(); j++) {
-						SourceValue value = frames[i - 1].getStack(j);
+					for (int j = 0; j < frame.getStackSize(); j++) {
+						SourceValue value = frame.getStack(j);
 						for (AbstractInsnNode insn : value.insns) {
-							if (insn instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String) {
-								name = (String) ldcInsn.cst;
+							if (insn instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String cst) {
+								name = cst;
 								break stackFor;
 							}
 						}

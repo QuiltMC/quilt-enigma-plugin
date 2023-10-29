@@ -41,6 +41,7 @@ public class NameProposerService implements NameProposalService {
 		this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_LOGGER, LoggerNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CODECS, CodecNameProposer::new);
+		// TODO: Disable by default
 		this.addIfEnabled(context, Arguments.DISABLE_MAP_NON_HASHED, MojangNameProposer::new);
 
 		if (indexer.getSimpleTypeSingleIndex().isEnabled()) {
