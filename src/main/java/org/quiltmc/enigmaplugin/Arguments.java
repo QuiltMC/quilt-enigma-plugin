@@ -35,6 +35,10 @@ public class Arguments {
 	public static final String SIMPLE_TYPE_FIELD_NAMES_PATH = "simple_type_field_names_path";
 
 	public static <T extends EnigmaService> boolean isDisabled(EnigmaServiceContext<T> context, String arg) {
-		return context.getArgument(arg).map(Boolean::parseBoolean).orElse(false);
+		return isDisabled(context, arg, false);
+	}
+
+	public static <T extends EnigmaService> boolean isDisabled(EnigmaServiceContext<T> context, String arg, boolean disabledByDefault) {
+		return context.getArgument(arg).map(Boolean::parseBoolean).orElse(disabledByDefault);
 	}
 }

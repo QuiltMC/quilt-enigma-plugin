@@ -41,8 +41,7 @@ public class NameProposerService implements NameProposalService {
 		this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_LOGGER, LoggerNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CODECS, CodecNameProposer::new);
-		// TODO: Disable by default
-		this.addIfEnabled(context, Arguments.DISABLE_MAP_NON_HASHED, MojangNameProposer::new);
+		this.addIfNotDisabled(context, Arguments.DISABLE_MAP_NON_HASHED, MojangNameProposer::new);
 
 		if (indexer.getSimpleTypeSingleIndex().isEnabled()) {
 			this.nameProposers.add(new SimpleTypeFieldNameProposer(indexer));
@@ -59,6 +58,12 @@ public class NameProposerService implements NameProposalService {
 	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, JarIndexer indexer, String name, Function<JarIndexer, NameProposer<?>> factory) {
 		if (!Arguments.isDisabled(context, name)) {
 			this.nameProposers.add(factory.apply(indexer));
+		}
+	}
+
+	private void addIfNotDisabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer<?>> factory) {
+		if (!Arguments.isDisabled(context, name, true)) {
+			this.nameProposers.add(factory.get());
 		}
 	}
 
