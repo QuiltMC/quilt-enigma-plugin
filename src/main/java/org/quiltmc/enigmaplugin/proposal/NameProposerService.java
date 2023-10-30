@@ -80,7 +80,7 @@ public class NameProposerService implements NameProposalService {
 	@Override
 	public Optional<String> proposeName(Entry<?> obfEntry, EntryRemapper remapper) {
 		Optional<String> name;
-		for (NameProposer<?> proposer : nameProposers) {
+		for (NameProposer<?> proposer : this.nameProposers) {
 			if (proposer.canPropose(obfEntry)) {
 				name = proposer.proposeName(obfEntry, this, remapper);
 				if (name.isPresent()) {

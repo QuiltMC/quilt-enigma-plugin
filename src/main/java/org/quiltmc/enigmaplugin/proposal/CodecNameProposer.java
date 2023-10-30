@@ -34,10 +34,10 @@ public class CodecNameProposer implements NameProposer<Entry<?>> {
 
 	@Override
 	public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
-		if (entry instanceof FieldEntry field && index.hasField(field)) {
-			return Optional.ofNullable(index.getFieldName(field));
-		} else if (entry instanceof MethodEntry method && index.hasMethod(method)) {
-			return Optional.ofNullable(index.getMethodName(method));
+		if (entry instanceof FieldEntry field && this.index.hasField(field)) {
+			return Optional.ofNullable(this.index.getFieldName(field));
+		} else if (entry instanceof MethodEntry method && this.index.hasMethod(method)) {
+			return Optional.ofNullable(this.index.getMethodName(method));
 		}
 		return Optional.empty();
 	}

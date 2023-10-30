@@ -64,7 +64,7 @@ public class AsmUtil {
 	}
 
 	public static Optional<FieldNode> getFieldFromGetter(ClassNode classNode, MethodNode node) {
-		if (Descriptors.getDescriptor(node).getArgumentDescs().size() != 0) return Optional.empty();
+		if (!Descriptors.getDescriptor(node).getArgumentDescs().isEmpty()) return Optional.empty();
 		if (node.instructions.size() != 3) return Optional.empty();
 		if (node.instructions.get(0).getOpcode() != Opcodes.ALOAD) return Optional.empty();
 		var getFieldNode = node.instructions.get(1);

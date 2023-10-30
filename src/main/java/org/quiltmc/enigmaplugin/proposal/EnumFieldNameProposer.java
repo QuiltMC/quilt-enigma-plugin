@@ -33,7 +33,7 @@ public class EnumFieldNameProposer implements NameProposer<FieldEntry> {
 
 	@Override
 	public Optional<String> doProposeName(FieldEntry entry, NameProposerService service, EntryRemapper remapper) {
-		return Optional.ofNullable(enumIndex.getName(entry));
+		return Optional.ofNullable(this.enumIndex.getName(entry));
 	}
 
 	@Override

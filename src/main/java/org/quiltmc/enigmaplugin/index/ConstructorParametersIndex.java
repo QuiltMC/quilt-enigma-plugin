@@ -46,7 +46,7 @@ public class ConstructorParametersIndex implements Index {
 		var methodEntry = new MethodEntry(classEntry, constructorNode.name, new MethodDescriptor(constructorNode.desc));
 
 		var parameters = Descriptors.getParameters(constructorNode);
-		if (parameters.size() == 0) return;
+		if (parameters.isEmpty()) return;
 
 		/*if (this.callToCanonical(classNode, constructorNode)) {
 			// @TODO Handle non-canonical constructors one day, as not every field will be present.

@@ -164,20 +164,20 @@ public class RecordIndex implements Index {
 	@Override
 	public void visitClassNode(ClassNode node) {
 		ClassEntry classEntry = getClassEntry(node);
-		if (records.containsKey(classEntry) && records.get(classEntry).hasComponents()) {
+		if (this.records.containsKey(classEntry) && this.records.get(classEntry).hasComponents()) {
 			return;
 		}
-		records.put(classEntry, new RecordComponentData());
+		this.records.put(classEntry, new RecordComponentData());
 
 		for (MethodNode methodNode : node.methods) {
 			if (methodNode.name.equals("hashCode") && methodNode.desc.equals("()I")) {
-				visitHashCodeNode(methodNode, classEntry);
+				this.visitHashCodeNode(methodNode, classEntry);
 			} else if (methodNode.name.equals("toString") && methodNode.desc.equals("()Ljava/lang/String;")) {
-				visitToStringNode(methodNode, classEntry);
+				this.visitToStringNode(methodNode, classEntry);
 			} else if (methodNode.name.equals("equals") && methodNode.desc.equals("(Ljava/lang/Object;)Z")) {
-				visitEqualsNode(methodNode, classEntry);
+				this.visitEqualsNode(methodNode, classEntry);
 			} else {
-				visitMethodNode(methodNode, classEntry);
+				this.visitMethodNode(methodNode, classEntry);
 			}
 		}
 	}
@@ -185,21 +185,21 @@ public class RecordIndex implements Index {
 	private void visitToStringNode(MethodNode node, ClassEntry classEntry) {
 		InvokeDynamicInsnNode invokeDynamicNode = getDefaultToStringInvokeDynamic(node);
 		if (invokeDynamicNode != null) {
-			computeFieldNames(classEntry, invokeDynamicNode);
+			this.computeFieldNames(classEntry, invokeDynamicNode);
 		}
 	}
 
 	private void visitHashCodeNode(MethodNode node, ClassEntry classEntry) {
 		InvokeDynamicInsnNode invokeDynamicNode = getDefaultHashCodeInvokeDynamic(node);
 		if (invokeDynamicNode != null) {
-			computeFieldNames(classEntry, invokeDynamicNode);
+			this.computeFieldNames(classEntry, invokeDynamicNode);
 		}
 	}
 
 	private void visitEqualsNode(MethodNode node, ClassEntry classEntry) {
 		InvokeDynamicInsnNode invokeDynamicNode = getDefaultEqualsInvokeDynamic(node);
 		if (invokeDynamicNode != null) {
-			computeFieldNames(classEntry, invokeDynamicNode);
+			this.computeFieldNames(classEntry, invokeDynamicNode);
 		}
 	}
 
@@ -223,14 +223,14 @@ public class RecordIndex implements Index {
 			String unobfuscatedFieldName = unobfuscatedFieldNames[i];
 			Handle fieldHandle = (Handle) bsmArgs[2 + i];
 			FieldEntry fieldEntry = createFieldEntry(classEntry, fieldHandle);
-			records.computeIfAbsent(classEntry, k -> new RecordComponentData()).add(fieldEntry, unobfuscatedFieldName);
+			this.records.computeIfAbsent(classEntry, k -> new RecordComponentData()).add(fieldEntry, unobfuscatedFieldName);
 		}
 	}
 
 	private void visitMethodNode(MethodNode node, ClassEntry classEntry) {
 		// Process default accessor methods
 		MethodDescriptor methodDescriptor = new MethodDescriptor(node.desc);
-		if (methodDescriptor.getArgumentDescs().size() > 0) {
+		if (!methodDescriptor.getArgumentDescs().isEmpty()) {
 			return;
 		}
 
@@ -261,11 +261,11 @@ public class RecordIndex implements Index {
 
 		FieldInsnNode field = (FieldInsnNode) second;
 		FieldEntry fieldEntry = new FieldEntry(classEntry, field.name, new TypeDescriptor(field.desc));
-		if (!records.containsKey(classEntry)) {
+		if (!this.records.containsKey(classEntry)) {
 			return;
 		}
 
-		RecordComponentData data = records.get(classEntry);
+		RecordComponentData data = this.records.get(classEntry);
 		if (fieldEntry.getDesc().equals(methodDescriptor.getReturnDesc()) && data.isComponentField(fieldEntry)) {
 			MethodEntry methodEntry = new MethodEntry(classEntry, node.name, methodDescriptor);
 			data.addAccessorMethod(fieldEntry, methodEntry);
@@ -273,43 +273,43 @@ public class RecordIndex implements Index {
 	}
 
 	public boolean isRecord(ClassEntry classEntry) {
-		return records.containsKey(classEntry);
+		return this.records.containsKey(classEntry);
 	}
 
 	public String getFieldName(ClassEntry parent, FieldEntry field) {
-		return records.containsKey(parent) ? records.get(parent).getName(field) : null;
+		return this.records.containsKey(parent) ? this.records.get(parent).getName(field) : null;
 	}
 
 	public String getInitParamName(ClassEntry parent, int lvtIndex) {
-		return records.containsKey(parent) ? records.get(parent).getInitParamName(lvtIndex) : null;
+		return this.records.containsKey(parent) ? this.records.get(parent).getInitParamName(lvtIndex) : null;
 	}
 
 	public String getCanonicalConstructorDescriptor(ClassEntry parent) {
-		return records.containsKey(parent) ? records.get(parent).getCanonicalConstructorDescriptor() : null;
+		return this.records.containsKey(parent) ? this.records.get(parent).getCanonicalConstructorDescriptor() : null;
 	}
 
 	public String getAccessorMethodName(ClassEntry parent, MethodEntry method) {
-		return records.containsKey(parent) ? records.get(parent).getAccessorMethodName(method) : null;
+		return this.records.containsKey(parent) ? this.records.get(parent).getAccessorMethodName(method) : null;
 	}
 
 	protected Map<FieldEntry, String> getAllFieldNames() {
-		return records.keySet().stream().flatMap(c -> getFieldNames(c).entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		return this.records.keySet().stream().flatMap(c -> this.getFieldNames(c).entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 
 	protected Map<MethodEntry, String> getAllMethodNames() {
-		return records.keySet().stream().flatMap(c -> getMethodNames(c).entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		return this.records.keySet().stream().flatMap(c -> this.getMethodNames(c).entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 
 	protected Map<FieldEntry, String> getFieldNames(ClassEntry parent) {
-		return records.containsKey(parent) ? records.get(parent).fieldNames : null;
+		return this.records.containsKey(parent) ? this.records.get(parent).fieldNames : null;
 	}
 
 	protected Map<MethodEntry, String> getMethodNames(ClassEntry parent) {
-		if (!records.containsKey(parent)) {
+		if (!this.records.containsKey(parent)) {
 			return null;
 		}
 
-		RecordComponentData data = records.get(parent);
+		RecordComponentData data = this.records.get(parent);
 		return data.fieldAccessorMethods.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> data.getName(e.getValue())));
 	}
 
@@ -321,42 +321,43 @@ public class RecordIndex implements Index {
 		private final Map<MethodEntry, FieldEntry> fieldAccessorMethods = new HashMap<>();
 
 		public void add(FieldEntry fieldEntry, String unobfuscatedFieldName) {
-			if (fieldNames.containsKey(fieldEntry)) {
+			if (this.fieldNames.containsKey(fieldEntry)) {
 				return;
 			}
 
-			unobfuscatedFieldNames.add(unobfuscatedFieldName);
-			fieldEntries.add(fieldEntry);
-			fieldNames.put(fieldEntry, unobfuscatedFieldName);
+			this.unobfuscatedFieldNames.add(unobfuscatedFieldName);
+			this.fieldEntries.add(fieldEntry);
+			this.fieldNames.put(fieldEntry, unobfuscatedFieldName);
 		}
 
 		public String getName(FieldEntry fieldEntry) {
-			return fieldNames.get(fieldEntry);
+			return this.fieldNames.get(fieldEntry);
 		}
 
 		public boolean isComponentField(FieldEntry fieldEntry) {
-			return fieldEntries.contains(fieldEntry);
+			return this.fieldEntries.contains(fieldEntry);
 		}
 
 		public String getInitParamName(int lvtIndex) {
-			return getName(getFieldByInitLvtIndex(lvtIndex));
+			return this.getName(this.getFieldByInitLvtIndex(lvtIndex));
 		}
 
 		private FieldEntry getFieldByInitLvtIndex(int lvtIndex) {
 			int i = 1;
-			for (FieldEntry fieldEntry : fieldEntries) {
+			for (FieldEntry fieldEntry : this.fieldEntries) {
 				if (i == lvtIndex) {
 					return fieldEntry;
 				}
 				i += fieldEntry.getDesc().getSize();
 			}
+
 			return null;
 		}
 
 		public String getCanonicalConstructorDescriptor() {
 			StringBuilder sb = new StringBuilder();
 			sb.append("(");
-			for (FieldEntry fieldEntry : fieldEntries) {
+			for (FieldEntry fieldEntry : this.fieldEntries) {
 				sb.append(fieldEntry.getDesc());
 			}
 			sb.append(")V");
@@ -364,23 +365,24 @@ public class RecordIndex implements Index {
 		}
 
 		public void addAccessorMethod(FieldEntry fieldEntry, MethodEntry accessorMethod) {
-			if (accessorMethods.containsKey(fieldEntry)) {
+			if (this.accessorMethods.containsKey(fieldEntry)) {
 				return;
 			}
-			accessorMethods.put(fieldEntry, accessorMethod);
-			fieldAccessorMethods.put(accessorMethod, fieldEntry);
+
+			this.accessorMethods.put(fieldEntry, accessorMethod);
+			this.fieldAccessorMethods.put(accessorMethod, fieldEntry);
 		}
 
 		private FieldEntry getAccessorMethodField(MethodEntry methodEntry) {
-			return fieldAccessorMethods.get(methodEntry);
+			return this.fieldAccessorMethods.get(methodEntry);
 		}
 
 		public String getAccessorMethodName(MethodEntry methodEntry) {
-			return fieldNames.get(getAccessorMethodField(methodEntry));
+			return this.fieldNames.get(this.getAccessorMethodField(methodEntry));
 		}
 
 		public boolean hasComponents() {
-			return !unobfuscatedFieldNames.isEmpty();
+			return !this.unobfuscatedFieldNames.isEmpty();
 		}
 	}
 }

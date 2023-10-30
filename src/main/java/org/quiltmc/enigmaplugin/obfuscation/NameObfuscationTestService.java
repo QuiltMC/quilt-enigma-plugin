@@ -37,12 +37,12 @@ public class NameObfuscationTestService implements ObfuscationTestService {
 	private final String classPackagePrefix;
 
 	public NameObfuscationTestService(EnigmaServiceContext<ObfuscationTestService> context) {
-		packagePrefix = context.getArgument("package").orElse(DEFAULT_PACKAGE) + "/";
-		classPrefix = context.getArgument("classPrefix").orElse(DEFAULT_CLASS_PREFIX);
-		fieldPrefix = context.getArgument("fieldPrefix").orElse(DEFAULT_FIELD_PREFIX);
-		methodPrefix = context.getArgument("methodPrefix").orElse(DEFAULT_METHOD_PREFIX);
+		this.packagePrefix = context.getArgument("package").orElse(DEFAULT_PACKAGE) + "/";
+		this.classPrefix = context.getArgument("classPrefix").orElse(DEFAULT_CLASS_PREFIX);
+		this.fieldPrefix = context.getArgument("fieldPrefix").orElse(DEFAULT_FIELD_PREFIX);
+		this.methodPrefix = context.getArgument("methodPrefix").orElse(DEFAULT_METHOD_PREFIX);
 
-		classPackagePrefix = packagePrefix + classPrefix;
+		this.classPackagePrefix = this.packagePrefix + this.classPrefix;
 	}
 
 	@Override
@@ -51,11 +51,11 @@ public class NameObfuscationTestService implements ObfuscationTestService {
 			String[] parts = classEntry.getFullName().split("\\$");
 
 			String lastPart = parts[parts.length - 1];
-			return !lastPart.startsWith(classPrefix) && !lastPart.startsWith(classPackagePrefix);
+			return !lastPart.startsWith(this.classPrefix) && !lastPart.startsWith(this.classPackagePrefix);
 		} else if (entry instanceof FieldEntry) {
-			return !entry.getName().startsWith(fieldPrefix);
+			return !entry.getName().startsWith(this.fieldPrefix);
 		} else if (entry instanceof MethodEntry) {
-			return !entry.getName().startsWith(methodPrefix);
+			return !entry.getName().startsWith(this.methodPrefix);
 		} else {
 			// unknown type
 			return false;

@@ -42,7 +42,7 @@ public class FieldNameFinder implements Opcodes {
 		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_';
 	}
 
-	private FieldEntry followFieldLink(FieldEntry field, Map<FieldEntry, FieldEntry> linkedFields, Map<FieldEntry, String> names) {
+	private static FieldEntry followFieldLink(FieldEntry field, Map<FieldEntry, FieldEntry> linkedFields, Map<FieldEntry, String> names) {
 		if (names.containsKey(field)) {
 			return field;
 		} else if (linkedFields.containsKey(field)) {
@@ -87,7 +87,7 @@ public class FieldNameFinder implements Opcodes {
 					for (int j = 0; j < frame.getStackSize() && name == null; j++) {
 						SourceValue value = frame.getStack(j);
 						for (AbstractInsnNode insn : value.insns) {
-							if (insn instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String cst) {
+							if (insn instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String cst && !cst.isBlank()) {
 								name = cst;
 								break;
 							}
@@ -179,7 +179,7 @@ public class FieldNameFinder implements Opcodes {
 						}
 					}
 
-					if (!hasText || usableName.length() == 0) {
+					if (!hasText || usableName.isEmpty()) {
 						continue;
 					}
 
