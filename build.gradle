@@ -33,10 +33,10 @@ repositories {
 }
 
 dependencies {
-	implementation "org.ow2.asm:asm:9.3"
-	implementation "org.ow2.asm:asm-commons:9.3"
-	implementation "org.ow2.asm:asm-tree:9.3"
-	implementation "org.ow2.asm:asm-util:9.3"
+	implementation "org.ow2.asm:asm:9.4"
+	implementation "org.ow2.asm:asm-commons:9.4"
+	implementation "org.ow2.asm:asm-tree:9.4"
+	implementation "org.ow2.asm:asm-util:9.4"
 	implementation "org.quiltmc:enigma:${enigma_version}"
 	implementation "org.quiltmc:quilt-json5:1.0.1"
 	implementation "org.jetbrains:annotations:23.0.0"
