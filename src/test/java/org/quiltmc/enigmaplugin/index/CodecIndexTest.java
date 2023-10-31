@@ -17,6 +17,7 @@
 package org.quiltmc.enigmaplugin.index;
 
 import org.objectweb.asm.tree.ClassNode;
+import org.tinylog.Logger;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,7 +25,7 @@ import java.util.List;
 public class CodecIndexTest {
 	public static void main(String[] args) {
 		if (args.length < 1) {
-			System.err.println("Usage: CodecIndexTest <path> [<customCodec>...]");
+			Logger.info("Usage: CodecIndexTest <path> [<customCodec>...]");
 			System.exit(1);
 		}
 
@@ -42,26 +43,29 @@ public class CodecIndexTest {
 	}
 
 	private static void dumpIndex(CodecIndex index) {
-		System.out.println("CodecIndex");
+		StringBuilder sb = new StringBuilder();
+		sb.append("CodecIndex\n");
 		if (index.hasCustomCodecs()) {
-			System.out.println("  Custom codecs:");
+			sb.append("  Custom codecs:\n");
 			for (String codec : index.getCustomCodecs()) {
-				System.out.println("    " + codec);
+				sb.append("    ").append(codec).append("\n");
 			}
 		}
 
-		System.out.println("\nFields:\n");
+		sb.append("\nFields:\n\n");
 		if (index.getFieldNames().isEmpty()) {
-			System.out.println("  No fields");
+			sb.append("  No fields\n");
 		} else {
-			index.getFieldNames().forEach(((field, s) -> System.out.println(field + " " + s)));
+			index.getFieldNames().forEach(((field, s) -> sb.append(field).append(" ").append(s).append("\n")));
 		}
 
-		System.out.println("\nMethods:\n");
+		sb.append("\nMethods:\n\n");
 		if (index.getMethodNames().isEmpty()) {
-			System.out.println("  No methods");
+			sb.append("  No methods\n");
 		} else {
-			index.getMethodNames().forEach(((method, s) -> System.out.println(method + " " + s)));
+			index.getMethodNames().forEach(((method, s) -> sb.append(method).append(" ").append(s).append("\n")));
 		}
+
+		Logger.info(sb.toString());
 	}
 }

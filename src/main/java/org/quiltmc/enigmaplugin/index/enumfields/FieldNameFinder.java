@@ -26,6 +26,7 @@ import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.SourceInterpreter;
 import org.objectweb.asm.tree.analysis.SourceValue;
+import org.tinylog.Logger;
 
 import java.util.*;
 
@@ -190,7 +191,7 @@ public class FieldNameFinder implements Opcodes {
 
 					if (!duplicatedNames.contains(fieldName)) {
 						if (!usedNames.add(fieldName)) {
-							System.err.println("Warning: Duplicate key: " + fieldName + " (" + name + ") in " + owner);
+							Logger.warn("Duplicate key: " + fieldName + " (" + name + ") in " + owner);
 							duplicatedNames.add(fieldName);
 							usedNames.remove(fieldName);
 						}

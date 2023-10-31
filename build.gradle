@@ -39,6 +39,7 @@ dependencies {
 	implementation "org.ow2.asm:asm-util:9.4"
 	implementation "org.quiltmc:enigma:${enigma_version}"
 	implementation "org.quiltmc:quilt-json5:1.0.1"
+	implementation "org.tinylog:tinylog-api:2.6.2"
 	implementation "org.jetbrains:annotations:23.0.0"
 
 	testImplementation "org.quiltmc:enigma-swing:${enigma_version}"
