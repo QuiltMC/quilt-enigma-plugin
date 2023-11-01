@@ -29,26 +29,26 @@ import java.util.Optional;
  * This is useful to avoid situations where we simply click "mark as deobf" to name something.
  */
 public class MojangNameProposer implements NameProposer<Entry<?>> {
-    @Override
-    public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
-        String name = entry.getName();
-        if (remapper.getDeobfMapping(entry).targetName() == null
-                && ((entry instanceof FieldEntry && !name.startsWith("f_"))
-                || (entry instanceof MethodEntry && !name.startsWith("m_"))
-                || (entry instanceof ClassEntry classEntry && !classEntry.getSimpleName().startsWith("C_")))) {
-            return Optional.of(name);
-        }
+	@Override
+	public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
+		String name = entry.getName();
+		if (remapper.getDeobfMapping(entry).targetName() == null
+			&& ((entry instanceof FieldEntry && !name.startsWith("f_"))
+			|| (entry instanceof MethodEntry && !name.startsWith("m_"))
+			|| (entry instanceof ClassEntry classEntry && !classEntry.getSimpleName().startsWith("C_")))) {
+			return Optional.of(name);
+		}
 
-        return Optional.empty();
-    }
+		return Optional.empty();
+	}
 
-    @Override
-    public boolean canPropose(Entry<?> entry) {
-        return entry instanceof FieldEntry || entry instanceof MethodEntry || entry instanceof ClassEntry;
-    }
+	@Override
+	public boolean canPropose(Entry<?> entry) {
+		return entry instanceof FieldEntry || entry instanceof MethodEntry || entry instanceof ClassEntry;
+	}
 
-    @Override
-    public Entry<?> upcast(Entry<?> entry) {
-        return entry;
-    }
+	@Override
+	public Entry<?> upcast(Entry<?> entry) {
+		return entry;
+	}
 }

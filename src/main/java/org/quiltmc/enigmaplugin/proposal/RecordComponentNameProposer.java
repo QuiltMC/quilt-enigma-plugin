@@ -37,10 +37,10 @@ public class RecordComponentNameProposer implements NameProposer<Entry<?>> {
 	public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
 		if (entry instanceof FieldEntry fieldEntry) {
 			ClassEntry parent = fieldEntry.getParent();
-			return Optional.ofNullable(index.getFieldName(parent, fieldEntry));
+			return Optional.ofNullable(this.index.getFieldName(parent, fieldEntry));
 		} else if (entry instanceof MethodEntry methodEntry) {
 			ClassEntry parent = methodEntry.getParent();
-			return Optional.ofNullable(index.getAccessorMethodName(parent, methodEntry));
+			return Optional.ofNullable(this.index.getAccessorMethodName(parent, methodEntry));
 		}
 
 		return Optional.empty();
@@ -57,7 +57,7 @@ public class RecordComponentNameProposer implements NameProposer<Entry<?>> {
 			return false;
 		}
 
-		return index.isRecord(classEntry);
+		return this.index.isRecord(classEntry);
 	}
 
 	@Override

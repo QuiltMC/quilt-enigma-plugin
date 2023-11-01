@@ -19,13 +19,14 @@ package org.quiltmc.enigmaplugin.index;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.tree.ClassNode;
+import org.tinylog.Logger;
 
 import java.util.Map;
 
 public class RecordIndexTest {
 	public static void main(String[] args) {
 		if (args.length < 1) {
-			System.err.println("Usage: RecordIndexTest <path>");
+			Logger.info("Usage: RecordIndexTest <path>");
 			System.exit(1);
 		}
 
@@ -39,24 +40,27 @@ public class RecordIndexTest {
 	}
 
 	private static void dumpIndex(RecordIndex index) {
-		System.out.println("RecordIndex");
+		StringBuilder sb = new StringBuilder();
+		sb.append("RecordIndex\n");
 
 		Map<FieldEntry, String> fieldNames = index.getAllFieldNames();
-		System.out.println("\nFields:\n");
-		System.out.println("  " + fieldNames.size() + " fields");
+		sb.append("\nFields:\n\n");
+		sb.append("  ").append(fieldNames.size()).append(" fields\n");
 		if (fieldNames.isEmpty()) {
-			System.out.println("  No fields");
+			sb.append("  No fields\n");
 		} else {
-			fieldNames.forEach(((field, s) -> System.out.println(field + " " + s)));
+			fieldNames.forEach(((field, s) -> sb.append(field).append(" ").append(s).append("\n")));
 		}
 
 		Map<MethodEntry, String> methodNames = index.getAllMethodNames();
-		System.out.println("\nMethods:\n");
-		System.out.println("  " + methodNames.size() + " methods");
+		sb.append("\nMethods:\n\n");
+		sb.append("  ").append(methodNames.size()).append(" methods\n");
 		if (methodNames.isEmpty()) {
-			System.out.println("  No methods");
+			sb.append("  No methods\n");
 		} else {
-			methodNames.forEach(((method, s) -> System.out.println(method + " " + s)));
+			methodNames.forEach(((method, s) -> sb.append(method).append(" ").append(s).append("\n")));
 		}
+
+		Logger.info(sb.toString());
 	}
 }

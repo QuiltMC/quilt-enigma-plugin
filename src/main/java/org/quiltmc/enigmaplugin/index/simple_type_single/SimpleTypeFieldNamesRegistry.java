@@ -20,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigmaplugin.util.CasingUtil;
 import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonToken;
+import org.tinylog.Logger;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -86,7 +87,7 @@ public class SimpleTypeFieldNamesRegistry {
 						reader.endObject();
 
 						if (localName == null) {
-							System.err.println("Failed parsing local name for type " + type);
+							Logger.error("Failed parsing local name for type " + type);
 							break;
 						}
 
@@ -100,8 +101,7 @@ public class SimpleTypeFieldNamesRegistry {
 
 			reader.endObject();
 		} catch (IOException e) {
-			System.err.println("Failed to read simple type field names registry.");
-			e.printStackTrace();
+			Logger.error(e, "Failed to read simple type field names registry.");
 		}
 	}
 
@@ -132,7 +132,7 @@ public class SimpleTypeFieldNamesRegistry {
 					reader.endObject();
 
 					if (localName == null) {
-						System.err.println("Failed parsing fallback local name for type " + type);
+						Logger.error("Failed parsing fallback local name for type " + type);
 						break;
 					}
 

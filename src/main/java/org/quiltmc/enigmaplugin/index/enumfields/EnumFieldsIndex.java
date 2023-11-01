@@ -26,46 +26,47 @@ import java.util.*;
 
 public class EnumFieldsIndex implements Index {
 	private final Map<String, Set<String>> enumFields = new HashMap<>();
-	private final Map<String, List<MethodNode>> enumStaticInitializers = new HashMap<>();
+	private final Map<String, List<MethodNode>> staticInitializers = new HashMap<>();
 	private Map<FieldEntry, String> fieldNames;
 
 	@Override
 	public void visitClassNode(ClassNode node) {
 		for (FieldNode field : node.fields) {
 			if ((field.access & ACC_ENUM) != 0) {
-				if (!enumFields.computeIfAbsent(node.name, k -> new HashSet<>()).add(field.name + ":" + field.desc)) {
+				if (!this.enumFields.computeIfAbsent(node.name, k -> new HashSet<>()).add(field.name + ":" + field.desc)) {
 					throw new IllegalStateException("Found a duplicate enum field with name \"" + field.name + "\"");
 				}
 			}
 		}
+
 		for (MethodNode method : node.methods) {
 			if (method.name.equals("<clinit>")) {
-				enumStaticInitializers.computeIfAbsent(node.name, k -> new ArrayList<>()).add(method);
+				this.staticInitializers.computeIfAbsent(node.name, k -> new ArrayList<>()).add(method);
 			}
 		}
 	}
 
 	public void findFieldNames() {
 		try {
-			fieldNames = new FieldNameFinder().findNames(this);
+			this.fieldNames = new FieldNameFinder().findNames(this);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	public boolean hasName(FieldEntry field) {
-		return fieldNames.containsKey(field);
+		return this.fieldNames.containsKey(field);
 	}
 
 	public String getName(FieldEntry field) {
-		return fieldNames.get(field);
+		return this.fieldNames.get(field);
 	}
 
 	protected Map<String, Set<String>> getEnumFields() {
 		return this.enumFields;
 	}
 
-	protected Map<String, List<MethodNode>> getEnumStaticInitializers() {
-		return this.enumStaticInitializers;
+	protected Map<String, List<MethodNode>> getStaticInitializers() {
+		return this.staticInitializers;
 	}
 }

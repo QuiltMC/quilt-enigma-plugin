@@ -27,6 +27,7 @@ import org.objectweb.asm.tree.*;
 import org.objectweb.asm.tree.analysis.*;
 import org.quiltmc.enigmaplugin.util.AsmUtil;
 import org.quiltmc.enigmaplugin.util.CasingUtil;
+import org.tinylog.Logger;
 
 import java.util.*;
 
@@ -62,7 +63,7 @@ public class CodecIndex implements Index {
 	private final Map<MethodEntry, String> methodNames = new HashMap<>();
 
 	public CodecIndex() {
-		analyzer = new Analyzer<>(new SourceInterpreter());
+		this.analyzer = new Analyzer<>(new SourceInterpreter());
 	}
 
 	public void addCustomCodecs(List<String> customCodecClasses) {
@@ -70,7 +71,7 @@ public class CodecIndex implements Index {
 	}
 
 	private boolean isCodecClass(String className) {
-		return BUILTIN_CODEC_CLASSES.contains(className) || customCodecClasses.contains(className);
+		return BUILTIN_CODEC_CLASSES.contains(className) || this.customCodecClasses.contains(className);
 	}
 
 	private boolean isCodecFieldMethod(MethodInsnNode mInsn) {
@@ -84,38 +85,36 @@ public class CodecIndex implements Index {
 			try {
 				this.visitMethodNode(node, method);
 			} catch (Exception e) {
-				System.err.println("Error visiting method " + method.name + method.desc + " in class " + node.name);
-				e.printStackTrace();
+				Logger.error(e, "Error visiting method " + method.name + method.desc + " in class " + node.name);
 				throw new RuntimeException(e);
 			}
 		}
 	}
 
 	private void visitMethodNode(ClassNode parent, MethodNode node) throws AnalyzerException {
-		Frame<SourceValue>[] frames = analyzer.analyze(parent.name, node);
+		Frame<SourceValue>[] frames = this.analyzer.analyze(parent.name, node);
 		InsnList instructions = node.instructions;
 
 		for (int i = 1; i < instructions.size() && i < frames.length - 1; i++) {
 			AbstractInsnNode insn = instructions.get(i);
 			if (insn instanceof MethodInsnNode mInsn && this.isCodecFieldMethod(mInsn)) {
-				// System.out.println(mInsn.getOpcode() + " " + mInsn.owner + "." + mInsn.name + " " + mInsn.desc + " in " + parent.name + "." + node.name + " " + node.desc + " (" + i + ")");
+				// Logger.info(mInsn.getOpcode() + " " + mInsn.owner + "." + mInsn.name + " " + mInsn.desc + " in " + parent.name + "." + node.name + " " + node.desc + " (" + i + ")");
 				Frame<SourceValue> frame = frames[i];
 
 				// Find the field name in the stack
 				String name = null;
-				stackFor:
-				for (int j = frame.getStackSize() - 1; j >= 0; j--) {// Start searching from the top of the stack
+				for (int j = frame.getStackSize() - 1; j >= 0 && name == null; j--) {// Start searching from the top of the stack
 					SourceValue value = frame.getStack(j);
 					for (AbstractInsnNode insn2 : value.insns) {
 						if (insn2 instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String s && !s.isBlank()) {
 							name = s;
-							// System.out.println("Found name \"" + name + "\"");
-							break stackFor;
+							// Logger.info("Found name \"" + name + "\"");
+							break;
 						}
 					}
 				}
 
-				if (name == null || name.isBlank()) {
+				if (name == null || name.isEmpty()) {
 					continue;
 				}
 
@@ -146,13 +145,13 @@ public class CodecIndex implements Index {
 					AbstractInsnNode insn2 = instructions.get(j);
 					if (insn2 instanceof MethodInsnNode mInsn2) {
 						if (mInsn2.owner.equals(FOR_GETTER_METHOD_OWNER) && FOR_GETTER_METHOD.matches(mInsn2)) {
-							// System.out.println("Found forGetter call " + mInsn2.getOpcode() + " (" + j + ")");
+							// Logger.info("Found forGetter call " + mInsn2.getOpcode() + " (" + j + ")");
 							AbstractInsnNode getterInsn = instructions.get(j - 1);
 							if (!(getterInsn instanceof InvokeDynamicInsnNode getterInvokeInsn)) {
 								continue;
 							}
 
-							// System.out.println("Found getter call " + getterInvokeInsn.bsm + " (" + (j - 1) + ")");
+							// Logger.info("Found getter call " + getterInvokeInsn.bsm + " (" + (j - 1) + ")");
 							this.visitGetterInvokeDynamicInsn(parent, getterInvokeInsn, name);
 							break;
 						} else {
@@ -170,7 +169,7 @@ public class CodecIndex implements Index {
 
 							// The first argument 'this' may be our field
 							if (hasThis && fieldIndex == offset) {
-								// System.out.println("Found codec field call " + mInsn2.getOpcode() + " (" + j + ")");
+								// Logger.info("Found codec field call " + mInsn2.getOpcode() + " (" + j + ")");
 								codecFieldInsn = mInsn2;
 								continue;
 							}
@@ -183,7 +182,7 @@ public class CodecIndex implements Index {
 
 								// Offset by one slot if there's a 'this' pointer
 								if (fieldIndex == offset + k + (hasThis ? 1 : 0)) {
-									// System.out.println("Found codec field call " + mInsn2.getOpcode() + " (" + j + ")");
+									// Logger.info("Found codec field call " + mInsn2.getOpcode() + " (" + j + ")");
 									codecFieldInsn = mInsn2;
 									break;
 								}
@@ -210,7 +209,7 @@ public class CodecIndex implements Index {
 		String getterName = "get" + camelCaseName.substring(0, 1).toUpperCase() + camelCaseName.substring(1);
 		if (getterHandle.getTag() == H_INVOKEVIRTUAL) {
 			var entry = new MethodEntry(parentEntry, getterHandle.getName(), new MethodDescriptor(getterHandle.getDesc()));
-			methodNames.put(entry, getterName);
+			this.methodNames.put(entry, getterName);
 
 			AsmUtil.getMethod(parent, getterHandle.getName(), getterHandle.getDesc())
 					.flatMap(m -> AsmUtil.getFieldFromGetter(parent, m))
@@ -245,10 +244,10 @@ public class CodecIndex implements Index {
 
 			if (fieldInsn != null) {
 				var entry = new FieldEntry(parentEntry, fieldInsn.name, new TypeDescriptor(fieldInsn.desc));
-				fieldNames.put(entry, camelCaseName);
+				this.fieldNames.put(entry, camelCaseName);
 			} else if (methodInsn != null) {
 				var entry = new MethodEntry(parentEntry, methodInsn.name, new MethodDescriptor(methodInsn.desc));
-				methodNames.put(entry, getterName);
+				this.methodNames.put(entry, getterName);
 
 				AsmUtil.getMethod(parent, methodInsn.name, methodInsn.desc)
 						.flatMap(m -> AsmUtil.getFieldFromGetter(parent, m))
@@ -261,27 +260,27 @@ public class CodecIndex implements Index {
 	}
 
 	public boolean hasField(FieldEntry field) {
-		return fieldNames.containsKey(field);
+		return this.fieldNames.containsKey(field);
 	}
 
 	public boolean hasMethod(MethodEntry method) {
-		return methodNames.containsKey(method);
+		return this.methodNames.containsKey(method);
 	}
 
 	public String getFieldName(FieldEntry field) {
-		return fieldNames.get(field);
+		return this.fieldNames.get(field);
 	}
 
 	public String getMethodName(MethodEntry method) {
-		return methodNames.get(method);
+		return this.methodNames.get(method);
 	}
 
 	protected Map<FieldEntry, String> getFieldNames() {
-		return fieldNames;
+		return this.fieldNames;
 	}
 
 	protected Map<MethodEntry, String> getMethodNames() {
-		return methodNames;
+		return this.methodNames;
 	}
 
 	protected boolean hasCustomCodecs() {
@@ -294,7 +293,7 @@ public class CodecIndex implements Index {
 
 	record MethodInfo(String name, String desc) {
 		public boolean matches(MethodInsnNode insn) {
-			return insn.name.equals(name) && insn.desc.equals(desc);
+			return insn.name.equals(this.name) && insn.desc.equals(this.desc);
 		}
 	}
 }

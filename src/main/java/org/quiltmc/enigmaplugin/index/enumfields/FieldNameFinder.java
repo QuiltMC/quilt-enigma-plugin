@@ -26,6 +26,7 @@ import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.SourceInterpreter;
 import org.objectweb.asm.tree.analysis.SourceValue;
+import org.tinylog.Logger;
 
 import java.util.*;
 
@@ -42,15 +43,25 @@ public class FieldNameFinder implements Opcodes {
 		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_';
 	}
 
+	private static FieldEntry followFieldLink(FieldEntry field, Map<FieldEntry, FieldEntry> linkedFields, Map<FieldEntry, String> names) {
+		if (names.containsKey(field)) {
+			return field;
+		} else if (linkedFields.containsKey(field)) {
+			return followFieldLink(linkedFields.get(field), linkedFields, names);
+		}
+
+		return null;
+	}
+
 	public Map<FieldEntry, String> findNames(EnumFieldsIndex enumIndex) throws Exception {
 		Analyzer<SourceValue> analyzer = new Analyzer<>(new SourceInterpreter());
 		Map<FieldEntry, String> fieldNames = new HashMap<>();
 		Map<String, Set<String>> usedFieldNames = new HashMap<>();
 		Map<String, Set<String>> duplicatedFieldNames = new HashMap<>();
+		Map<FieldEntry, FieldEntry> linkedFields = new HashMap<>();
 
-		for (Map.Entry<String, List<MethodNode>> entry : enumIndex.getEnumStaticInitializers().entrySet()) {
+		for (Map.Entry<String, List<MethodNode>> entry : enumIndex.getStaticInitializers().entrySet()) {
 			String owner = entry.getKey();
-			ClassEntry classEntry = new ClassEntry(owner);
 			Set<String> enumFields = enumIndex.getEnumFields().getOrDefault(owner, Collections.emptySet());
 
 			for (MethodNode staticInitializer : entry.getValue()) {
@@ -72,19 +83,54 @@ public class FieldNameFinder implements Opcodes {
 					}
 
 					// Search for a name within the frame
+					Frame<SourceValue> frame = frames[i - 1];
 					String name = null;
-					stackFor:
-					for (int j = 0; j < frames[i - 1].getStackSize(); j++) {
-						SourceValue value = frames[i - 1].getStack(j);
+					for (int j = 0; j < frame.getStackSize() && name == null; j++) {
+						SourceValue value = frame.getStack(j);
 						for (AbstractInsnNode insn : value.insns) {
-							if (insn instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String) {
-								name = (String) ldcInsn.cst;
-								break stackFor;
+							if (insn instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String cst && !cst.isBlank()) {
+								name = cst;
+								break;
 							}
 						}
 					}
 
 					if (name == null) {
+						// Try to link this field to another one
+						FieldInsnNode usedFieldInsn = null;
+						for (int j = 0; j < frame.getStackSize() && usedFieldInsn == null; j++) {
+							SourceValue value = frame.getStack(j);
+							AbstractInsnNode stackInsn = null;
+							for (AbstractInsnNode insn : value.insns) {
+								stackInsn = insn;
+								if (insn instanceof FieldInsnNode fInsn && fInsn.getOpcode() == GETSTATIC && !owner.equals(fInsn.owner)) {
+									usedFieldInsn = fInsn;
+									break;
+								}
+							}
+
+							/* Search between the last stack instruction and the INVOKESPECIAL, useful for parameters passed to a constructor
+							NEW com/example/Clazz // Last instruction in the stack
+							DUP
+							GETSTATIC com/example/Test.FIELD : I // Instruction we are looking for
+							INVOKESPECIAL com/example/Clazz.<init> (I)V
+							INVOKESPECIAL com/example/Test.foo (Lcom/example/Clazz;)Lcom/example/Test; // End INVOKESPECIAL
+							*/
+							if (usedFieldInsn == null && stackInsn != null) {
+								while (stackInsn.getNext() != null && stackInsn.getNext() != insn1) {
+									stackInsn = stackInsn.getNext();
+									if (stackInsn instanceof FieldInsnNode fInsn && fInsn.getOpcode() == GETSTATIC && !owner.equals(fInsn.owner)) {
+										usedFieldInsn = fInsn;
+										break;
+									}
+								}
+							}
+						}
+
+						if (usedFieldInsn != null) {
+							linkedFields.put(fieldFromInsn(fInsn2), fieldFromInsn(usedFieldInsn));
+						}
+
 						continue;
 					}
 
@@ -134,7 +180,7 @@ public class FieldNameFinder implements Opcodes {
 						}
 					}
 
-					if (!hasText || usableName.length() == 0) {
+					if (!hasText || usableName.isEmpty()) {
 						continue;
 					}
 
@@ -145,19 +191,34 @@ public class FieldNameFinder implements Opcodes {
 
 					if (!duplicatedNames.contains(fieldName)) {
 						if (!usedNames.add(fieldName)) {
-							System.err.println("Warning: Duplicate key: " + fieldName + " (" + name + ") in " + owner);
+							Logger.warn("Duplicate key: " + fieldName + " (" + name + ") in " + owner);
 							duplicatedNames.add(fieldName);
 							usedNames.remove(fieldName);
 						}
 					}
 
 					if (usedNames.contains(fieldName)) {
-						fieldNames.put(new FieldEntry(classEntry, fInsn2.name, new TypeDescriptor(fInsn2.desc)), fieldName);
+						fieldNames.put(fieldFromInsn(fInsn2), fieldName);
 					}
 				}
 			}
 		}
 
+		// Insert linked names
+		for (FieldEntry linked : linkedFields.keySet()) {
+			FieldEntry target = followFieldLink(linked, linkedFields, fieldNames);
+			String name = fieldNames.get(target);
+
+			Set<String> usedNames = usedFieldNames.computeIfAbsent(linked.getParent().getFullName(), s -> new HashSet<>());
+			if (usedNames.add(name)) {
+				fieldNames.put(linked, name);
+			}
+		}
+
 		return fieldNames;
+	}
+
+	private static FieldEntry fieldFromInsn(FieldInsnNode insn) {
+		return new FieldEntry(new ClassEntry(insn.owner), insn.name, new TypeDescriptor(insn.desc));
 	}
 }

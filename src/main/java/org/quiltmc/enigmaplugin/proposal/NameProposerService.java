@@ -41,7 +41,7 @@ public class NameProposerService implements NameProposalService {
 		this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_LOGGER, LoggerNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CODECS, CodecNameProposer::new);
-		this.addIfEnabled(context, Arguments.DISABLE_MAP_NON_HASHED, MojangNameProposer::new);
+		this.addIfNotDisabled(context, Arguments.DISABLE_MAP_NON_HASHED, MojangNameProposer::new);
 
 		if (indexer.getSimpleTypeSingleIndex().isEnabled()) {
 			this.nameProposers.add(new SimpleTypeFieldNameProposer(indexer));
@@ -61,6 +61,12 @@ public class NameProposerService implements NameProposalService {
 		}
 	}
 
+	private void addIfNotDisabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer<?>> factory) {
+		if (!Arguments.isDisabled(context, name, true)) {
+			this.nameProposers.add(factory.get());
+		}
+	}
+
 	public String getMappedFieldName(EntryRemapper remapper, FieldEntry field) {
 		var deobfedField = remapper.extendedDeobfuscate(field);
 
@@ -74,7 +80,7 @@ public class NameProposerService implements NameProposalService {
 	@Override
 	public Optional<String> proposeName(Entry<?> obfEntry, EntryRemapper remapper) {
 		Optional<String> name;
-		for (NameProposer<?> proposer : nameProposers) {
+		for (NameProposer<?> proposer : this.nameProposers) {
 			if (proposer.canPropose(obfEntry)) {
 				name = proposer.proposeName(obfEntry, this, remapper);
 				if (name.isPresent()) {

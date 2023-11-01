@@ -24,6 +24,9 @@ import org.quiltmc.enigmaplugin.index.LoggerIndex;
 
 import java.util.Optional;
 
+/**
+ * Proposes names for the {@code org/slf4j/Logger} class. Will always propose the same name, {@code LOGGER}.
+ */
 public class LoggerNameProposer implements NameProposer<FieldEntry> {
 	private final LoggerIndex index;
 
