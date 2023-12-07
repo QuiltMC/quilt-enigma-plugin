@@ -16,33 +16,30 @@
 
 package org.quiltmc.enigmaplugin.proposal;
 
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 import org.quiltmc.enigmaplugin.index.enumfields.EnumFieldsIndex;
 
-import java.util.Optional;
+import java.util.Map;
 
-public class EnumFieldNameProposer implements NameProposer<FieldEntry> {
+public class EnumFieldNameProposer extends NameProposer {
+	public static final String ID = "enum_fields";
 	private final EnumFieldsIndex enumIndex;
 
 	public EnumFieldNameProposer(JarIndexer index) {
+		super(ID);
 		this.enumIndex = index.getEnumFieldsIndex();
 	}
 
 	@Override
-	public Optional<String> doProposeName(FieldEntry entry, NameProposerService service, EntryRemapper remapper) {
-		return Optional.ofNullable(this.enumIndex.getName(entry));
+	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+		for (FieldEntry field : this.enumIndex.getFields()) {
+			String name = this.enumIndex.getName(field);
+			this.insertProposal(mappings, field, name);
+		}
 	}
 
-	@Override
-	public boolean canPropose(Entry<?> entry) {
-		return entry instanceof FieldEntry;
-	}
-
-	@Override
-	public FieldEntry upcast(Entry<?> entry) {
-		return (FieldEntry) entry;
-	}
 }

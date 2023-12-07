@@ -16,9 +16,9 @@
 
 package org.quiltmc.enigmaplugin.index;
 
-import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
+import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.objectweb.asm.tree.ClassNode;
 import org.quiltmc.enigmaplugin.util.AsmUtil;
 
@@ -47,5 +47,9 @@ public class LoggerIndex implements Index {
 
 	public boolean hasField(FieldEntry field) {
 		return this.fields.contains(field);
+	}
+
+	public Set<FieldEntry> getFields() {
+		return this.fields;
 	}
 }

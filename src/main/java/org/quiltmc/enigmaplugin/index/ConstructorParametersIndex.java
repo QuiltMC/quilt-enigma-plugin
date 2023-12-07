@@ -16,21 +16,24 @@
 
 package org.quiltmc.enigmaplugin.index;
 
-import cuchaz.enigma.translation.representation.MethodDescriptor;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
+import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
+import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 import org.quiltmc.enigmaplugin.util.Descriptors;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class ConstructorParametersIndex implements Index {
 	private final Map<LocalVariableEntry, FieldEntry> entries = new HashMap<>();
+	private final Map<FieldEntry, Set<LocalVariableEntry>> entriesByField = new HashMap<>();
 
 	@Override
 	public void visitClassNode(ClassNode classNode) {
@@ -70,6 +73,7 @@ public class ConstructorParametersIndex implements Index {
 					var param = new LocalVariableEntry(methodEntry, loadInst.var, "", true, null);
 					var field = new FieldEntry(classEntry, fieldInst.name, new TypeDescriptor(fieldInst.desc));
 					this.entries.put(param, field);
+					this.entriesByField.computeIfAbsent(field, f -> new HashSet<>()).add(param);
 				}
 			}
 		}
@@ -83,6 +87,22 @@ public class ConstructorParametersIndex implements Index {
 	 */
 	public FieldEntry getLinkedField(LocalVariableEntry entry) {
 		return this.entries.get(entry);
+	}
+
+	public Set<LocalVariableEntry> getParameters() {
+		return this.entries.keySet();
+	}
+
+	public boolean isParameterLinked(LocalVariableEntry parameter) {
+		return this.entries.containsKey(parameter);
+	}
+
+	public boolean isFieldLinked(FieldEntry field) {
+		return this.entriesByField.containsKey(field);
+	}
+
+	public Set<LocalVariableEntry> getParametersForField(FieldEntry field) {
+		return this.entriesByField.get(field);
 	}
 
 	private boolean callToCanonical(ClassNode classNode, MethodNode constructorNode) {

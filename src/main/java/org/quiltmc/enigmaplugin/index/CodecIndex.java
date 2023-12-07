@@ -16,11 +16,12 @@
 
 package org.quiltmc.enigmaplugin.index;
 
-import cuchaz.enigma.translation.representation.MethodDescriptor;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.jetbrains.annotations.TestOnly;
+import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
+import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
+import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -275,18 +276,30 @@ public class CodecIndex implements Index {
 		return this.methodNames.get(method);
 	}
 
+	public Set<FieldEntry> getFields() {
+		return this.fieldNames.keySet();
+	}
+
+	public Set<MethodEntry> getMethods() {
+		return this.methodNames.keySet();
+	}
+
+	@TestOnly
 	protected Map<FieldEntry, String> getFieldNames() {
 		return this.fieldNames;
 	}
 
+	@TestOnly
 	protected Map<MethodEntry, String> getMethodNames() {
 		return this.methodNames;
 	}
 
+	@TestOnly
 	protected boolean hasCustomCodecs() {
 		return !this.customCodecClasses.isEmpty();
 	}
 
+	@TestOnly
 	protected Set<String> getCustomCodecs() {
 		return this.customCodecClasses;
 	}

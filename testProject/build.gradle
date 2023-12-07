@@ -52,7 +52,7 @@ var mappings = file('mappings/')
 var profile = file('profile.json')
 
 task testEnigma(type: JavaExec, dependsOn: "obfuscate") {
-	mainClass = "cuchaz.enigma.gui.Main"
+	mainClass = "org.quiltmc.enigma.gui.Main"
 	classpath = configurations.enigmaRuntime
 
 	args('-jar', outputJar, '-mappings', mappings.getAbsolutePath(), '-profile', profile.getAbsolutePath())

@@ -16,38 +16,54 @@
 
 package org.quiltmc.enigmaplugin.proposal;
 
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigmaplugin.index.ConstructorParametersIndex;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 
-import java.util.Optional;
+import java.util.Map;
 
-public class ConstructorParamsNameProposer implements NameProposer<LocalVariableEntry> {
+public class ConstructorParamsNameProposer extends NameProposer {
+	public static final String ID = "constructor_params";
 	private final ConstructorParametersIndex index;
 
 	public ConstructorParamsNameProposer(JarIndexer index) {
+		super(ID);
 		this.index = index.getConstructorParametersIndex();
 	}
 
 	@Override
-	public Optional<String> doProposeName(LocalVariableEntry entry, NameProposerService service, EntryRemapper remapper) {
-		FieldEntry linkedField = this.index.getLinkedField(entry);
-
-		var newName = service.getMappedFieldName(remapper, linkedField);
-
-		return Optional.ofNullable(newName);
+	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
 	}
 
 	@Override
-	public boolean canPropose(Entry<?> entry) {
-		return entry instanceof LocalVariableEntry paramEntry && this.index.getLinkedField(paramEntry) != null;
-	}
+	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
+		if (obfEntry instanceof FieldEntry field && this.index.isFieldLinked(field)) {
+			for (LocalVariableEntry parameter : this.index.getParametersForField(field)) {
+				this.insertDynamicProposal(mappings, parameter, newMapping);
+			}
+		} else if (obfEntry instanceof LocalVariableEntry parameter && this.index.isParameterLinked(parameter)) {
+			FieldEntry linkedField = this.index.getLinkedField(parameter);
 
-	@Override
-	public LocalVariableEntry upcast(Entry<?> entry) {
-		return (LocalVariableEntry) entry;
+			this.insertDynamicProposal(mappings, linkedField, newMapping);
+
+			for (LocalVariableEntry param : this.index.getParametersForField(linkedField)) {
+				if (param != parameter) {
+					this.insertDynamicProposal(mappings, param, newMapping);
+				}
+			}
+		} else if (obfEntry == null) {
+			// Mappings were just loaded
+			for (LocalVariableEntry parameter : this.index.getParameters()) {
+				FieldEntry linkedField = this.index.getLinkedField(parameter);
+				EntryMapping mapping = remapper.getMapping(linkedField);
+
+				this.insertDynamicProposal(mappings, parameter, mapping);
+			}
+		}
 	}
 }

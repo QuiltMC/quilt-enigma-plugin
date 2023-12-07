@@ -16,63 +16,96 @@
 
 package org.quiltmc.enigmaplugin.proposal;
 
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigmaplugin.index.GetterSetterIndex;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 import org.quiltmc.enigmaplugin.util.Descriptors;
 
-import java.util.Optional;
+import java.util.Map;
 
-public class GetterSetterNameProposer implements NameProposer<Entry<?>> {
+public class GetterSetterNameProposer extends NameProposer {
+	public static final String ID = "getter_setter";
 	private final GetterSetterIndex index;
 
 	public GetterSetterNameProposer(JarIndexer index) {
+		super(ID);
 		this.index = index.getGetterSetterIndex();
 	}
 
-	@Override
-	public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
-		if (entry instanceof MethodEntry methodEntry) {
-			FieldEntry linkedField = this.index.getLinkedField(methodEntry);
-
-			var newName = service.getMappedFieldName(remapper, linkedField);
-
-			if (newName == null) {
-				return Optional.empty();
-			}
-
-			if (methodEntry.getDesc().getReturnDesc().equals(Descriptors.VOID_TYPE)) {
-				// Setter
-				newName = "set" + newName.substring(0, 1).toUpperCase() + newName.substring(1);
-			} else {
-				// Getter
-				newName = "get" + newName.substring(0, 1).toUpperCase() + newName.substring(1);
-			}
-
-			return Optional.of(newName);
-		} else if (entry instanceof LocalVariableEntry paramEntry) {
-			FieldEntry linkedField = this.index.getLinkedField(paramEntry);
-
-			var newName = service.getMappedFieldName(remapper, linkedField);
-
-			return Optional.ofNullable(newName);
+	private static String getMethodName(String newName, MethodEntry method) {
+		if (newName == null || newName.isEmpty()) {
+			return null;
 		}
 
-		return Optional.empty();
+		newName = newName.substring(0, 1).toUpperCase() + newName.substring(1);
+
+		if (method.getDesc().getReturnDesc().equals(Descriptors.VOID_TYPE)) {
+			return "set" + newName;
+		} else {
+			return "get" + newName;
+		}
 	}
 
 	@Override
-	public boolean canPropose(Entry<?> entry) {
-		return entry instanceof MethodEntry methodEntry && this.index.getLinkedField(methodEntry) != null
-				|| entry instanceof LocalVariableEntry paramEntry && this.index.getLinkedField(paramEntry) != null;
+	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
 	}
 
 	@Override
-	public Entry<?> upcast(Entry<?> entry) {
-		return entry;
+	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
+		if (obfEntry == null) {
+			// Mappings were just loaded
+			for (MethodEntry method : this.index.getLinkedMethods()) {
+				FieldEntry linkedField = this.index.getLinkedField(method);
+				EntryMapping mapping = remapper.getMapping(linkedField);
+				var newName = getMethodName(mapping.targetName(), method);
+
+				if (newName == null) {
+					continue;
+				}
+
+				this.insertDynamicProposal(mappings, method, newName);
+			}
+
+			for (LocalVariableEntry parameter : this.index.getLinkedParameters()) {
+				FieldEntry linkedField = this.index.getLinkedField(parameter);
+				EntryMapping mapping = remapper.getMapping(linkedField);
+				var newName = mapping.targetName();
+
+				if (newName == null || newName.isEmpty()) {
+					continue;
+				}
+
+				this.insertDynamicProposal(mappings, parameter, newName);
+			}
+
+			return;
+		}
+
+		if (obfEntry instanceof FieldEntry field) {
+			var name = newMapping.targetName();
+			if (name == null) {
+				return; // TODO
+			}
+
+			for (Entry<?> link : this.index.getFieldLinks(field)) {
+				if (link instanceof MethodEntry method) {
+					var newName = getMethodName(name, method);
+
+					if (newName == null) {
+						continue;
+					}
+
+					this.insertDynamicProposal(mappings, method, newName);
+				} else if (link instanceof LocalVariableEntry parameter) {
+					this.insertDynamicProposal(mappings, parameter, name);
+				}
+			}
+		}
 	}
 }

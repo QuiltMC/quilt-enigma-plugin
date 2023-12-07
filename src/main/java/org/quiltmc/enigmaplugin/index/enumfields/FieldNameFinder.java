@@ -17,9 +17,9 @@
 
 package org.quiltmc.enigmaplugin.index.enumfields;
 
-import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
+import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 import org.objectweb.asm.tree.analysis.Analyzer;

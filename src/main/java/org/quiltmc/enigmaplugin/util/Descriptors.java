@@ -16,8 +16,8 @@
 
 package org.quiltmc.enigmaplugin.util;
 
-import cuchaz.enigma.translation.representation.MethodDescriptor;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
+import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
+import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.MethodNode;

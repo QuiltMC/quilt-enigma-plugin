@@ -16,39 +16,35 @@
 
 package org.quiltmc.enigmaplugin.proposal;
 
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.MethodDescriptor;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 
-import java.util.Optional;
+import java.util.Map;
 
-public class EqualsNameProposer implements NameProposer<LocalVariableEntry> {
+public class EqualsNameProposer extends NameProposer {
+	public static final String ID = "equals";
 	private static final MethodDescriptor EQUALS_DESCRIPTOR = new MethodDescriptor("(Ljava/lang/Object;)Z");
 
-	@Override
-	public Optional<String> doProposeName(LocalVariableEntry entry, NameProposerService service, EntryRemapper remapper) {
-		return Optional.of("o");
+	public EqualsNameProposer() {
+		super(ID);
 	}
 
 	@Override
-	public boolean canPropose(Entry<?> entry) {
-		if (entry instanceof LocalVariableEntry localVar) {
-			MethodEntry parent = localVar.getParent();
-			if (parent == null) {
-				return false;
+	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+		EntryIndex entryIndex = index.getIndex(EntryIndex.class);
+
+		for (MethodEntry method : entryIndex.getMethods()) {
+			String methodName = method.getName();
+			if (methodName.equals("equals") && method.getDesc().equals(EQUALS_DESCRIPTOR)) {
+				LocalVariableEntry param = new LocalVariableEntry(method, 1, "", true, null);
+				this.insertProposal(mappings, param, "o");
 			}
-
-			String methodName = parent.getName();
-			return methodName.equals("equals") && parent.getDesc().equals(EQUALS_DESCRIPTOR);
 		}
-
-		return false;
 	}
 
-	@Override
-	public LocalVariableEntry upcast(Entry<?> entry) {
-		return (LocalVariableEntry) entry;
-	}
 }

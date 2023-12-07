@@ -16,37 +16,32 @@
 
 package org.quiltmc.enigmaplugin.proposal;
 
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 import org.quiltmc.enigmaplugin.index.LoggerIndex;
 
-import java.util.Optional;
+import java.util.Map;
 
 /**
  * Proposes names for the {@code org/slf4j/Logger} class. Will always propose the same name, {@code LOGGER}.
  */
-public class LoggerNameProposer implements NameProposer<FieldEntry> {
+public class LoggerNameProposer extends NameProposer {
+	public static final String ID = "logger";
 	private final LoggerIndex index;
 
 	public LoggerNameProposer(JarIndexer index) {
+		super(ID);
 		this.index = index.getLoggerIndex();
 	}
 
 	@Override
-	public Optional<String> doProposeName(FieldEntry entry, NameProposerService service, EntryRemapper remapper) {
-		return Optional.of("LOGGER");
+	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+		for (FieldEntry field : this.index.getFields()) {
+			this.insertProposal(mappings, field, "LOGGER");
+		}
 	}
 
-	@Override
-	public boolean canPropose(Entry<?> entry) {
-		return entry instanceof FieldEntry fieldEntry
-				&& this.index.hasField(fieldEntry);
-	}
-
-	@Override
-	public FieldEntry upcast(Entry<?> entry) {
-		return (FieldEntry) entry;
-	}
 }

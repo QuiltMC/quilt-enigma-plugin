@@ -16,11 +16,11 @@
 
 package org.quiltmc.enigmaplugin;
 
-import cuchaz.enigma.api.EnigmaPlugin;
-import cuchaz.enigma.api.EnigmaPluginContext;
-import cuchaz.enigma.api.service.JarIndexerService;
-import cuchaz.enigma.api.service.NameProposalService;
-import cuchaz.enigma.api.service.ObfuscationTestService;
+import org.quiltmc.enigma.api.EnigmaPlugin;
+import org.quiltmc.enigma.api.EnigmaPluginContext;
+import org.quiltmc.enigma.api.service.JarIndexerService;
+import org.quiltmc.enigma.api.service.NameProposalService;
+import org.quiltmc.enigma.api.service.ObfuscationTestService;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 import org.quiltmc.enigmaplugin.obfuscation.NameObfuscationTestService;
 import org.quiltmc.enigmaplugin.proposal.NameProposerService;
@@ -29,13 +29,14 @@ public class QuiltEnigmaPlugin implements EnigmaPlugin {
 	public static final String SERVICE_ID_PREFIX = "quiltmc:";
 	public static final String INDEX_SERVICE_NAME = "jar_index";
 	public static final String NAME_PROPOSAL_SERVICE_NAME = "name_proposal";
+	public static final String NAME_PROPOSAL_SERVICE_ID = SERVICE_ID_PREFIX + NAME_PROPOSAL_SERVICE_NAME;
 	public static final String OBFUSCATION_SERVICE_NAME = "obfuscation_test";
 
 	@Override
 	public void init(EnigmaPluginContext ctx) {
 		var indexer = new JarIndexer();
 		ctx.registerService(SERVICE_ID_PREFIX + INDEX_SERVICE_NAME, JarIndexerService.TYPE, indexer::withContext);
-		ctx.registerService(SERVICE_ID_PREFIX + NAME_PROPOSAL_SERVICE_NAME, NameProposalService.TYPE, ctx1 -> new NameProposerService(indexer, ctx1));
+		ctx.registerService(NAME_PROPOSAL_SERVICE_ID, NameProposalService.TYPE, ctx1 -> new NameProposerService(indexer, ctx1));
 		ctx.registerService(SERVICE_ID_PREFIX + OBFUSCATION_SERVICE_NAME, ObfuscationTestService.TYPE, NameObfuscationTestService::new);
 	}
 }

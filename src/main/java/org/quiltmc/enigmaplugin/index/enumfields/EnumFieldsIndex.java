@@ -16,7 +16,7 @@
 
 package org.quiltmc.enigmaplugin.index.enumfields;
 
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -60,6 +60,10 @@ public class EnumFieldsIndex implements Index {
 
 	public String getName(FieldEntry field) {
 		return this.fieldNames.get(field);
+	}
+
+	public Set<FieldEntry> getFields() {
+		return this.fieldNames.keySet();
 	}
 
 	protected Map<String, Set<String>> getEnumFields() {

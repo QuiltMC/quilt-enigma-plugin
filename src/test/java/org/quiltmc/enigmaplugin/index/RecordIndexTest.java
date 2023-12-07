@@ -16,8 +16,8 @@
 
 package org.quiltmc.enigmaplugin.index;
 
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.tree.ClassNode;
 import org.tinylog.Logger;
 

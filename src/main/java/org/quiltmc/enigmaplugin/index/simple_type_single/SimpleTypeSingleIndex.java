@@ -16,13 +16,13 @@
 
 package org.quiltmc.enigmaplugin.index.simple_type_single;
 
-import cuchaz.enigma.classprovider.ClassProvider;
-import cuchaz.enigma.translation.representation.MethodDescriptor;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.api.class_provider.ClassProvider;
+import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
+import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
+import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 import org.objectweb.asm.Opcodes;
@@ -43,7 +43,7 @@ import java.util.*;
  * they are entirely unique within their context (no other fields/local vars in the same scope have the same type).
  */
 public class SimpleTypeSingleIndex implements Opcodes {
-	private final Map<ParameterEntry, String> parameters = new HashMap<>();
+	private final Map<LocalVariableEntry, String> parameters = new HashMap<>();
 	private final Map<FieldEntry, String> fields = new HashMap<>();
 	private final Map<ClassNode, Map<String, FieldBuildingEntry>> fieldCache = new HashMap<>();
 	private SimpleTypeFieldNamesRegistry registry;
@@ -70,16 +70,24 @@ public class SimpleTypeSingleIndex implements Opcodes {
 		return this.fields.get(fieldEntry);
 	}
 
-	public @Nullable String getParam(ParameterEntry paramEntry) {
+	public @Nullable String getParam(LocalVariableEntry paramEntry) {
 		return this.parameters.get(paramEntry);
 	}
 
+	public Set<FieldEntry> getFields() {
+		return this.fields.keySet();
+	}
+
+	public Set<LocalVariableEntry> getParams() {
+		return this.parameters.keySet();
+	}
+
 	@TestOnly
-	public List<ParameterEntry> getParamsOf(MethodEntry methodEntry) {
-		var params = new ArrayList<ParameterEntry>();
+	public List<LocalVariableEntry> getParamsOf(MethodEntry methodEntry) {
+		var params = new ArrayList<LocalVariableEntry>();
 
 		this.parameters.forEach((param, name) -> {
-			if (param.parent.equals(methodEntry)) {
+			if (param.getParent() != null && param.getParent().equals(methodEntry)) {
 				params.add(param);
 			}
 		});
@@ -127,7 +135,8 @@ public class SimpleTypeSingleIndex implements Opcodes {
 			this.collectMatchingParameters(method, bannedTypes, parameters).forEach((name, param) -> {
 				if (!param.isNull()) {
 					boolean isStatic = AsmUtil.maskMatch(method.access, ACC_STATIC);
-					var paramEntry = new ParameterEntry(methodEntry, param.index() + (isStatic ? 0 : 1));
+					int index = param.index() + (isStatic ? 0 : 1);
+					var paramEntry = new LocalVariableEntry(methodEntry, index, "", true, null);
 					this.parameters.put(paramEntry, name);
 				}
 			});
@@ -255,12 +264,6 @@ public class SimpleTypeSingleIndex implements Opcodes {
 
 		public boolean isNull() {
 			return this.node == null;
-		}
-	}
-
-	public record ParameterEntry(MethodEntry parent, int index) {
-		public static ParameterEntry fromLocalVariableEntry(LocalVariableEntry entry) {
-			return new ParameterEntry(entry.getParent(), entry.getIndex());
 		}
 	}
 }

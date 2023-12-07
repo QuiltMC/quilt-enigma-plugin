@@ -16,11 +16,12 @@
 
 package org.quiltmc.enigmaplugin.index;
 
-import cuchaz.enigma.translation.representation.MethodDescriptor;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.jetbrains.annotations.TestOnly;
+import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
+import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
+import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.tree.*;
 
@@ -292,18 +293,22 @@ public class RecordIndex implements Index {
 		return this.records.containsKey(parent) ? this.records.get(parent).getAccessorMethodName(method) : null;
 	}
 
+	@TestOnly
 	protected Map<FieldEntry, String> getAllFieldNames() {
 		return this.records.keySet().stream().flatMap(c -> this.getFieldNames(c).entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 
+	@TestOnly
 	protected Map<MethodEntry, String> getAllMethodNames() {
 		return this.records.keySet().stream().flatMap(c -> this.getMethodNames(c).entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 
+	@TestOnly
 	protected Map<FieldEntry, String> getFieldNames(ClassEntry parent) {
 		return this.records.containsKey(parent) ? this.records.get(parent).fieldNames : null;
 	}
 
+	@TestOnly
 	protected Map<MethodEntry, String> getMethodNames(ClassEntry parent) {
 		if (!this.records.containsKey(parent)) {
 			return null;
@@ -311,6 +316,26 @@ public class RecordIndex implements Index {
 
 		RecordComponentData data = this.records.get(parent);
 		return data.fieldAccessorMethods.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> data.getName(e.getValue())));
+	}
+
+	public Set<ClassEntry> getRecordClasses() {
+		return this.records.keySet();
+	}
+
+	public Set<FieldEntry> getFields(ClassEntry parent) {
+		if (this.records.containsKey(parent)) {
+			return this.records.get(parent).fieldNames.keySet();
+		}
+
+		return Collections.emptySet();
+	}
+
+	public Set<MethodEntry> getMethods(ClassEntry parent) {
+		if (this.records.containsKey(parent)) {
+			return this.records.get(parent).fieldAccessorMethods.keySet();
+		}
+
+		return Collections.emptySet();
 	}
 
 	static class RecordComponentData {

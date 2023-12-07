@@ -16,39 +16,50 @@
 
 package org.quiltmc.enigmaplugin.proposal;
 
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 
-import java.util.Optional;
+import java.util.Map;
 
 /**
  * If the entry is not deobfuscated, propose the name that's already provided.
  * This is useful to avoid situations where we simply click "mark as deobf" to name something.
  */
-public class MojangNameProposer implements NameProposer<Entry<?>> {
+public class MojangNameProposer extends NameProposer {
+	public static final String ID = "map_non_hashed";
+
+	public MojangNameProposer() {
+		super(ID);
+	}
+
 	@Override
-	public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
-		String name = entry.getName();
-		if (remapper.getDeobfMapping(entry).targetName() == null
-			&& ((entry instanceof FieldEntry && !name.startsWith("f_"))
-			|| (entry instanceof MethodEntry && !name.startsWith("m_"))
-			|| (entry instanceof ClassEntry classEntry && !classEntry.getSimpleName().startsWith("C_")))) {
-			return Optional.of(name);
+	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+		EntryIndex entryIndex = index.getIndex(EntryIndex.class);
+
+		for (FieldEntry field : entryIndex.getFields()) {
+			String name = field.getName();
+			if (!name.startsWith("f_")) {
+				this.insertProposal(mappings, field, name);
+			}
 		}
 
-		return Optional.empty();
+		for (MethodEntry method : entryIndex.getMethods()) {
+			String name = method.getName();
+			if (!name.startsWith("m_")) {
+				this.insertProposal(mappings, method, name);
+			}
+		}
+
+		for (ClassEntry clazz : entryIndex.getClasses()) {
+			if (!clazz.getSimpleName().startsWith("C_")) {
+				this.insertProposal(mappings, clazz, clazz.getFullName());
+			}
+		}
 	}
 
-	@Override
-	public boolean canPropose(Entry<?> entry) {
-		return entry instanceof FieldEntry || entry instanceof MethodEntry || entry instanceof ClassEntry;
-	}
-
-	@Override
-	public Entry<?> upcast(Entry<?> entry) {
-		return entry;
-	}
 }

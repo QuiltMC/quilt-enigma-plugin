@@ -16,19 +16,51 @@
 
 package org.quiltmc.enigmaplugin.proposal;
 
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.source.TokenType;
+import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigmaplugin.QuiltEnigmaPlugin;
 
-import java.util.Optional;
+import java.util.Map;
 
-public interface NameProposer<E extends Entry<?>> {
-	Optional<String> doProposeName(E entry, NameProposerService service, EntryRemapper remapper);
+public abstract class NameProposer {
+	private final String id;
 
-	boolean canPropose(Entry<?> entry);
+	public NameProposer(String id) {
+		this.id = id;
+	}
 
-	E upcast(Entry<?> entry);
+	public void insertProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, EntryMapping mapping) {
+		if (mapping != null && mapping.targetName() != null && !mapping.targetName().isEmpty()) {
+			this.insertProposal(mappings, entry, mapping.targetName());
+		}
+	}
 
-	default Optional<String> proposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
-		return this.doProposeName(this.upcast(entry), service, remapper);
+	public void insertProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name) {
+		insertProposal(mappings, entry, name, TokenType.JAR_PROPOSED);
+	}
+
+	public void insertDynamicProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, EntryMapping mapping) {
+		if (mapping != null && mapping.targetName() != null && !mapping.targetName().isEmpty()) {
+			this.insertDynamicProposal(mappings, entry, mapping.targetName());
+		}
+	}
+
+	public void insertDynamicProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name) {
+		insertProposal(mappings, entry, name, TokenType.DYNAMIC_PROPOSED);
+	}
+
+	private void insertProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name, TokenType tokenType) {
+		if (!mappings.containsKey(entry)) {
+			EntryMapping mapping = new EntryMapping(name, null, tokenType, QuiltEnigmaPlugin.NAME_PROPOSAL_SERVICE_ID + "/" + this.id);
+			mappings.put(entry, mapping);
+		}
+	}
+
+	public abstract void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings);
+
+	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
 	}
 }

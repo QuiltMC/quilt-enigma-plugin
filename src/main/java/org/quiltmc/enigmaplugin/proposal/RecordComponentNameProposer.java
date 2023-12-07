@@ -16,52 +16,41 @@
 
 package org.quiltmc.enigmaplugin.proposal;
 
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 import org.quiltmc.enigmaplugin.index.RecordIndex;
 
-import java.util.Optional;
+import java.util.Map;
 
-public class RecordComponentNameProposer implements NameProposer<Entry<?>> {
+public class RecordComponentNameProposer extends NameProposer {
+	public static final String ID = "records";
 	private final RecordIndex index;
 
 	public RecordComponentNameProposer(JarIndexer index) {
+		super(ID);
 		this.index = index.getRecordIndex();
 	}
 
 	@Override
-	public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
-		if (entry instanceof FieldEntry fieldEntry) {
-			ClassEntry parent = fieldEntry.getParent();
-			return Optional.ofNullable(this.index.getFieldName(parent, fieldEntry));
-		} else if (entry instanceof MethodEntry methodEntry) {
-			ClassEntry parent = methodEntry.getParent();
-			return Optional.ofNullable(this.index.getAccessorMethodName(parent, methodEntry));
+	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+		for (ClassEntry recordClass : this.index.getRecordClasses()) {
+			for (FieldEntry field : this.index.getFields(recordClass)) {
+				String name = this.index.getFieldName(recordClass, field);
+
+				this.insertProposal(mappings, field, name);
+			}
+
+			for (MethodEntry method : this.index.getMethods(recordClass)) {
+				String name = this.index.getAccessorMethodName(recordClass, method);
+
+				this.insertProposal(mappings, method, name);
+			}
 		}
-
-		return Optional.empty();
 	}
 
-	@Override
-	public boolean canPropose(Entry<?> entry) {
-		ClassEntry classEntry;
-		if (entry instanceof FieldEntry fieldEntry) {
-			classEntry = fieldEntry.getParent();
-		} else if (entry instanceof MethodEntry methodEntry) {
-			classEntry = methodEntry.getParent();
-		} else {
-			return false;
-		}
-
-		return this.index.isRecord(classEntry);
-	}
-
-	@Override
-	public Entry<?> upcast(Entry<?> entry) {
-		return entry;
-	}
 }

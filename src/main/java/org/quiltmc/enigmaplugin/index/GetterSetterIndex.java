@@ -16,12 +16,13 @@
 
 package org.quiltmc.enigmaplugin.index;
 
-import cuchaz.enigma.translation.representation.MethodDescriptor;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
+import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
+import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -29,11 +30,14 @@ import org.quiltmc.enigmaplugin.util.AsmUtil;
 import org.quiltmc.enigmaplugin.util.Descriptors;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class GetterSetterIndex implements Index {
 	private final Map<MethodEntry, FieldEntry> linked = new HashMap<>();
 	private final Map<LocalVariableEntry, FieldEntry> linkedSetterParams = new HashMap<>();
+	private final Map<FieldEntry, Set<Entry<?>>> links = new HashMap<>();
 
 	@Override
 	public void visitClassNode(ClassNode classNode) {
@@ -71,10 +75,12 @@ public class GetterSetterIndex implements Index {
 		var fieldEntry = new FieldEntry(classEntry, fieldNode.name, new TypeDescriptor(fieldNode.desc));
 
 		this.linked.put(methodEntry, fieldEntry);
+		this.links.computeIfAbsent(fieldEntry, f -> new HashSet<>()).add(methodEntry);
 
 		if (descriptor.getArgumentDescs().size() == 1) {
 			var paramEntry = new LocalVariableEntry(methodEntry, 1, "", true, null);
 			this.linkedSetterParams.put(paramEntry, fieldEntry);
+			this.links.get(fieldEntry).add(paramEntry);
 		}
 	}
 
@@ -84,5 +90,17 @@ public class GetterSetterIndex implements Index {
 
 	public FieldEntry getLinkedField(LocalVariableEntry param) {
 		return this.linkedSetterParams.get(param);
+	}
+
+	public Set<Entry<?>> getFieldLinks(FieldEntry field) {
+		return this.links.get(field);
+	}
+
+	public Set<MethodEntry> getLinkedMethods() {
+		return this.linked.keySet();
+	}
+
+	public Set<LocalVariableEntry> getLinkedParameters() {
+		return this.linkedSetterParams.keySet();
 	}
 }

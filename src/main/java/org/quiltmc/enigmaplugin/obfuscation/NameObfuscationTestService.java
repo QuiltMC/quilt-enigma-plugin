@@ -17,12 +17,12 @@
 
 package org.quiltmc.enigmaplugin.obfuscation;
 
-import cuchaz.enigma.api.service.EnigmaServiceContext;
-import cuchaz.enigma.api.service.ObfuscationTestService;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.api.service.EnigmaServiceContext;
+import org.quiltmc.enigma.api.service.ObfuscationTestService;
+import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 
 public class NameObfuscationTestService implements ObfuscationTestService {
 	private static final String DEFAULT_PACKAGE = "net/minecraft/unmapped";
@@ -37,10 +37,10 @@ public class NameObfuscationTestService implements ObfuscationTestService {
 	private final String classPackagePrefix;
 
 	public NameObfuscationTestService(EnigmaServiceContext<ObfuscationTestService> context) {
-		this.packagePrefix = context.getArgument("package").orElse(DEFAULT_PACKAGE) + "/";
-		this.classPrefix = context.getArgument("classPrefix").orElse(DEFAULT_CLASS_PREFIX);
-		this.fieldPrefix = context.getArgument("fieldPrefix").orElse(DEFAULT_FIELD_PREFIX);
-		this.methodPrefix = context.getArgument("methodPrefix").orElse(DEFAULT_METHOD_PREFIX);
+		this.packagePrefix = context.getSingleArgument("package").orElse(DEFAULT_PACKAGE) + "/";
+		this.classPrefix = context.getSingleArgument("classPrefix").orElse(DEFAULT_CLASS_PREFIX);
+		this.fieldPrefix = context.getSingleArgument("fieldPrefix").orElse(DEFAULT_FIELD_PREFIX);
+		this.methodPrefix = context.getSingleArgument("methodPrefix").orElse(DEFAULT_METHOD_PREFIX);
 
 		this.classPackagePrefix = this.packagePrefix + this.classPrefix;
 	}

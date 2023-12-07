@@ -16,8 +16,8 @@
 
 package org.quiltmc.enigmaplugin;
 
-import cuchaz.enigma.api.service.EnigmaService;
-import cuchaz.enigma.api.service.EnigmaServiceContext;
+import org.quiltmc.enigma.api.service.EnigmaService;
+import org.quiltmc.enigma.api.service.EnigmaServiceContext;
 
 /**
  * Contains all the keys of the arguments used by this plugin.
@@ -39,6 +39,6 @@ public class Arguments {
 	}
 
 	public static <T extends EnigmaService> boolean isDisabled(EnigmaServiceContext<T> context, String arg, boolean disabledByDefault) {
-		return context.getArgument(arg).map(Boolean::parseBoolean).orElse(disabledByDefault);
+		return context.getSingleArgument(arg).map(Boolean::parseBoolean).orElse(disabledByDefault);
 	}
 }

@@ -16,39 +16,35 @@
 
 package org.quiltmc.enigmaplugin.proposal;
 
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigmaplugin.index.CodecIndex;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 
-import java.util.Optional;
+import java.util.Map;
 
-public class CodecNameProposer implements NameProposer<Entry<?>> {
+public class CodecNameProposer extends NameProposer {
+	public static final String ID = "codecs";
 	private final CodecIndex index;
 
 	public CodecNameProposer(JarIndexer index) {
+		super(ID);
 		this.index = index.getCodecIndex();
 	}
 
 	@Override
-	public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
-		if (entry instanceof FieldEntry field && this.index.hasField(field)) {
-			return Optional.ofNullable(this.index.getFieldName(field));
-		} else if (entry instanceof MethodEntry method && this.index.hasMethod(method)) {
-			return Optional.ofNullable(this.index.getMethodName(method));
+	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+		for (FieldEntry field : this.index.getFields()) {
+			String name = this.index.getFieldName(field);
+			this.insertProposal(mappings, field, name);
 		}
-		return Optional.empty();
-	}
 
-	@Override
-	public boolean canPropose(Entry<?> entry) {
-		return entry instanceof FieldEntry || entry instanceof MethodEntry;
-	}
-
-	@Override
-	public Entry<?> upcast(Entry<?> entry) {
-		return entry;
+		for (MethodEntry method : this.index.getMethods()) {
+			String name = this.index.getMethodName(method);
+			this.insertProposal(mappings, method, name);
+		}
 	}
 }

@@ -16,10 +16,10 @@
 
 package org.quiltmc.enigmaplugin.index;
 
-import cuchaz.enigma.analysis.index.JarIndex;
-import cuchaz.enigma.api.service.EnigmaServiceContext;
-import cuchaz.enigma.api.service.JarIndexerService;
-import cuchaz.enigma.classprovider.ClassProvider;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.service.EnigmaServiceContext;
+import org.quiltmc.enigma.api.service.JarIndexerService;
+import org.quiltmc.enigma.api.class_provider.ClassProvider;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.quiltmc.enigmaplugin.Arguments;
@@ -28,6 +28,7 @@ import org.quiltmc.enigmaplugin.index.simple_type_single.SimpleTypeSingleIndex;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 public class JarIndexer implements JarIndexerService, Opcodes {
 	private final RecordIndex recordIndex = new RecordIndex();
@@ -52,11 +53,12 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 		this.disableConstructorParametersIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CONSTRUCTOR_PARAMS);
 		this.disableGetterSetterIndexing = Arguments.isDisabled(context, Arguments.DISABLE_GETTER_SETTER);
 
-		List<String> codecs = context.getArgument(Arguments.CUSTOM_CODECS).map(s -> List.of(s.split(",[\n ]*")))
+		List<String> codecs = context.getArgument(Arguments.CUSTOM_CODECS)
+				.map(e -> e.map(s -> List.of(s.split(",[\n ]*")), Function.identity()))
 				.orElse(List.of());
 		this.codecIndex.addCustomCodecs(codecs);
 
-		this.simpleTypeSingleIndex.loadRegistry(context.getArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
+		this.simpleTypeSingleIndex.loadRegistry(context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
 				.map(context::getPath).orElse(null));
 		return this;
 	}

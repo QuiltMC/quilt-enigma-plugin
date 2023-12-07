@@ -16,42 +16,38 @@
 
 package org.quiltmc.enigmaplugin.proposal;
 
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 import org.quiltmc.enigmaplugin.index.simple_type_single.SimpleTypeSingleIndex;
-import org.quiltmc.enigmaplugin.index.simple_type_single.SimpleTypeSingleIndex.ParameterEntry;
 
-import java.util.Optional;
+import java.util.Map;
 
-public class SimpleTypeFieldNameProposer implements NameProposer<Entry<?>> {
+public class SimpleTypeFieldNameProposer extends NameProposer {
+	public static final String ID = "simple_type_field_names";
 	private final SimpleTypeSingleIndex index;
 
 	public SimpleTypeFieldNameProposer(JarIndexer index) {
+		super(ID);
 		this.index = index.getSimpleTypeSingleIndex();
 	}
 
 	@Override
-	public Optional<String> doProposeName(Entry<?> entry, NameProposerService service, EntryRemapper remapper) {
-		if (entry instanceof FieldEntry fieldEntry) {
-			return Optional.ofNullable(this.index.getField(fieldEntry));
-		} else if (entry instanceof LocalVariableEntry localVariableEntry) {
-			var paramEntry = ParameterEntry.fromLocalVariableEntry(localVariableEntry);
-			return Optional.ofNullable(this.index.getParam(paramEntry));
+	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+		for (FieldEntry field : this.index.getFields()) {
+			String name = this.index.getField(field);
+
+			this.insertProposal(mappings, field, name);
 		}
 
-		return Optional.empty();
+		for (LocalVariableEntry param : this.index.getParams()) {
+			String name = this.index.getParam(param);
+
+			this.insertProposal(mappings, param, name);
+		}
 	}
 
-	@Override
-	public boolean canPropose(Entry<?> entry) {
-		return entry instanceof FieldEntry || entry instanceof LocalVariableEntry;
-	}
-
-	@Override
-	public Entry<?> upcast(Entry<?> entry) {
-		return entry;
-	}
 }

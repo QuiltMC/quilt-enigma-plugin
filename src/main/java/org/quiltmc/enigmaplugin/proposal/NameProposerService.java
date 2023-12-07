@@ -16,11 +16,13 @@
 
 package org.quiltmc.enigmaplugin.proposal;
 
-import cuchaz.enigma.api.service.EnigmaServiceContext;
-import cuchaz.enigma.api.service.NameProposalService;
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.service.EnigmaServiceContext;
+import org.quiltmc.enigma.api.service.NameProposalService;
+import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigmaplugin.Arguments;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 
@@ -33,7 +35,7 @@ public class NameProposerService implements NameProposalService {
 	 * Represents a cache of the successful proposed field names.
 	 */
 	private final Map<FieldEntry, String> namedFields = new WeakHashMap<>();
-	private final List<NameProposer<?>> nameProposers = new ArrayList<>();
+	private final List<NameProposer> nameProposers = new ArrayList<>();
 
 	public NameProposerService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_RECORDS, RecordComponentNameProposer::new);
@@ -51,17 +53,17 @@ public class NameProposerService implements NameProposalService {
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_GETTER_SETTER, GetterSetterNameProposer::new);
 	}
 
-	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer<?>> factory) {
+	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer> factory) {
 		this.addIfEnabled(context, null, name, indexer -> factory.get());
 	}
 
-	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, JarIndexer indexer, String name, Function<JarIndexer, NameProposer<?>> factory) {
+	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, JarIndexer indexer, String name, Function<JarIndexer, NameProposer> factory) {
 		if (!Arguments.isDisabled(context, name)) {
 			this.nameProposers.add(factory.apply(indexer));
 		}
 	}
 
-	private void addIfNotDisabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer<?>> factory) {
+	private void addIfNotDisabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer> factory) {
 		if (!Arguments.isDisabled(context, name, true)) {
 			this.nameProposers.add(factory.get());
 		}
@@ -78,21 +80,24 @@ public class NameProposerService implements NameProposalService {
 	}
 
 	@Override
-	public Optional<String> proposeName(Entry<?> obfEntry, EntryRemapper remapper) {
-		Optional<String> name;
-		for (NameProposer<?> proposer : this.nameProposers) {
-			if (proposer.canPropose(obfEntry)) {
-				name = proposer.proposeName(obfEntry, this, remapper);
-				if (name.isPresent()) {
-					if (obfEntry instanceof FieldEntry fieldEntry) {
-						this.namedFields.put(fieldEntry, name.get());
-					}
+	public Map<Entry<?>, EntryMapping> getProposedNames(JarIndex index) {
+		HashMap<Entry<?>, EntryMapping> proposedNames = new HashMap<>();
 
-					return name;
-				}
-			}
+		for (NameProposer proposer : this.nameProposers) {
+			proposer.insertProposedNames(index, proposedNames);
 		}
 
-		return Optional.empty();
+		return proposedNames;
+	}
+
+	@Override
+	public Map<Entry<?>, EntryMapping> getDynamicProposedNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping) {
+		HashMap<Entry<?>, EntryMapping> proposedNames = new HashMap<>();
+
+		for (NameProposer proposer : this.nameProposers) {
+			proposer.proposeDynamicNames(remapper, obfEntry, oldMapping, newMapping, proposedNames);
+		}
+
+		return proposedNames;
 	}
 }
