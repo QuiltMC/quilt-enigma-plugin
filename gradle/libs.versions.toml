@@ -1,0 +1,26 @@
+[versions]
+enigma = "2.0.0-SNAPSHOT"
+
+asm = "9.4"
+quilt_json5 = "1.0.3"
+tinylog = "2.6.2"
+annotations = "23.0.0"
+
+dfu = "4.1.27"
+
+[libraries]
+enigma = { module = "org.quiltmc:enigma", version.ref = "enigma" }
+enigma_swing = { module = "org.quiltmc:enigma-swing", version.ref = "enigma" }
+
+asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
+asm_commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
+asm_tree = { module = "org.ow2.asm:asm-tree", version.ref = "asm" }
+asm_util = { module = "org.ow2.asm:asm-util", version.ref = "asm" }
+quilt_json5 = { module = "org.quiltmc:quilt-json5", version.ref = "quilt_json5" }
+tinylog = { module = "org.tinylog:tinylog-api", version.ref = "tinylog" }
+annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
+
+dfu = { module = "com.mojang:datafixerupper", version.ref = "dfu" }
+
+[bundles]
+asm = ["asm", "asm_commons", "asm_tree", "asm_util"]
