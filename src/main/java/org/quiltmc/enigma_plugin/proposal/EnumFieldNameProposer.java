@@ -41,5 +41,4 @@ public class EnumFieldNameProposer extends NameProposer {
 			this.insertProposal(mappings, field, name);
 		}
 	}
-
 }

@@ -26,7 +26,10 @@ import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 

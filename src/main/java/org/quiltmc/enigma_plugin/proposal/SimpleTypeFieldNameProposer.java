@@ -49,5 +49,4 @@ public class SimpleTypeFieldNameProposer extends NameProposer {
 			this.insertProposal(mappings, param, name);
 		}
 	}
-
 }

@@ -93,15 +93,19 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 		if (!this.disableEnumFieldsIndexing) {
 			this.enumFieldsIndex.visitClassNode(node);
 		}
+
 		if (!this.disableCodecsIndexing) {
 			this.codecIndex.visitClassNode(node);
 		}
+
 		if (!this.disableLoggerIndexing) {
 			this.loggerIndex.visitClassNode(node);
 		}
+
 		if (!this.disableConstructorParametersIndexing) {
 			this.constructorParametersIndex.visitClassNode(node);
 		}
+
 		if (!this.disableGetterSetterIndexing) {
 			this.getterSetterIndex.visitClassNode(node);
 		}

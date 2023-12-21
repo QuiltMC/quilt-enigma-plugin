@@ -23,6 +23,7 @@ public class CasingUtil {
 		while (name.contains("_")) {
 			name = name.replaceFirst("_[a-z]", String.valueOf(Character.toUpperCase(name.charAt(name.indexOf('_') + 1))));
 		}
+
 		return name;
 	}
 

@@ -43,5 +43,4 @@ public class LoggerNameProposer extends NameProposer {
 			this.insertProposal(mappings, field, "LOGGER");
 		}
 	}
-
 }

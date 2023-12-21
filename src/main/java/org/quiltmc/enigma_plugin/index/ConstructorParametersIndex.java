@@ -16,6 +16,11 @@
 
 package org.quiltmc.enigma_plugin.index;
 
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
 import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
 import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
@@ -23,7 +28,6 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.*;
 import org.quiltmc.enigma_plugin.util.Descriptors;
 
 import java.util.HashMap;
@@ -67,8 +71,9 @@ public class ConstructorParametersIndex implements Index {
 				if (previousInst.getOpcode() >= Opcodes.ILOAD && previousInst.getOpcode() <= Opcodes.ALOAD) {
 					var loadInst = (VarInsnNode) previousInst;
 
-					if (parameters.get(parameters.size() - 1).lvtIndex() < loadInst.var)
+					if (parameters.get(parameters.size() - 1).lvtIndex() < loadInst.var) {
 						continue; // This load opcode does not correspond to a parameter.
+					}
 
 					var param = new LocalVariableEntry(methodEntry, loadInst.var, "", true, null);
 					var field = new FieldEntry(classEntry, fieldInst.name, new TypeDescriptor(fieldInst.desc));

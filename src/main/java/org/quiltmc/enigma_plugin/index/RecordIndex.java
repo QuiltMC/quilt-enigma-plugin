@@ -17,15 +17,27 @@
 package org.quiltmc.enigma_plugin.index;
 
 import org.jetbrains.annotations.TestOnly;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InvokeDynamicInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
 import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
 import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Handle;
-import org.objectweb.asm.tree.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class RecordIndex implements Index {
@@ -48,6 +60,7 @@ public class RecordIndex implements Index {
 				return new FieldEntry(classEntry, fieldName, new TypeDescriptor(fieldDesc));
 			}
 		}
+
 		throw new IllegalArgumentException("Invalid field handle");
 	}
 
@@ -59,8 +72,10 @@ public class RecordIndex implements Index {
 			if (insn.getOpcode() == ALOAD) {
 				return i;
 			}
+
 			i++;
 		}
+
 		return -1;
 	}
 
@@ -168,6 +183,7 @@ public class RecordIndex implements Index {
 		if (this.records.containsKey(classEntry) && this.records.get(classEntry).hasComponents()) {
 			return;
 		}
+
 		this.records.put(classEntry, new RecordComponentData());
 
 		for (MethodNode methodNode : node.methods) {
@@ -373,6 +389,7 @@ public class RecordIndex implements Index {
 				if (i == lvtIndex) {
 					return fieldEntry;
 				}
+
 				i += fieldEntry.getDesc().getSize();
 			}
 
@@ -385,6 +402,7 @@ public class RecordIndex implements Index {
 			for (FieldEntry fieldEntry : this.fieldEntries) {
 				sb.append(fieldEntry.getDesc());
 			}
+
 			sb.append(")V");
 			return sb.toString();
 		}

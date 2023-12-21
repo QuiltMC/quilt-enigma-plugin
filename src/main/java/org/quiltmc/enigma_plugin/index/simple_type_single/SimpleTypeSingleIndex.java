@@ -36,7 +36,12 @@ import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.Descriptors;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Index of fields/local variables that are of a rather simple type (as-in easy to guess the variable name) and which
@@ -122,8 +127,11 @@ public class SimpleTypeSingleIndex implements Opcodes {
 
 			for (var param : parameters) {
 				types.compute(param.type(), (t, old) -> {
-					if (old == null) return 0;
-					else return old + 1;
+					if (old == null) {
+						return 0;
+					} else {
+						return old + 1;
+					}
 				});
 			}
 

@@ -24,7 +24,11 @@ import org.tinylog.Logger;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 public class SimpleTypeFieldNamesRegistry {
@@ -153,8 +157,9 @@ public class SimpleTypeFieldNamesRegistry {
 
 		public @Nullable Name findFallback(Predicate<Name> predicate) {
 			for (var fallback : this.fallback) {
-				if (predicate.test(fallback))
+				if (predicate.test(fallback)) {
 					return fallback;
+				}
 			}
 
 			return null;

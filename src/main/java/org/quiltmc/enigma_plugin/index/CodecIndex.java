@@ -17,6 +17,19 @@
 package org.quiltmc.enigma_plugin.index;
 
 import org.jetbrains.annotations.TestOnly;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InvokeDynamicInsnNode;
+import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.analysis.Analyzer;
+import org.objectweb.asm.tree.analysis.AnalyzerException;
+import org.objectweb.asm.tree.analysis.Frame;
+import org.objectweb.asm.tree.analysis.SourceInterpreter;
+import org.objectweb.asm.tree.analysis.SourceValue;
 import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
 import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
@@ -24,13 +37,15 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.*;
-import org.objectweb.asm.tree.analysis.*;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.CasingUtil;
 import org.tinylog.Logger;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class CodecIndex implements Index {
 	private static final List<MethodInfo> CODEC_FIELD_METHODS = List.of(
@@ -76,7 +91,7 @@ public class CodecIndex implements Index {
 	}
 
 	private boolean isCodecFieldMethod(MethodInsnNode mInsn) {
-		return isCodecClass(mInsn.owner)
+		return this.isCodecClass(mInsn.owner)
 				&& (CODEC_FIELD_METHODS.stream().anyMatch(m -> m.matches(mInsn)) || CODEC_OPTIONAL_FIELD_METHODS.stream().anyMatch(m -> m.matches(mInsn)));
 	}
 
@@ -104,7 +119,7 @@ public class CodecIndex implements Index {
 
 				// Find the field name in the stack
 				String name = null;
-				for (int j = frame.getStackSize() - 1; j >= 0 && name == null; j--) {// Start searching from the top of the stack
+				for (int j = frame.getStackSize() - 1; j >= 0 && name == null; j--) { // Start searching from the top of the stack
 					SourceValue value = frame.getStack(j);
 					for (AbstractInsnNode insn2 : value.insns) {
 						if (insn2 instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String s && !s.isBlank()) {

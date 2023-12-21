@@ -43,7 +43,7 @@ public abstract class NameProposer {
 	}
 
 	public void insertProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name) {
-		insertProposal(mappings, entry, name, TokenType.JAR_PROPOSED);
+		this.insertProposal(mappings, entry, name, TokenType.JAR_PROPOSED);
 	}
 
 	public void insertDynamicProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, EntryMapping mapping) {
@@ -57,7 +57,7 @@ public abstract class NameProposer {
 	}
 
 	public void insertDynamicProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name) {
-		insertProposal(mappings, entry, name, TokenType.DYNAMIC_PROPOSED);
+		this.insertProposal(mappings, entry, name, TokenType.DYNAMIC_PROPOSED);
 	}
 
 	private void insertProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name, TokenType tokenType) {

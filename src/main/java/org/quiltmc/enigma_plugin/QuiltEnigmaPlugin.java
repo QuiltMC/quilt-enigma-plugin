@@ -27,7 +27,7 @@ import org.quiltmc.enigma_plugin.proposal.NameProposerService;
 
 public class QuiltEnigmaPlugin implements EnigmaPlugin {
 	public static final String SERVICE_ID_PREFIX = "quiltmc:";
-	public static final String INDEX_SERVICE_ID = SERVICE_ID_PREFIX +  "jar_index";
+	public static final String INDEX_SERVICE_ID = SERVICE_ID_PREFIX + "jar_index";
 	public static final String NAME_PROPOSAL_SERVICE_ID = SERVICE_ID_PREFIX + "name_proposal";
 	public static final String OBFUSCATION_SERVICE_ID = SERVICE_ID_PREFIX + "obfuscation_test";
 

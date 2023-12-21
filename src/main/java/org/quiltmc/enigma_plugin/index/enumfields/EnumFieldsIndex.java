@@ -22,7 +22,12 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.quiltmc.enigma_plugin.index.Index;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class EnumFieldsIndex implements Index {
 	private final Map<String, Set<String>> enumFields = new HashMap<>();
