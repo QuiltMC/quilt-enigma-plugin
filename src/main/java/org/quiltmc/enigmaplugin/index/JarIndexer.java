@@ -23,6 +23,7 @@ import org.quiltmc.enigma.api.class_provider.ClassProvider;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.quiltmc.enigmaplugin.Arguments;
+import org.quiltmc.enigmaplugin.QuiltEnigmaPlugin;
 import org.quiltmc.enigmaplugin.index.enumfields.EnumFieldsIndex;
 import org.quiltmc.enigmaplugin.index.simple_type_single.SimpleTypeSingleIndex;
 
@@ -132,5 +133,10 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 
 	public GetterSetterIndex getGetterSetterIndex() {
 		return this.getterSetterIndex;
+	}
+
+	@Override
+	public String getId() {
+		return QuiltEnigmaPlugin.INDEX_SERVICE_ID;
 	}
 }

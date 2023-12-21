@@ -55,7 +55,7 @@ task testEnigma(type: JavaExec, dependsOn: "obfuscate") {
 	mainClass = "org.quiltmc.enigma.gui.Main"
 	classpath = configurations.enigmaRuntime
 
-	args('-jar', outputJar, '-mappings', mappings.getAbsolutePath(), '-profile', profile.getAbsolutePath())
+	args('-jar', outputJar, '-mappings', mappings.getAbsolutePath(), '-profile', profile.getAbsolutePath(), '--development')
 	doFirst {
 		mappings.mkdirs()
 	}

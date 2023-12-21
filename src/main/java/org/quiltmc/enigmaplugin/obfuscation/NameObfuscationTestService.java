@@ -23,6 +23,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigmaplugin.QuiltEnigmaPlugin;
 
 public class NameObfuscationTestService implements ObfuscationTestService {
 	private static final String DEFAULT_PACKAGE = "net/minecraft/unmapped";
@@ -60,5 +61,10 @@ public class NameObfuscationTestService implements ObfuscationTestService {
 			// unknown type
 			return false;
 		}
+	}
+
+	@Override
+	public String getId() {
+		return QuiltEnigmaPlugin.OBFUSCATION_SERVICE_ID;
 	}
 }

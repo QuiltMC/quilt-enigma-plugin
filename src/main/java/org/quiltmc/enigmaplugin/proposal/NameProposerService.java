@@ -22,8 +22,8 @@ import org.quiltmc.enigma.api.service.NameProposalService;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
-import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigmaplugin.Arguments;
+import org.quiltmc.enigmaplugin.QuiltEnigmaPlugin;
 import org.quiltmc.enigmaplugin.index.JarIndexer;
 
 import java.util.*;
@@ -31,10 +31,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class NameProposerService implements NameProposalService {
-	/**
-	 * Represents a cache of the successful proposed field names.
-	 */
-	private final Map<FieldEntry, String> namedFields = new WeakHashMap<>();
 	private final List<NameProposer> nameProposers = new ArrayList<>();
 
 	public NameProposerService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
@@ -69,16 +65,6 @@ public class NameProposerService implements NameProposalService {
 		}
 	}
 
-	public String getMappedFieldName(EntryRemapper remapper, FieldEntry field) {
-		var deobfedField = remapper.extendedDeobfuscate(field);
-
-		if (deobfedField != null && deobfedField.isDeobfuscated()) {
-			return deobfedField.getValue().getName();
-		} else {
-			return this.namedFields.get(field);
-		}
-	}
-
 	@Override
 	public Map<Entry<?>, EntryMapping> getProposedNames(JarIndex index) {
 		HashMap<Entry<?>, EntryMapping> proposedNames = new HashMap<>();
@@ -99,5 +85,10 @@ public class NameProposerService implements NameProposalService {
 		}
 
 		return proposedNames;
+	}
+
+	@Override
+	public String getId() {
+		return QuiltEnigmaPlugin.NAME_PROPOSAL_SERVICE_ID;
 	}
 }

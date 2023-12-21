@@ -96,6 +96,10 @@ public class GetterSetterIndex implements Index {
 		return this.links.get(field);
 	}
 
+	public boolean fieldHasLinks(FieldEntry field) {
+		return this.links.containsKey(field);
+	}
+
 	public Set<MethodEntry> getLinkedMethods() {
 		return this.linked.keySet();
 	}

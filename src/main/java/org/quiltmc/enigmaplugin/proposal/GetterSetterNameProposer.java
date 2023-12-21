@@ -87,20 +87,12 @@ public class GetterSetterNameProposer extends NameProposer {
 			return;
 		}
 
-		if (obfEntry instanceof FieldEntry field) {
+		if (obfEntry instanceof FieldEntry field && this.index.fieldHasLinks(field)) {
 			var name = newMapping.targetName();
-			if (name == null) {
-				return; // TODO
-			}
 
 			for (Entry<?> link : this.index.getFieldLinks(field)) {
 				if (link instanceof MethodEntry method) {
 					var newName = getMethodName(name, method);
-
-					if (newName == null) {
-						continue;
-					}
-
 					this.insertDynamicProposal(mappings, method, newName);
 				} else if (link instanceof LocalVariableEntry parameter) {
 					this.insertDynamicProposal(mappings, parameter, name);
