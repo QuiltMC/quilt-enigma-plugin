@@ -71,6 +71,11 @@ public abstract class NameProposer {
 		}
 	}
 
+	public boolean hasJarProposal(EntryRemapper remapper, Entry<?> entry) {
+		EntryMapping mapping = remapper.getProposedMappings().get(entry);
+		return mapping != null && mapping.tokenType().isProposed();
+	}
+
 	public abstract void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings);
 
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {

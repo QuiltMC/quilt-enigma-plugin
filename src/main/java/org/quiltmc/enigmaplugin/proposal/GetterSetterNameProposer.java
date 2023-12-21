@@ -61,6 +61,10 @@ public class GetterSetterNameProposer extends NameProposer {
 		if (obfEntry == null) {
 			// Mappings were just loaded
 			for (MethodEntry method : this.index.getLinkedMethods()) {
+				if (this.hasJarProposal(remapper, method)) {
+					continue;
+				}
+
 				FieldEntry linkedField = this.index.getLinkedField(method);
 				EntryMapping mapping = remapper.getMapping(linkedField);
 				var newName = getMethodName(mapping.targetName(), method);
@@ -73,6 +77,10 @@ public class GetterSetterNameProposer extends NameProposer {
 			}
 
 			for (LocalVariableEntry parameter : this.index.getLinkedParameters()) {
+				if (this.hasJarProposal(remapper, parameter)) {
+					continue;
+				}
+
 				FieldEntry linkedField = this.index.getLinkedField(parameter);
 				EntryMapping mapping = remapper.getMapping(linkedField);
 				var newName = mapping.targetName();
@@ -91,6 +99,10 @@ public class GetterSetterNameProposer extends NameProposer {
 			var name = newMapping.targetName();
 
 			for (Entry<?> link : this.index.getFieldLinks(field)) {
+				if (this.hasJarProposal(remapper, link)) {
+					continue;
+				}
+
 				if (link instanceof MethodEntry method) {
 					var newName = getMethodName(name, method);
 					this.insertDynamicProposal(mappings, method, newName);

@@ -44,14 +44,24 @@ public class ConstructorParamsNameProposer extends NameProposer {
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
 		if (obfEntry instanceof FieldEntry field && this.index.isFieldLinked(field)) {
 			for (LocalVariableEntry parameter : this.index.getParametersForField(field)) {
+				if (this.hasJarProposal(remapper, parameter)) {
+					continue;
+				}
+
 				this.insertDynamicProposal(mappings, parameter, newMapping);
 			}
 		} else if (obfEntry instanceof LocalVariableEntry parameter && this.index.isParameterLinked(parameter)) {
 			FieldEntry linkedField = this.index.getLinkedField(parameter);
 
-			this.insertDynamicProposal(mappings, linkedField, newMapping);
+			if (!this.hasJarProposal(remapper, linkedField)) {
+				this.insertDynamicProposal(mappings, linkedField, newMapping);
+			}
 
 			for (LocalVariableEntry param : this.index.getParametersForField(linkedField)) {
+				if (this.hasJarProposal(remapper, param)) {
+					continue;
+				}
+
 				if (param != parameter) {
 					this.insertDynamicProposal(mappings, param, newMapping);
 				}
@@ -59,6 +69,10 @@ public class ConstructorParamsNameProposer extends NameProposer {
 		} else if (obfEntry == null) {
 			// Mappings were just loaded
 			for (LocalVariableEntry parameter : this.index.getParameters()) {
+				if (this.hasJarProposal(remapper, parameter)) {
+					continue;
+				}
+
 				FieldEntry linkedField = this.index.getLinkedField(parameter);
 				EntryMapping mapping = remapper.getMapping(linkedField);
 
