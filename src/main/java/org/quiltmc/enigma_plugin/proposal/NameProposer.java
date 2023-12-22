@@ -72,8 +72,7 @@ public abstract class NameProposer {
 	}
 
 	public boolean hasJarProposal(EntryRemapper remapper, Entry<?> entry) {
-		EntryMapping mapping = remapper.getProposedMappings().get(entry);
-		return mapping != null && mapping.tokenType().isProposed();
+		return remapper.getJarProposedMappings().contains(entry);
 	}
 
 	public abstract void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings);
