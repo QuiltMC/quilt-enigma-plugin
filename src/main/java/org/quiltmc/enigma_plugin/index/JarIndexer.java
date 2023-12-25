@@ -29,7 +29,6 @@ import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 public class JarIndexer implements JarIndexerService, Opcodes {
 	private final RecordIndex recordIndex = new RecordIndex();
