@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.quiltmc.enigma_plugin.index.enumfields;
+package org.quiltmc.enigma_plugin.index.enum_fields;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;

@@ -24,7 +24,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
-import org.quiltmc.enigma_plugin.index.enumfields.EnumFieldsIndex;
+import org.quiltmc.enigma_plugin.index.enum_fields.EnumFieldsIndex;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
 import java.util.List;

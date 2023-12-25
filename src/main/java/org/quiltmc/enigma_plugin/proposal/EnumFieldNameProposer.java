@@ -21,7 +21,7 @@ import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
-import org.quiltmc.enigma_plugin.index.enumfields.EnumFieldsIndex;
+import org.quiltmc.enigma_plugin.index.enum_fields.EnumFieldsIndex;
 
 import java.util.Map;
 
