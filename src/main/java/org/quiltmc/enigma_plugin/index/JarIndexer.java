@@ -54,8 +54,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 		this.disableConstructorParametersIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CONSTRUCTOR_PARAMS);
 		this.disableGetterSetterIndexing = Arguments.isDisabled(context, Arguments.DISABLE_GETTER_SETTER);
 
-		List<String> codecs = context.getArgument(Arguments.CUSTOM_CODECS)
-				.map(e -> e.map(s -> List.of(s.split(",[\n ]*")), Function.identity()))
+		List<String> codecs = context.getMultipleArguments(Arguments.CUSTOM_CODECS)
 				.orElse(List.of());
 		this.codecIndex.addCustomCodecs(codecs);
 
