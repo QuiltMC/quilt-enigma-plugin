@@ -64,6 +64,35 @@ public class ConstantFieldNameFinder implements Opcodes {
 		return null;
 	}
 
+	private static String stringToUpperSnakeCase(String s) {
+		StringBuilder usableName = new StringBuilder();
+		boolean hasAlphabetic = false;
+
+		for (int j = 0; j < s.length(); j++) {
+			char c = s.charAt(j);
+
+			if (isCharacterUsable(c)) {
+				if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+					hasAlphabetic = true;
+				}
+
+				if (j > 0 && Character.isUpperCase(c) && j < s.length() - 1 && Character.isLowerCase(s.charAt(j + 1))) {
+					usableName.append('_');
+				}
+
+				usableName.append(c);
+			} else {
+				usableName.append('_');
+			}
+		}
+
+		if (!hasAlphabetic) {
+			return null;
+		}
+
+		return usableName.toString().toUpperCase();
+	}
+
 	public Map<FieldEntry, String> findNames(ConstantFieldIndex fieldIndex) throws Exception {
 		Analyzer<SourceValue> analyzer = new Analyzer<>(new SourceInterpreter());
 		Map<FieldEntry, String> fieldNames = new HashMap<>();
@@ -176,32 +205,11 @@ public class ConstantFieldNameFinder implements Opcodes {
 						name = last + "_" + first;
 					}
 
-					// Check if the name is usable, replace invalid characters, convert camel case to snake case
-					StringBuilder usableName = new StringBuilder();
-					boolean hasAlphabetic = false;
-					for (int j = 0; j < name.length(); j++) {
-						char c = name.charAt(j);
+					var fieldName = stringToUpperSnakeCase(name);
 
-						if (isCharacterUsable(c)) {
-							if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
-								hasAlphabetic = true;
-							}
-
-							if (j > 0 && Character.isUpperCase(c) && Character.isLowerCase(usableName.charAt(usableName.length() - 1))) {
-								usableName.append('_');
-							}
-
-							usableName.append(c);
-						} else {
-							usableName.append('_');
-						}
-					}
-
-					if (!hasAlphabetic || usableName.isEmpty()) {
+					if (fieldName == null || fieldName.isEmpty()) {
 						continue;
 					}
-
-					String fieldName = usableName.toString().toUpperCase(Locale.ROOT);
 
 					Set<String> usedNames = usedFieldNames.computeIfAbsent(clazz, k -> new HashSet<>());
 					Set<String> duplicatedNames = duplicatedFieldNames.computeIfAbsent(clazz, k -> new HashSet<>());
