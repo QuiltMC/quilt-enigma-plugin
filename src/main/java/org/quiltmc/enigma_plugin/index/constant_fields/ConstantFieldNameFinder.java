@@ -55,6 +55,38 @@ public class ConstantFieldNameFinder implements Opcodes {
 		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_';
 	}
 
+	private static String processIdentifierPath(String name) {
+		if (name == null) {
+			return null;
+		}
+
+		// Remove identifier namespace
+		if (name.contains(":")) {
+			name = name.substring(name.lastIndexOf(":") + 1);
+		}
+
+		// Process a path
+		if (name.contains("/")) {
+			int separator = name.indexOf("/");
+			String first = name.substring(0, separator);
+			String last;
+
+			if (name.contains(".") && name.indexOf(".") > separator) {
+				last = name.substring(separator + 1, name.indexOf("."));
+			} else {
+				last = name.substring(separator + 1);
+			}
+
+			if (first.endsWith("s")) {
+				first = first.substring(0, first.length() - 1);
+			}
+
+			name = last + "_" + first;
+		}
+
+		return name;
+	}
+
 	private static String stringToUpperSnakeCase(String s) {
 		StringBuilder usableName = new StringBuilder();
 		boolean hasAlphabetic = false;
@@ -71,7 +103,7 @@ public class ConstantFieldNameFinder implements Opcodes {
 					usableName.append('_');
 				}
 
-				usableName.append(c);
+				usableName.append(Character.toUpperCase(c));
 			} else {
 				usableName.append('_');
 			}
@@ -88,7 +120,7 @@ public class ConstantFieldNameFinder implements Opcodes {
 		if (names.containsKey(field)) {
 			return field;
 		} else if (this.linkedFields.containsKey(field)) {
-			return followFieldLink(this.linkedFields.get(field), names);
+			return this.followFieldLink(this.linkedFields.get(field), names);
 		}
 
 		return null;
@@ -109,12 +141,12 @@ public class ConstantFieldNameFinder implements Opcodes {
 		for (String clazz : fieldIndex.getStaticInitializers().keySet()) {
 			var initializers = fieldIndex.getStaticInitializers().get(clazz);
 
-			findNamesInInitializers(clazz, initializers, analyzer, fieldNames);
+			this.findNamesInInitializers(clazz, initializers, analyzer, fieldNames);
 		}
 
 		// Insert linked names
 		for (FieldEntry linked : this.linkedFields.keySet()) {
-			FieldEntry target = followFieldLink(linked, fieldNames);
+			FieldEntry target = this.followFieldLink(linked, fieldNames);
 			String name = fieldNames.get(target);
 
 			String clazz = linked.getParent().getFullName();
@@ -124,7 +156,7 @@ public class ConstantFieldNameFinder implements Opcodes {
 				fieldNames.put(linked, name);
 			} else {
 				duplicatedNames.add(name);
-				Logger.warn("Duplicate name \"{}\" for field {}", name, linked);
+				Logger.warn("Duplicate name \"{}\" for field {}, linked to {}", name, linked, target);
 			}
 		}
 
@@ -143,18 +175,18 @@ public class ConstantFieldNameFinder implements Opcodes {
 				var insn = instructions.get(i);
 				var prevInsn = insn.getPrevious();
 
-				if (!isClassPutStatic(clazz, insn)) {
-					continue;
-				}
-
 				/*
 				 * We want instructions in the form of
 				 * prevInsn: INVOKESTATIC ${clazz}.* (*)L*; || INVOKESPECIAL ${clazz}.<init> (*)V
 				 * insn:     PUTSTATIC ${clazz}.* : L*;
 				 */
+				if (!isClassPutStatic(clazz, insn)) {
+					continue; // Ensure the current instruction is a PUTSTATIC for one of this class' fields
+				}
+
 				var putStatic = (FieldInsnNode) insn;
 				if (!(prevInsn instanceof MethodInsnNode invokeInsn) || !invokeInsn.owner.equals(clazz)) {
-					continue; // Ensure the previous instruction was an invocation of one of this class' methods
+					continue; // Ensure the previous instruction is an invocation of one of this class' methods
 				}
 
 				if (invokeInsn.getOpcode() != INVOKESTATIC && !isInit(invokeInsn)) {
@@ -174,6 +206,7 @@ public class ConstantFieldNameFinder implements Opcodes {
 					}
 				}
 
+				FieldEntry fieldEntry = fieldFromInsn(putStatic);
 				if (name == null) {
 					// If we couldn't find a name, try to link this field to one from another class instead
 					FieldInsnNode otherFieldInsn = null;
@@ -207,52 +240,23 @@ public class ConstantFieldNameFinder implements Opcodes {
 					}
 
 					if (otherFieldInsn != null) {
-						this.linkedFields.put(fieldFromInsn(putStatic), fieldFromInsn(otherFieldInsn));
+						this.linkedFields.put(fieldEntry, fieldFromInsn(otherFieldInsn));
 					}
 
 					continue; // Done with the current putStatic
 				}
 
-				// Remove identifier namespace
-				if (name.contains(":")) {
-					name = name.substring(name.lastIndexOf(":") + 1);
-				}
-
-				// Process a path
-				if (name.contains("/")) {
-					int separator = name.indexOf("/");
-					String first = name.substring(0, separator);
-					String last;
-
-					if (name.contains(".") && name.indexOf(".") > separator) {
-						last = name.substring(separator + 1, name.indexOf("."));
-					} else {
-						last = name.substring(separator + 1);
-					}
-
-					if (first.endsWith("s")) {
-						first = first.substring(0, first.length() - 1);
-					}
-
-					name = last + "_" + first;
-				}
-
-				var fieldName = stringToUpperSnakeCase(name);
+				var fieldName = stringToUpperSnakeCase(processIdentifierPath(name));
 
 				if (fieldName == null || fieldName.isEmpty()) {
 					continue;
 				}
 
-				if (!duplicatedNames.contains(fieldName)) {
-					if (!usedNames.add(fieldName)) {
-						Logger.warn("Duplicate key: " + fieldName + " (" + name + ") in " + clazz);
-						duplicatedNames.add(fieldName);
-						usedNames.remove(fieldName);
-					}
-				}
-
-				if (usedNames.contains(fieldName)) {
-					fieldNames.put(fieldFromInsn(putStatic), fieldName);
+				if (!duplicatedNames.contains(fieldName) && usedNames.add(fieldName)) {
+					fieldNames.put(fieldEntry, fieldName);
+				} else {
+					duplicatedNames.add(fieldName);
+					Logger.warn("Duplicate field name \"{}\" (\"{}\") for field {}", fieldName, name, fieldEntry);
 				}
 			}
 		}
