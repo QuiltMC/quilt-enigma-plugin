@@ -38,7 +38,7 @@ public class NameProposerService implements NameProposalService {
 
 	public NameProposerService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_RECORDS, RecordComponentNameProposer::new);
-		this.addIfEnabled(context, indexer, Arguments.DISABLE_ENUM_FIELDS, EnumFieldNameProposer::new);
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_ENUM_FIELDS, ConstantFieldNameProposer::new);
 		this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_LOGGER, LoggerNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CODECS, CodecNameProposer::new);

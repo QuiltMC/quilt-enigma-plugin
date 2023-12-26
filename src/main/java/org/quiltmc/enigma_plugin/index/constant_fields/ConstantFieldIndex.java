@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.quiltmc.enigma_plugin.index.enum_fields;
+package org.quiltmc.enigma_plugin.index.constant_fields;
 
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.objectweb.asm.tree.ClassNode;
@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class EnumFieldsIndex implements Index {
+public class ConstantFieldIndex implements Index {
 	private final Map<String, Set<String>> enumFields = new HashMap<>();
 	private final Map<String, List<MethodNode>> staticInitializers = new HashMap<>();
 	private Map<FieldEntry, String> fieldNames;
@@ -39,7 +39,7 @@ public class EnumFieldsIndex implements Index {
 		for (FieldNode field : node.fields) {
 			if ((field.access & ACC_ENUM) != 0) {
 				if (!this.enumFields.computeIfAbsent(node.name, k -> new HashSet<>()).add(field.name + ":" + field.desc)) {
-					throw new IllegalStateException("Found a duplicate enum field with name \"" + field.name + "\"");
+					throw new IllegalStateException("Found a duplicate enum field with name \"" + field.name + "\" in class " + node.name);
 				}
 			}
 		}
@@ -53,7 +53,7 @@ public class EnumFieldsIndex implements Index {
 
 	public void findFieldNames() {
 		try {
-			this.fieldNames = new FieldNameFinder().findNames(this);
+			this.fieldNames = new ConstantFieldNameFinder().findNames(this);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

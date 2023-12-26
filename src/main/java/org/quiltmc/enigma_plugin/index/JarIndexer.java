@@ -24,7 +24,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
-import org.quiltmc.enigma_plugin.index.enum_fields.EnumFieldsIndex;
+import org.quiltmc.enigma_plugin.index.constant_fields.ConstantFieldIndex;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
 import java.util.List;
@@ -32,7 +32,7 @@ import java.util.Set;
 
 public class JarIndexer implements JarIndexerService, Opcodes {
 	private final RecordIndex recordIndex = new RecordIndex();
-	private final EnumFieldsIndex enumFieldsIndex = new EnumFieldsIndex();
+	private final ConstantFieldIndex constantFieldIndex = new ConstantFieldIndex();
 	private final CodecIndex codecIndex = new CodecIndex();
 	private final LoggerIndex loggerIndex = new LoggerIndex();
 	private final SimpleTypeSingleIndex simpleTypeSingleIndex = new SimpleTypeSingleIndex();
@@ -73,7 +73,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 		}
 
 		if (!this.disableEnumFieldsIndexing) {
-			this.enumFieldsIndex.findFieldNames();
+			this.constantFieldIndex.findFieldNames();
 		}
 
 		this.simpleTypeSingleIndex.dropCache();
@@ -89,7 +89,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 		}
 
 		if (!this.disableEnumFieldsIndexing) {
-			this.enumFieldsIndex.visitClassNode(node);
+			this.constantFieldIndex.visitClassNode(node);
 		}
 
 		if (!this.disableCodecsIndexing) {
@@ -113,8 +113,8 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 		return this.recordIndex;
 	}
 
-	public EnumFieldsIndex getEnumFieldsIndex() {
-		return this.enumFieldsIndex;
+	public ConstantFieldIndex getEnumFieldsIndex() {
+		return this.constantFieldIndex;
 	}
 
 	public CodecIndex getCodecIndex() {

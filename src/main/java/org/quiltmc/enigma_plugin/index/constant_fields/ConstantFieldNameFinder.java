@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.quiltmc.enigma_plugin.index.enum_fields;
+package org.quiltmc.enigma_plugin.index.constant_fields;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
@@ -41,7 +41,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-public class FieldNameFinder implements Opcodes {
+public class ConstantFieldNameFinder implements Opcodes {
 	private static boolean isClassPutStatic(String owner, AbstractInsnNode insn) {
 		return insn.getOpcode() == PUTSTATIC && ((FieldInsnNode) insn).owner.equals(owner);
 	}
@@ -64,85 +64,92 @@ public class FieldNameFinder implements Opcodes {
 		return null;
 	}
 
-	public Map<FieldEntry, String> findNames(EnumFieldsIndex enumIndex) throws Exception {
+	public Map<FieldEntry, String> findNames(ConstantFieldIndex fieldIndex) throws Exception {
 		Analyzer<SourceValue> analyzer = new Analyzer<>(new SourceInterpreter());
 		Map<FieldEntry, String> fieldNames = new HashMap<>();
 		Map<String, Set<String>> usedFieldNames = new HashMap<>();
 		Map<String, Set<String>> duplicatedFieldNames = new HashMap<>();
 		Map<FieldEntry, FieldEntry> linkedFields = new HashMap<>();
 
-		for (Map.Entry<String, List<MethodNode>> entry : enumIndex.getStaticInitializers().entrySet()) {
-			String owner = entry.getKey();
-			Set<String> enumFields = enumIndex.getEnumFields().getOrDefault(owner, Collections.emptySet());
+		for (String clazz : fieldIndex.getStaticInitializers().keySet()) {
+			var initializers = fieldIndex.getStaticInitializers().get(clazz);
 
-			for (MethodNode staticInitializer : entry.getValue()) {
-				Frame<SourceValue>[] frames = analyzer.analyze(owner, staticInitializer);
-				InsnList instructions = staticInitializer.instructions;
+			for (var initializer : initializers) {
+				var frames = analyzer.analyze(clazz, initializer);
+				var instructions = initializer.instructions;
 
 				for (int i = 1; i < instructions.size(); i++) {
-					AbstractInsnNode insn1 = instructions.get(i - 1);
-					AbstractInsnNode insn2 = instructions.get(i);
+					var insn = instructions.get(i);
+					var prevInsn = insn.getPrevious();
 
-					if (!isClassPutStatic(owner, insn2)) {
+					if (!isClassPutStatic(clazz, insn)) {
 						continue;
 					}
 
-					FieldInsnNode fInsn2 = (FieldInsnNode) insn2;
-					if (!(insn1 instanceof MethodInsnNode mInsn1 && mInsn1.owner.equals(owner) || enumFields.contains(fInsn2.name + ":" + fInsn2.desc))
-							|| !(insn1.getOpcode() == INVOKESTATIC || isInit(insn1))) {
-						continue;
+					/*
+					 * We want instructions in the form of
+					 * prevInsn: INVOKESTATIC ${clazz}.* (*)L*; || INVOKESPECIAL ${clazz}.<init> (*)V
+					 * insn:     PUTSTATIC ${clazz}.* : L*;
+					 */
+					var putStatic = (FieldInsnNode) insn;
+					if (!(prevInsn instanceof MethodInsnNode invokeInsn) || !invokeInsn.owner.equals(clazz)) {
+						continue; // Ensure the previous instruction was an invocation of one of this class' methods
 					}
 
-					// Search for a name within the frame
-					Frame<SourceValue> frame = frames[i - 1];
+					if (invokeInsn.getOpcode() != INVOKESTATIC && !isInit(invokeInsn)) {
+						continue; // Ensure the invocation is either an INVOKESTATIC or a constructor invocation
+					}
+
+					// Search for a name within the frame for the invocation instruction
+					var frame = frames[i - 1];
 					String name = null;
-					for (int j = 0; j < frame.getStackSize() && name == null; j++) {
-						SourceValue value = frame.getStack(j);
-						for (AbstractInsnNode insn : value.insns) {
-							if (insn instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String cst && !cst.isBlank()) {
-								name = cst;
+					for (int j = 0; j < frame.getStackSize(); j++) {
+						var value = frame.getStack(j);
+						for (var stackInsn : value.insns) {
+							if (stackInsn instanceof LdcInsnNode ldc && ldc.cst instanceof String constant && !constant.isBlank()) {
+								name = constant;
 								break;
 							}
 						}
 					}
 
 					if (name == null) {
-						// Try to link this field to another one
-						FieldInsnNode usedFieldInsn = null;
-						for (int j = 0; j < frame.getStackSize() && usedFieldInsn == null; j++) {
-							SourceValue value = frame.getStack(j);
-							AbstractInsnNode stackInsn = null;
-							for (AbstractInsnNode insn : value.insns) {
-								stackInsn = insn;
-								if (insn instanceof FieldInsnNode fInsn && fInsn.getOpcode() == GETSTATIC && !owner.equals(fInsn.owner)) {
-									usedFieldInsn = fInsn;
+						// If we couldn't find a name, try to link this field to one from another class instead
+						FieldInsnNode otherFieldInsn = null;
+						for (int j = 0; j < frame.getStackSize(); j++) {
+							var value = frame.getStack(j);
+							AbstractInsnNode lastStackInsn = null;
+							for (var stackInsn : value.insns) {
+								lastStackInsn = stackInsn;
+								if (stackInsn instanceof FieldInsnNode fieldInsn && fieldInsn.getOpcode() == GETSTATIC && !fieldInsn.owner.equals(clazz)) {
+									otherFieldInsn = fieldInsn;
 									break;
 								}
 							}
 
-							/* Search between the last stack instruction and the INVOKESPECIAL, useful for parameters passed to a constructor
-							NEW com/example/Clazz // Last instruction in the stack
-							DUP
-							GETSTATIC com/example/Test.FIELD : I // Instruction we are looking for
-							INVOKESPECIAL com/example/Clazz.<init> (I)V
-							INVOKESPECIAL com/example/Test.foo (Lcom/example/Clazz;)Lcom/example/Test; // End INVOKESPECIAL
-							*/
-							if (usedFieldInsn == null && stackInsn != null) {
-								while (stackInsn.getNext() != null && stackInsn.getNext() != insn1) {
-									stackInsn = stackInsn.getNext();
-									if (stackInsn instanceof FieldInsnNode fInsn && fInsn.getOpcode() == GETSTATIC && !owner.equals(fInsn.owner)) {
-										usedFieldInsn = fInsn;
+							/* Search between the last stack instruction and the invocation instruction, useful for parameters passed to a constructor
+							 * lastStackInsn: NEW * // Last instruction in the stack
+							 *                DUP
+							 *                GETSTATIC !${clazz}.* : * // Instruction we are looking for
+							 *                INVOKESPECIAL *.<init> (*)V
+							 * invokeInsn:    INVOKESPECIAL ${clazz}.<init> (L*;*)V
+							 */
+							if (otherFieldInsn == null && lastStackInsn != null) {
+								var stackInsn = lastStackInsn;
+								while ((stackInsn = stackInsn.getNext()) != null && stackInsn != invokeInsn) {
+									if (stackInsn instanceof FieldInsnNode fieldInsn && fieldInsn.getOpcode() == GETSTATIC && !fieldInsn.owner.equals(clazz)) {
+										otherFieldInsn = fieldInsn;
 										break;
 									}
 								}
 							}
 						}
 
-						if (usedFieldInsn != null) {
-							linkedFields.put(fieldFromInsn(fInsn2), fieldFromInsn(usedFieldInsn));
+						if (otherFieldInsn != null) {
+							linkedFields.put(fieldFromInsn(putStatic), fieldFromInsn(otherFieldInsn));
 						}
 
-						continue;
+						continue; // Done with the current putStatic
 					}
 
 					// Remove identifier namespace
@@ -171,45 +178,44 @@ public class FieldNameFinder implements Opcodes {
 
 					// Check if the name is usable, replace invalid characters, convert camel case to snake case
 					StringBuilder usableName = new StringBuilder();
-					boolean hasText = false;
+					boolean hasAlphabetic = false;
 					for (int j = 0; j < name.length(); j++) {
 						char c = name.charAt(j);
 
 						if (isCharacterUsable(c)) {
 							if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
-								hasText = true;
+								hasAlphabetic = true;
 							}
 
 							if (j > 0 && Character.isUpperCase(c) && Character.isLowerCase(usableName.charAt(usableName.length() - 1))) {
 								usableName.append('_');
-								usableName.append(Character.toLowerCase(c));
-							} else {
-								usableName.append(c);
 							}
+
+							usableName.append(c);
 						} else {
 							usableName.append('_');
 						}
 					}
 
-					if (!hasText || usableName.isEmpty()) {
+					if (!hasAlphabetic || usableName.isEmpty()) {
 						continue;
 					}
 
 					String fieldName = usableName.toString().toUpperCase(Locale.ROOT);
 
-					Set<String> usedNames = usedFieldNames.computeIfAbsent(owner, k -> new HashSet<>());
-					Set<String> duplicatedNames = duplicatedFieldNames.computeIfAbsent(owner, k -> new HashSet<>());
+					Set<String> usedNames = usedFieldNames.computeIfAbsent(clazz, k -> new HashSet<>());
+					Set<String> duplicatedNames = duplicatedFieldNames.computeIfAbsent(clazz, k -> new HashSet<>());
 
 					if (!duplicatedNames.contains(fieldName)) {
 						if (!usedNames.add(fieldName)) {
-							Logger.warn("Duplicate key: " + fieldName + " (" + name + ") in " + owner);
+							Logger.warn("Duplicate key: " + fieldName + " (" + name + ") in " + clazz);
 							duplicatedNames.add(fieldName);
 							usedNames.remove(fieldName);
 						}
 					}
 
 					if (usedNames.contains(fieldName)) {
-						fieldNames.put(fieldFromInsn(fInsn2), fieldName);
+						fieldNames.put(fieldFromInsn(putStatic), fieldName);
 					}
 				}
 			}
