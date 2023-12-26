@@ -39,7 +39,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 	private final ConstructorParametersIndex constructorParametersIndex = new ConstructorParametersIndex();
 	private final GetterSetterIndex getterSetterIndex = new GetterSetterIndex();
 	private boolean disableRecordIndexing = false;
-	private boolean disableEnumFieldsIndexing = false;
+	private boolean disableConstantFieldIndexing = false;
 	private boolean disableCodecsIndexing = false;
 	private boolean disableLoggerIndexing = false;
 	private boolean disableConstructorParametersIndexing = false;
@@ -47,7 +47,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 
 	public JarIndexer withContext(EnigmaServiceContext<JarIndexerService> context) {
 		this.disableRecordIndexing = Arguments.isDisabled(context, Arguments.DISABLE_RECORDS);
-		this.disableEnumFieldsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_ENUM_FIELDS);
+		this.disableConstantFieldIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CONSTANT_FIELDS);
 		this.disableCodecsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CODECS);
 		this.disableLoggerIndexing = Arguments.isDisabled(context, Arguments.DISABLE_LOGGER);
 		this.disableConstructorParametersIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CONSTRUCTOR_PARAMS);
@@ -72,7 +72,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 			}
 		}
 
-		if (!this.disableEnumFieldsIndexing) {
+		if (!this.disableConstantFieldIndexing) {
 			this.constantFieldIndex.findFieldNames();
 		}
 
@@ -88,7 +88,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 			}
 		}
 
-		if (!this.disableEnumFieldsIndexing) {
+		if (!this.disableConstantFieldIndexing) {
 			this.constantFieldIndex.visitClassNode(node);
 		}
 
@@ -113,7 +113,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 		return this.recordIndex;
 	}
 
-	public ConstantFieldIndex getEnumFieldsIndex() {
+	public ConstantFieldIndex getConstantFieldIndex() {
 		return this.constantFieldIndex;
 	}
 

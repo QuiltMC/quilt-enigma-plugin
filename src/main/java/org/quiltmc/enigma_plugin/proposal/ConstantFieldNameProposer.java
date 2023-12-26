@@ -31,7 +31,7 @@ public class ConstantFieldNameProposer extends NameProposer {
 
 	public ConstantFieldNameProposer(JarIndexer index) {
 		super(ID);
-		this.fieldIndex = index.getEnumFieldsIndex();
+		this.fieldIndex = index.getConstantFieldIndex();
 	}
 
 	@Override
