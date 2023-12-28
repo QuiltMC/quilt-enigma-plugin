@@ -20,11 +20,13 @@ package org.quiltmc.enigma_plugin.index.constant_fields;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
+import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.SourceInterpreter;
 import org.objectweb.asm.tree.analysis.SourceValue;
 import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
@@ -116,6 +118,27 @@ public class ConstantFieldNameFinder implements Opcodes {
 		return usableName.toString().toUpperCase();
 	}
 
+	private static FieldEntry fieldFromInsn(FieldInsnNode insn) {
+		return new FieldEntry(new ClassEntry(insn.owner), insn.name, new TypeDescriptor(insn.desc));
+	}
+
+	private static String searchStringCstInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames) {
+		var frame = frames[insns.indexOf(frameInsn)];
+
+		for (int i = 0; i < frame.getStackSize(); i++) {
+			var value = frame.getStack(i);
+			for (var stackInsn : value.insns) {
+				if (stackInsn instanceof LdcInsnNode ldc && ldc.cst instanceof String constant && !constant.isBlank()) {
+					return constant;
+				} else if (stackInsn.getOpcode() == INVOKESTATIC) {
+					return searchStringCstInStack(insns, stackInsn, frames);
+				}
+			}
+		}
+
+		return null;
+	}
+
 	private FieldEntry followFieldLink(FieldEntry field, Map<FieldEntry, String> names) {
 		if (names.containsKey(field)) {
 			return field;
@@ -194,22 +217,13 @@ public class ConstantFieldNameFinder implements Opcodes {
 				}
 
 				// Search for a name within the frame for the invocation instruction
-				var frame = frames[i - 1];
-				String name = null;
-				for (int j = 0; j < frame.getStackSize(); j++) {
-					var value = frame.getStack(j);
-					for (var stackInsn : value.insns) {
-						if (stackInsn instanceof LdcInsnNode ldc && ldc.cst instanceof String constant && !constant.isBlank()) {
-							name = constant;
-							break;
-						}
-					}
-				}
+				String name = searchStringCstInStack(instructions, invokeInsn, frames);
 
 				FieldEntry fieldEntry = fieldFromInsn(putStatic);
 				if (name == null) {
 					// If we couldn't find a name, try to link this field to one from another class instead
 					FieldInsnNode otherFieldInsn = null;
+					var frame = frames[instructions.indexOf(invokeInsn)];
 					for (int j = 0; j < frame.getStackSize(); j++) {
 						var value = frame.getStack(j);
 						AbstractInsnNode lastStackInsn = null;
@@ -260,9 +274,5 @@ public class ConstantFieldNameFinder implements Opcodes {
 				}
 			}
 		}
-	}
-
-	private static FieldEntry fieldFromInsn(FieldInsnNode insn) {
-		return new FieldEntry(new ClassEntry(insn.owner), insn.name, new TypeDescriptor(insn.desc));
 	}
 }
