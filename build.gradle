@@ -1,10 +1,11 @@
 plugins {
 	id 'java'
 	id 'maven-publish'
+	id 'checkstyle'
 	id 'org.quiltmc.gradle.licenser' version '2.0.1'
 }
 
-version '1.4.0'
+version '2.0.0'
 group 'org.quiltmc'
 
 sourceCompatibility = JavaVersion.VERSION_17
@@ -16,7 +17,11 @@ repositories {
 	mavenCentral()
 	maven {
 		name 'Quilt Repository'
-		url 'https://maven.quiltmc.org/repository/release'
+		url 'https://maven.quiltmc.org/repository/release/'
+	}
+	maven {
+		name 'Quilt Snapshots'
+		url 'https://maven.quiltmc.org/repository/snapshot/'
 	}
 
 	// Enigma dependencies
@@ -33,16 +38,13 @@ repositories {
 }
 
 dependencies {
-	implementation "org.ow2.asm:asm:9.4"
-	implementation "org.ow2.asm:asm-commons:9.4"
-	implementation "org.ow2.asm:asm-tree:9.4"
-	implementation "org.ow2.asm:asm-util:9.4"
-	implementation "org.quiltmc:enigma:${enigma_version}"
-	implementation "org.quiltmc:quilt-json5:1.0.1"
-	implementation "org.tinylog:tinylog-api:2.6.2"
-	implementation "org.jetbrains:annotations:23.0.0"
+	implementation libs.bundles.asm
+	implementation libs.enigma
+	implementation libs.quilt.json5
+	implementation libs.tinylog
+	implementation libs.annotations
 
-	testImplementation "org.quiltmc:enigma-swing:${enigma_version}"
+	testImplementation libs.enigma.swing
 }
 
 license {
