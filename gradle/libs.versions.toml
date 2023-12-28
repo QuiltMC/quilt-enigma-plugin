@@ -1,5 +1,5 @@
 [versions]
-enigma = "2.0.0-SNAPSHOT"
+enigma = "2.0.0"
 
 asm = "9.4"
 quilt_json5 = "1.0.3"
