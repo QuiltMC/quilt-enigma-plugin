@@ -94,6 +94,7 @@ public class ConstantFieldNameFinder implements Opcodes {
 	private static String stringToUpperSnakeCase(String s) {
 		StringBuilder usableName = new StringBuilder();
 		boolean hasAlphabetic = false;
+		boolean prevUsable = false;
 
 		for (int j = 0; j < s.length(); j++) {
 			char c = s.charAt(j);
@@ -103,13 +104,17 @@ public class ConstantFieldNameFinder implements Opcodes {
 					hasAlphabetic = true;
 				}
 
-				if (j > 0 && Character.isUpperCase(c) && j < s.length() - 1 && Character.isLowerCase(s.charAt(j + 1))) {
+				// Add an underscore before if the current character follows another letter/number and is the start of a camel cased word
+				if (j > 0 && Character.isUpperCase(c) && j < s.length() - 1 && Character.isLowerCase(s.charAt(j + 1)) && prevUsable) {
 					usableName.append('_');
 				}
 
 				usableName.append(Character.toUpperCase(c));
-			} else {
+				prevUsable = true;
+			} else if (j > 0 && j < s.length() - 1 && prevUsable) {
+				// Replace unusable characters with underscores if they aren't at the start or end, and are following another usable character
 				usableName.append('_');
+				prevUsable = false;
 			}
 		}
 
