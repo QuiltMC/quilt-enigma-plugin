@@ -64,6 +64,8 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 
 	@Override
 	public void acceptJar(Set<String> scope, ClassProvider classProvider, JarIndex jarIndex) {
+		this.constantFieldIndex.clear();
+
 		for (String className : scope) {
 			ClassNode node = classProvider.get(className);
 			if (node != null) {

@@ -59,6 +59,12 @@ public class ConstantFieldIndex implements Index {
 		}
 	}
 
+	public void clear() {
+		this.enumFields.clear();
+		this.staticInitializers.clear();
+		this.fieldNames = null;
+	}
+
 	public boolean hasName(FieldEntry field) {
 		return this.fieldNames.containsKey(field);
 	}
