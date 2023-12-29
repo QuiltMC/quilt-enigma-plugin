@@ -39,6 +39,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public class ConstantFieldNameFinder implements Opcodes {
 	private final HashMap<String, Set<String>> usedNamesByClass = new HashMap<>();
@@ -122,7 +123,7 @@ public class ConstantFieldNameFinder implements Opcodes {
 		return new FieldEntry(new ClassEntry(insn.owner), insn.name, new TypeDescriptor(insn.desc));
 	}
 
-	private static String searchStringCstInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames) {
+	private static AbstractInsnNode searchInsnInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames, Predicate<AbstractInsnNode> insnPredicate) {
 		int frameIndex = insns.indexOf(frameInsn);
 		var frame = frames[frameIndex];
 
@@ -130,10 +131,10 @@ public class ConstantFieldNameFinder implements Opcodes {
 		for (int i = 0; i < frame.getStackSize(); i++) {
 			var value = frame.getStack(i);
 			for (var stackInsn : value.insns) {
-				if (stackInsn instanceof LdcInsnNode ldc && ldc.cst instanceof String constant && !constant.isBlank()) {
-					return constant;
+				if (insnPredicate.test(stackInsn)) {
+					return stackInsn;
 				} else if (stackInsn.getOpcode() == INVOKESTATIC) {
-					return searchStringCstInStack(insns, stackInsn, frames);
+					return searchInsnInStack(insns, stackInsn, frames, insnPredicate);
 				}
 
 				lastStackInsn = stackInsn;
@@ -165,7 +166,7 @@ public class ConstantFieldNameFinder implements Opcodes {
 				} else {
 					var insn = insns.get(searchFrameIndex - 1); // This was the last instruction with a frame with a dup
 					if (insn != frameInsn) {
-						return searchStringCstInStack(insns, insn, frames);
+						return searchInsnInStack(insns, insn, frames, insnPredicate);
 					}
 				}
 			}
@@ -174,53 +175,21 @@ public class ConstantFieldNameFinder implements Opcodes {
 		return null;
 	}
 
-	private static FieldInsnNode searchFieldReferenceInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames, String clazz) {
-		int frameIndex = insns.indexOf(frameInsn);
-		var frame = frames[frameIndex];
-
-		AbstractInsnNode lastStackInsn = null;
-		for (int i = 0; i < frame.getStackSize(); i++) {
-			var value = frame.getStack(i);
-			for (var stackInsn : value.insns) {
-				if (stackInsn instanceof FieldInsnNode fieldInsn && fieldInsn.getOpcode() == GETSTATIC && !fieldInsn.owner.equals(clazz)) {
-					return fieldInsn;
-				} else if (stackInsn.getOpcode() == INVOKESTATIC) {
-					return searchFieldReferenceInStack(insns, stackInsn, frames, clazz);
-				}
-
-				lastStackInsn = stackInsn;
-			}
+	private static String searchStringCstInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames) {
+		var insn = searchInsnInStack(insns, frameInsn, frames,
+				insnNode -> insnNode instanceof LdcInsnNode ldc && ldc.cst instanceof String constant && !constant.isBlank());
+		if (insn instanceof LdcInsnNode ldc) {
+			return (String) ldc.cst;
 		}
 
-		if (lastStackInsn != null && lastStackInsn.getOpcode() == NEW && lastStackInsn.getNext() != null && lastStackInsn.getNext().getOpcode() == DUP) {
-			// Find the last frame containing the DUP instruction
-			var dup = lastStackInsn.getNext();
-			int searchFrameIndex = insns.indexOf(dup) + 1;
-			var searchFrame = frames[searchFrameIndex];
+		return null;
+	}
 
-			while (searchFrame != null && searchFrameIndex <= frameIndex) {
-				boolean contains = false;
-				for (int j = 0; j < searchFrame.getStackSize(); j++) {
-					if (frame.getStack(j).insns.contains(dup)) {
-						contains = true;
-						break;
-					}
-				}
-
-				if (contains) {
-					searchFrameIndex++;
-					if (searchFrameIndex < frames.length) {
-						searchFrame = frames[searchFrameIndex];
-					} else {
-						searchFrame = null;
-					}
-				} else {
-					var insn = insns.get(searchFrameIndex - 1); // This was the last instruction with a frame with a dup
-					if (insn != frameInsn) {
-						return searchFieldReferenceInStack(insns, insn, frames, clazz);
-					}
-				}
-			}
+	private static FieldInsnNode searchFieldReferenceInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames, String clazz) {
+		var insn = searchInsnInStack(insns, frameInsn, frames,
+				insnNode -> insnNode instanceof FieldInsnNode fieldInsn && fieldInsn.getOpcode() == GETSTATIC && !fieldInsn.owner.equals(clazz));
+		if (insn instanceof FieldInsnNode fieldInsn) {
+			return fieldInsn;
 		}
 
 		return null;
