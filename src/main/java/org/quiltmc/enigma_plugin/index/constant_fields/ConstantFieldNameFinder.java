@@ -226,7 +226,14 @@ public class ConstantFieldNameFinder implements Opcodes {
 		// Insert linked names
 		for (FieldEntry linked : this.linkedFields.keySet()) {
 			FieldEntry target = this.followFieldLink(linked, fieldNames);
+			if (target == null) {
+				continue;
+			}
+
 			String name = fieldNames.get(target);
+			if (name == null) {
+				continue;
+			}
 
 			String clazz = linked.getParent().getFullName();
 			Set<String> usedNames = this.usedNamesByClass.computeIfAbsent(clazz, s -> new HashSet<>());
