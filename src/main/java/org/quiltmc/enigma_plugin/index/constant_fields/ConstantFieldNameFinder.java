@@ -140,7 +140,9 @@ public class ConstantFieldNameFinder implements Opcodes {
 				if (insnPredicate.test(stackInsn)) {
 					return stackInsn;
 				} else if (stackInsn.getOpcode() == INVOKESTATIC) {
-					return searchInsnInStack(insns, stackInsn, frames, insnPredicate);
+					if (!(frameInsn instanceof MethodInsnNode mInsn) || mInsn.owner.equals(((MethodInsnNode) stackInsn).owner)) {
+						return searchInsnInStack(insns, stackInsn, frames, insnPredicate);
+					}
 				}
 
 				lastStackInsn = stackInsn;
