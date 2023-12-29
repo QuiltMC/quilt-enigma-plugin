@@ -34,6 +34,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.tinylog.Logger;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -219,8 +220,9 @@ public class ConstantFieldNameFinder implements Opcodes {
 
 		for (String clazz : fieldIndex.getStaticInitializers().keySet()) {
 			var initializers = fieldIndex.getStaticInitializers().get(clazz);
+			var enumFields = fieldIndex.getEnumFields().getOrDefault(clazz, Collections.emptySet());
 
-			this.findNamesInInitializers(clazz, initializers, analyzer, fieldNames);
+			this.findNamesInInitializers(clazz, initializers, analyzer, fieldNames, enumFields);
 		}
 
 		// Insert linked names
@@ -249,7 +251,7 @@ public class ConstantFieldNameFinder implements Opcodes {
 		return fieldNames;
 	}
 
-	private void findNamesInInitializers(String clazz, List<MethodNode> initializers, Analyzer<SourceValue> analyzer, Map<FieldEntry, String> fieldNames) throws AnalyzerException {
+	private void findNamesInInitializers(String clazz, List<MethodNode> initializers, Analyzer<SourceValue> analyzer, Map<FieldEntry, String> fieldNames, Set<String> enumFields) throws AnalyzerException {
 		var usedNames = this.usedNamesByClass.computeIfAbsent(clazz, s -> new HashSet<>());
 		var duplicatedNames = this.duplicatedNamesByClass.computeIfAbsent(clazz, s -> new HashSet<>());
 
@@ -271,8 +273,8 @@ public class ConstantFieldNameFinder implements Opcodes {
 				}
 
 				var putStatic = (FieldInsnNode) insn;
-				if (!(prevInsn instanceof MethodInsnNode invokeInsn) || !invokeInsn.owner.equals(clazz)) {
-					continue; // Ensure the previous instruction is an invocation of one of this class' methods
+				if (!(prevInsn instanceof MethodInsnNode invokeInsn) || (!invokeInsn.owner.equals(clazz)) && !enumFields.contains(putStatic.name + ":" + putStatic.desc)) {
+					continue; // Ensure the previous instruction is an invocation of one of this class' methods, or an enum field, which may have an anonymous class
 				}
 
 				if (invokeInsn.getOpcode() != INVOKESTATIC && !isInit(invokeInsn)) {
