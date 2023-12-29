@@ -7,9 +7,9 @@ public class ClassTest {
 	public static final Something LOREM_IPSUM = create("baz/lorem_ipsum");
 	public static final Something AN_ID = create("example:an_id");
 	public static final Something ANOTHER_ID = create("example:foo/another_id");
-	public static final Something ONE = new Something("One");
-	public static final Something TWO = new Something(new Something("Two"));
-	public static final Something THREE = new Something(new Something(new Something("Three")));
+	public static final Something ONE = create(new Something("One"));
+	public static final Something TWO = create(new Something(new Something("Two")));
+	public static final Something THREE = create(new Something(new Something(new Something("Three"))));
 
 	private static Something create(String value) {
 		return new Something(value);

@@ -123,8 +123,10 @@ public class ConstantFieldNameFinder implements Opcodes {
 	}
 
 	private static String searchStringCstInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames) {
-		var frame = frames[insns.indexOf(frameInsn)];
+		int frameIndex = insns.indexOf(frameInsn);
+		var frame = frames[frameIndex];
 
+		AbstractInsnNode lastStackInsn = null;
 		for (int i = 0; i < frame.getStackSize(); i++) {
 			var value = frame.getStack(i);
 			for (var stackInsn : value.insns) {
@@ -132,6 +134,91 @@ public class ConstantFieldNameFinder implements Opcodes {
 					return constant;
 				} else if (stackInsn.getOpcode() == INVOKESTATIC) {
 					return searchStringCstInStack(insns, stackInsn, frames);
+				}
+
+				lastStackInsn = stackInsn;
+			}
+		}
+
+		if (lastStackInsn != null && lastStackInsn.getOpcode() == NEW && lastStackInsn.getNext() != null && lastStackInsn.getNext().getOpcode() == DUP) {
+			// Find the last frame containing the DUP instruction
+			var dup = lastStackInsn.getNext();
+			int searchFrameIndex = insns.indexOf(dup) + 1;
+			var searchFrame = frames[searchFrameIndex];
+
+			while (searchFrame != null && searchFrameIndex <= frameIndex) {
+				boolean contains = false;
+				for (int j = 0; j < searchFrame.getStackSize(); j++) {
+					if (frame.getStack(j).insns.contains(dup)) {
+						contains = true;
+						break;
+					}
+				}
+
+				if (contains) {
+					searchFrameIndex++;
+					if (searchFrameIndex < frames.length) {
+						searchFrame = frames[searchFrameIndex];
+					} else {
+						searchFrame = null;
+					}
+				} else {
+					var insn = insns.get(searchFrameIndex - 1); // This was the last instruction with a frame with a dup
+					if (insn != frameInsn) {
+						return searchStringCstInStack(insns, insn, frames);
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private static FieldInsnNode searchFieldReferenceInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames, String clazz) {
+		int frameIndex = insns.indexOf(frameInsn);
+		var frame = frames[frameIndex];
+
+		AbstractInsnNode lastStackInsn = null;
+		for (int i = 0; i < frame.getStackSize(); i++) {
+			var value = frame.getStack(i);
+			for (var stackInsn : value.insns) {
+				if (stackInsn instanceof FieldInsnNode fieldInsn && fieldInsn.getOpcode() == GETSTATIC && !fieldInsn.owner.equals(clazz)) {
+					return fieldInsn;
+				} else if (stackInsn.getOpcode() == INVOKESTATIC) {
+					return searchFieldReferenceInStack(insns, stackInsn, frames, clazz);
+				}
+
+				lastStackInsn = stackInsn;
+			}
+		}
+
+		if (lastStackInsn != null && lastStackInsn.getOpcode() == NEW && lastStackInsn.getNext() != null && lastStackInsn.getNext().getOpcode() == DUP) {
+			// Find the last frame containing the DUP instruction
+			var dup = lastStackInsn.getNext();
+			int searchFrameIndex = insns.indexOf(dup) + 1;
+			var searchFrame = frames[searchFrameIndex];
+
+			while (searchFrame != null && searchFrameIndex <= frameIndex) {
+				boolean contains = false;
+				for (int j = 0; j < searchFrame.getStackSize(); j++) {
+					if (frame.getStack(j).insns.contains(dup)) {
+						contains = true;
+						break;
+					}
+				}
+
+				if (contains) {
+					searchFrameIndex++;
+					if (searchFrameIndex < frames.length) {
+						searchFrame = frames[searchFrameIndex];
+					} else {
+						searchFrame = null;
+					}
+				} else {
+					var insn = insns.get(searchFrameIndex - 1); // This was the last instruction with a frame with a dup
+					if (insn != frameInsn) {
+						return searchFieldReferenceInStack(insns, insn, frames, clazz);
+					}
 				}
 			}
 		}
@@ -222,36 +309,7 @@ public class ConstantFieldNameFinder implements Opcodes {
 				FieldEntry fieldEntry = fieldFromInsn(putStatic);
 				if (name == null) {
 					// If we couldn't find a name, try to link this field to one from another class instead
-					FieldInsnNode otherFieldInsn = null;
-					var frame = frames[instructions.indexOf(invokeInsn)];
-					for (int j = 0; j < frame.getStackSize(); j++) {
-						var value = frame.getStack(j);
-						AbstractInsnNode lastStackInsn = null;
-						for (var stackInsn : value.insns) {
-							lastStackInsn = stackInsn;
-							if (stackInsn instanceof FieldInsnNode fieldInsn && fieldInsn.getOpcode() == GETSTATIC && !fieldInsn.owner.equals(clazz)) {
-								otherFieldInsn = fieldInsn;
-								break;
-							}
-						}
-
-						/* Search between the last stack instruction and the invocation instruction, useful for parameters passed to a constructor
-						 * lastStackInsn: NEW * // Last instruction in the stack
-						 *                DUP
-						 *                GETSTATIC !${clazz}.* : * // Instruction we are looking for
-						 *                INVOKESPECIAL *.<init> (*)V
-						 * invokeInsn:    INVOKESPECIAL ${clazz}.<init> (L*;*)V
-						 */
-						if (otherFieldInsn == null && lastStackInsn != null) {
-							var stackInsn = lastStackInsn;
-							while ((stackInsn = stackInsn.getNext()) != null && stackInsn != invokeInsn) {
-								if (stackInsn instanceof FieldInsnNode fieldInsn && fieldInsn.getOpcode() == GETSTATIC && !fieldInsn.owner.equals(clazz)) {
-									otherFieldInsn = fieldInsn;
-									break;
-								}
-							}
-						}
-					}
+					FieldInsnNode otherFieldInsn = searchFieldReferenceInStack(instructions, invokeInsn, frames, clazz);
 
 					if (otherFieldInsn != null) {
 						this.linkedFields.put(fieldEntry, fieldFromInsn(otherFieldInsn));
