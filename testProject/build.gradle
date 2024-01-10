@@ -85,5 +85,6 @@ task obfuscate(type: proguard.gradle.ProGuardTask) {
 	keepattributes 'EnclosingMethod'
 	keepattributes 'Deprecated'
 	keepattributes 'Signature'
+	keepattributes 'Record'
 	printmapping 'output/out.txt'
 }
