@@ -24,7 +24,7 @@ import org.quiltmc.enigma.api.service.EnigmaServiceContext;
  */
 public class Arguments {
 	public static final String DISABLE_RECORDS = "disable_records";
-	public static final String DISABLE_ENUM_FIELDS = "disable_enum_fields";
+	public static final String DISABLE_CONSTANT_FIELDS = "disable_constant_fields";
 	public static final String DISABLE_EQUALS = "disable_equals";
 	public static final String DISABLE_LOGGER = "disable_logger";
 	public static final String DISABLE_CONSTRUCTOR_PARAMS = "disable_constructor_params";

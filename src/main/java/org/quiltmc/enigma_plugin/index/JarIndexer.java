@@ -24,7 +24,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
-import org.quiltmc.enigma_plugin.index.enum_fields.EnumFieldsIndex;
+import org.quiltmc.enigma_plugin.index.constant_fields.ConstantFieldIndex;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
 import java.util.List;
@@ -32,14 +32,14 @@ import java.util.Set;
 
 public class JarIndexer implements JarIndexerService, Opcodes {
 	private final RecordIndex recordIndex = new RecordIndex();
-	private final EnumFieldsIndex enumFieldsIndex = new EnumFieldsIndex();
+	private final ConstantFieldIndex constantFieldIndex = new ConstantFieldIndex();
 	private final CodecIndex codecIndex = new CodecIndex();
 	private final LoggerIndex loggerIndex = new LoggerIndex();
 	private final SimpleTypeSingleIndex simpleTypeSingleIndex = new SimpleTypeSingleIndex();
 	private final ConstructorParametersIndex constructorParametersIndex = new ConstructorParametersIndex();
 	private final GetterSetterIndex getterSetterIndex = new GetterSetterIndex();
 	private boolean disableRecordIndexing = false;
-	private boolean disableEnumFieldsIndexing = false;
+	private boolean disableConstantFieldIndexing = false;
 	private boolean disableCodecsIndexing = false;
 	private boolean disableLoggerIndexing = false;
 	private boolean disableConstructorParametersIndexing = false;
@@ -47,7 +47,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 
 	public JarIndexer withContext(EnigmaServiceContext<JarIndexerService> context) {
 		this.disableRecordIndexing = Arguments.isDisabled(context, Arguments.DISABLE_RECORDS);
-		this.disableEnumFieldsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_ENUM_FIELDS);
+		this.disableConstantFieldIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CONSTANT_FIELDS);
 		this.disableCodecsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CODECS);
 		this.disableLoggerIndexing = Arguments.isDisabled(context, Arguments.DISABLE_LOGGER);
 		this.disableConstructorParametersIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CONSTRUCTOR_PARAMS);
@@ -64,6 +64,8 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 
 	@Override
 	public void acceptJar(Set<String> scope, ClassProvider classProvider, JarIndex jarIndex) {
+		this.constantFieldIndex.clear();
+
 		for (String className : scope) {
 			ClassNode node = classProvider.get(className);
 			if (node != null) {
@@ -72,8 +74,8 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 			}
 		}
 
-		if (!this.disableEnumFieldsIndexing) {
-			this.enumFieldsIndex.findFieldNames();
+		if (!this.disableConstantFieldIndexing) {
+			this.constantFieldIndex.findFieldNames();
 		}
 
 		this.simpleTypeSingleIndex.dropCache();
@@ -88,8 +90,8 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 			}
 		}
 
-		if (!this.disableEnumFieldsIndexing) {
-			this.enumFieldsIndex.visitClassNode(node);
+		if (!this.disableConstantFieldIndexing) {
+			this.constantFieldIndex.visitClassNode(node);
 		}
 
 		if (!this.disableCodecsIndexing) {
@@ -113,8 +115,8 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 		return this.recordIndex;
 	}
 
-	public EnumFieldsIndex getEnumFieldsIndex() {
-		return this.enumFieldsIndex;
+	public ConstantFieldIndex getConstantFieldIndex() {
+		return this.constantFieldIndex;
 	}
 
 	public CodecIndex getCodecIndex() {

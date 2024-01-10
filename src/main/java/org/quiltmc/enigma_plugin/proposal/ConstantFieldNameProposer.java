@@ -21,23 +21,23 @@ import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
-import org.quiltmc.enigma_plugin.index.enum_fields.EnumFieldsIndex;
+import org.quiltmc.enigma_plugin.index.constant_fields.ConstantFieldIndex;
 
 import java.util.Map;
 
-public class EnumFieldNameProposer extends NameProposer {
-	public static final String ID = "enum_fields";
-	private final EnumFieldsIndex enumIndex;
+public class ConstantFieldNameProposer extends NameProposer {
+	public static final String ID = "constant_fields";
+	private final ConstantFieldIndex fieldIndex;
 
-	public EnumFieldNameProposer(JarIndexer index) {
+	public ConstantFieldNameProposer(JarIndexer index) {
 		super(ID);
-		this.enumIndex = index.getEnumFieldsIndex();
+		this.fieldIndex = index.getConstantFieldIndex();
 	}
 
 	@Override
 	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
-		for (FieldEntry field : this.enumIndex.getFields()) {
-			String name = this.enumIndex.getName(field);
+		for (FieldEntry field : this.fieldIndex.getFields()) {
+			String name = this.fieldIndex.getName(field);
 			this.insertProposal(mappings, field, name);
 		}
 	}
