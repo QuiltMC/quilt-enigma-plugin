@@ -60,6 +60,9 @@ dependencies {
 	implementation libs.tinylog
 	implementation libs.annotations
 
+	testImplementation libs.junit
+	testImplementation libs.hamcrest
+	testRuntimeOnly libs.junit.engine
 	testImplementation libs.enigma.swing
 
 	testInputsImplementation libs.dfu
@@ -106,7 +109,7 @@ task obfuscateTestInputs(type: proguard.gradle.ProGuardTask) {
 	keepattributes 'Deprecated'
 	keepattributes 'Signature'
 	keepattributes 'Record'
-	printmapping 'build/obf/out.txt'
+	printmapping 'build/obf/obf.txt'
 }
 
 license {
@@ -121,6 +124,10 @@ java {
 	targetCompatibility = JavaVersion.VERSION_17
 
 	withSourcesJar()
+}
+
+test {
+	useJUnitPlatform()
 }
 
 publishing {
