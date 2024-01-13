@@ -3,5 +3,8 @@ build/
 out/
 .idea/
 *.iml
+
+testMappings/
+
 testProject/output/
 testProject/mappings/

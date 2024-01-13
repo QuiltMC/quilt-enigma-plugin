@@ -9,4 +9,3 @@ pluginManagement {
 }
 
 rootProject.name = 'quilt-enigma-plugin'
-include 'testProject'
