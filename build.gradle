@@ -112,6 +112,8 @@ task obfuscateTestInputs(type: proguard.gradle.ProGuardTask) {
 	printmapping 'build/obf/obf.txt'
 }
 
+tasks.test.dependsOn obfuscateTestInputs, processTestInputsResources
+
 license {
 	rule file('codeformat/FABRIC_MODIFIED_HEADER')
 	rule file('codeformat/HEADER')
