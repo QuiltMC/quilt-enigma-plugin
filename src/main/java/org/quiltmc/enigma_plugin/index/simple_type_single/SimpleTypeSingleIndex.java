@@ -128,7 +128,7 @@ public class SimpleTypeSingleIndex extends Index {
 		var parentEntry = new ClassEntry(node.name);
 
 		this.collectMatchingFields(provider, node).forEach((name, entry) -> {
-			if (entry != FieldBuildingEntry.NULL) {
+			if (!entry.isNull()) {
 				var fieldEntry = new FieldEntry(parentEntry, entry.node().name, new TypeDescriptor(entry.node().desc));
 				this.fields.put(fieldEntry,
 						AsmUtil.matchAccess(entry.node(), ACC_STATIC, ACC_FINAL)
@@ -145,6 +145,7 @@ public class SimpleTypeSingleIndex extends Index {
 			var methodEntry = new MethodEntry(parentEntry, method.name, methodDescriptor);
 			var parameters = Descriptors.getParameters(method);
 
+			// Count the times a type is used in the descriptor
 			var types = new HashMap<Type, Integer>();
 
 			for (var param : parameters) {
@@ -157,6 +158,7 @@ public class SimpleTypeSingleIndex extends Index {
 				});
 			}
 
+			// Don't propose names for types appearing more than once
 			var bannedTypes = new HashSet<Type>();
 			types.forEach((type, amount) -> {
 				if (amount > 1) bannedTypes.add(type);
@@ -181,6 +183,7 @@ public class SimpleTypeSingleIndex extends Index {
 
 		var knownFields = new HashMap<String, FieldBuildingEntry>();
 		for (var field : classNode.fields) {
+			// Collect names from the outer class as initial context
 			if (classNode.outerClass != null) {
 				ClassNode outerClass = classProvider.get(classNode.outerClass);
 
@@ -194,20 +197,29 @@ public class SimpleTypeSingleIndex extends Index {
 
 			var entry = this.registry.getEntry(type);
 			if (entry != null) {
+				// Check if there's a field by the default name
 				var existingEntry = knownFields.get(entry.name().local());
 
 				if (existingEntry != null) {
+					// If the existing field is of the same type, remove it and skip this one
+					if (existingEntry.entry() == entry) {
+						knownFields.put(entry.name().local(), FieldBuildingEntry.createNull(entry));
+						continue;
+					}
+
+					// If there's already a field by the default name, find a fallback name
 					Name foundFallback = entry.findFallback(fallback -> !knownFields.containsKey(fallback.local()));
 
 					if (foundFallback != null) {
 						knownFields.put(foundFallback.local(), new FieldBuildingEntry(field, foundFallback, entry));
 
-						if (existingEntry != FieldBuildingEntry.NULL && existingEntry.entry().exclusive()) {
+						// If the existing entry is exclusive, remove it and if possible replace it with one of its fallbacks
+						if (!existingEntry.isNull() && existingEntry.entry().exclusive()) {
 							Name replacement = existingEntry.entry().findFallback(
 									fallback -> !knownFields.containsKey(fallback.local())
 							);
 
-							knownFields.put(entry.name().local(), FieldBuildingEntry.NULL);
+							knownFields.put(entry.name().local(), FieldBuildingEntry.createNull(entry));
 
 							if (replacement != null) {
 								knownFields.put(replacement.local(),
@@ -216,9 +228,11 @@ public class SimpleTypeSingleIndex extends Index {
 							}
 						}
 					} else {
-						knownFields.put(entry.name().local(), FieldBuildingEntry.NULL);
+						// If a fallback name couldn't be found, remove the name for the existing field
+						knownFields.put(entry.name().local(), FieldBuildingEntry.createNull(entry));
 					}
 				} else {
+					// Another field with the name doesn't exist, proceed as usual
 					knownFields.put(entry.name().local(), new FieldBuildingEntry(field, entry.name(), entry));
 				}
 			}
@@ -284,7 +298,13 @@ public class SimpleTypeSingleIndex extends Index {
 	}
 
 	private record FieldBuildingEntry(FieldNode node, Name name, SimpleTypeFieldNamesRegistry.Entry entry) {
-		public static final FieldBuildingEntry NULL = new FieldBuildingEntry(null, null, null);
+		public static FieldBuildingEntry createNull(SimpleTypeFieldNamesRegistry.Entry entry) {
+			return new FieldBuildingEntry(null, null, entry);
+		}
+
+		public boolean isNull() {
+			return this.node == null;
+		}
 	}
 
 	private record ParameterBuildingEntry(ParameterNode node, int index, SimpleTypeFieldNamesRegistry.Entry entry) {

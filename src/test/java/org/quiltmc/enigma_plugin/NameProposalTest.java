@@ -176,7 +176,7 @@ public class NameProposalTest {
 
 		var owner = new ClassEntry(fieldsClassEntry, "a");
 		assertNotProposed(new FieldEntry(owner, "a", new TypeDescriptor("Lcom/a/b/g;")));
-		// assertNotProposed(new FieldEntry(owner, "b", new TypeDescriptor("Lcom/a/b/g;"))); // TODO
+		assertNotProposed(new FieldEntry(owner, "b", new TypeDescriptor("Lcom/a/b/g;")));
 
 		owner = new ClassEntry(fieldsClassEntry, "b");
 		assertProposal("POS", new FieldEntry(owner, "a", new TypeDescriptor("Lcom/a/b/b;")));
