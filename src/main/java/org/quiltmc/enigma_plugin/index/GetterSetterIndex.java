@@ -26,6 +26,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.Descriptors;
 
@@ -34,10 +35,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class GetterSetterIndex implements Index {
+public class GetterSetterIndex extends Index {
 	private final Map<MethodEntry, FieldEntry> linked = new HashMap<>();
 	private final Map<LocalVariableEntry, FieldEntry> linkedSetterParams = new HashMap<>();
 	private final Map<FieldEntry, Set<Entry<?>>> links = new HashMap<>();
+
+	public GetterSetterIndex() {
+		super(Arguments.DISABLE_GETTER_SETTER);
+	}
 
 	@Override
 	public void visitClassNode(ClassNode classNode) {

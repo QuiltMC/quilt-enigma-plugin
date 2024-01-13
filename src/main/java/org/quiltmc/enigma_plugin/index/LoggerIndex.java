@@ -20,15 +20,20 @@ import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.objectweb.asm.tree.ClassNode;
+import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class LoggerIndex implements Index {
+public class LoggerIndex extends Index {
 	private static final String LOGGER_TYPE = "Lorg/slf4j/Logger;";
 
 	private final Set<FieldEntry> fields = new HashSet<>();
+
+	public LoggerIndex() {
+		super(Arguments.DISABLE_LOGGER);
+	}
 
 	@Override
 	public void visitClassNode(ClassNode parent) {

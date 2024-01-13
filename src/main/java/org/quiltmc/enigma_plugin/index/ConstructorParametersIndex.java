@@ -28,6 +28,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Opcodes;
+import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.util.Descriptors;
 
 import java.util.HashMap;
@@ -35,9 +36,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class ConstructorParametersIndex implements Index {
+public class ConstructorParametersIndex extends Index {
 	private final Map<LocalVariableEntry, FieldEntry> entries = new HashMap<>();
 	private final Map<FieldEntry, Set<LocalVariableEntry>> entriesByField = new HashMap<>();
+
+	public ConstructorParametersIndex() {
+		super(Arguments.DISABLE_CONSTRUCTOR_PARAMS);
+	}
 
 	@Override
 	public void visitClassNode(ClassNode classNode) {

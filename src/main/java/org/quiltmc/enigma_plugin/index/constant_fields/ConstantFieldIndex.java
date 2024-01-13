@@ -16,10 +16,12 @@
 
 package org.quiltmc.enigma_plugin.index.constant_fields;
 
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.index.Index;
 
 import java.util.ArrayList;
@@ -29,10 +31,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class ConstantFieldIndex implements Index {
+public class ConstantFieldIndex extends Index {
 	private final Map<String, Set<String>> enumFields = new HashMap<>();
 	private final Map<String, List<MethodNode>> staticInitializers = new HashMap<>();
 	private Map<FieldEntry, String> fieldNames;
+
+	public ConstantFieldIndex() {
+		super(Arguments.DISABLE_CONSTANT_FIELDS);
+	}
 
 	@Override
 	public void visitClassNode(ClassNode node) {

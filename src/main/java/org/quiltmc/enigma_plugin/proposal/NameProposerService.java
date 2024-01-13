@@ -57,13 +57,13 @@ public class NameProposerService implements NameProposalService {
 	}
 
 	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, JarIndexer indexer, String name, Function<JarIndexer, NameProposer> factory) {
-		if (!Arguments.isDisabled(context, name)) {
+		if (!Arguments.getBoolean(context, name)) {
 			this.nameProposers.add(factory.apply(indexer));
 		}
 	}
 
 	private void addIfNotDisabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer> factory) {
-		if (!Arguments.isDisabled(context, name, true)) {
+		if (!Arguments.getBoolean(context, name, true)) {
 			this.nameProposers.add(factory.get());
 		}
 	}

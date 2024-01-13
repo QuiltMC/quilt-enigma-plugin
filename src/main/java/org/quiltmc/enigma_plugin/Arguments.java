@@ -34,11 +34,11 @@ public class Arguments {
 	public static final String CUSTOM_CODECS = "custom_codecs";
 	public static final String SIMPLE_TYPE_FIELD_NAMES_PATH = "simple_type_field_names_path";
 
-	public static <T extends EnigmaService> boolean isDisabled(EnigmaServiceContext<T> context, String arg) {
-		return isDisabled(context, arg, false);
+	public static <T extends EnigmaService> boolean getBoolean(EnigmaServiceContext<T> context, String arg) {
+		return getBoolean(context, arg, false);
 	}
 
-	public static <T extends EnigmaService> boolean isDisabled(EnigmaServiceContext<T> context, String arg, boolean disabledByDefault) {
+	public static <T extends EnigmaService> boolean getBoolean(EnigmaServiceContext<T> context, String arg, boolean disabledByDefault) {
 		return context.getSingleArgument(arg).map(Boolean::parseBoolean).orElse(disabledByDefault);
 	}
 }

@@ -46,12 +46,12 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 	private boolean disableGetterSetterIndexing = false;
 
 	public JarIndexer withContext(EnigmaServiceContext<JarIndexerService> context) {
-		this.disableRecordIndexing = Arguments.isDisabled(context, Arguments.DISABLE_RECORDS);
-		this.disableConstantFieldIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CONSTANT_FIELDS);
-		this.disableCodecsIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CODECS);
-		this.disableLoggerIndexing = Arguments.isDisabled(context, Arguments.DISABLE_LOGGER);
-		this.disableConstructorParametersIndexing = Arguments.isDisabled(context, Arguments.DISABLE_CONSTRUCTOR_PARAMS);
-		this.disableGetterSetterIndexing = Arguments.isDisabled(context, Arguments.DISABLE_GETTER_SETTER);
+		this.disableRecordIndexing = Arguments.getBoolean(context, Arguments.DISABLE_RECORDS);
+		this.disableConstantFieldIndexing = Arguments.getBoolean(context, Arguments.DISABLE_CONSTANT_FIELDS);
+		this.disableCodecsIndexing = Arguments.getBoolean(context, Arguments.DISABLE_CODECS);
+		this.disableLoggerIndexing = Arguments.getBoolean(context, Arguments.DISABLE_LOGGER);
+		this.disableConstructorParametersIndexing = Arguments.getBoolean(context, Arguments.DISABLE_CONSTRUCTOR_PARAMS);
+		this.disableGetterSetterIndexing = Arguments.getBoolean(context, Arguments.DISABLE_GETTER_SETTER);
 
 		List<String> codecs = context.getMultipleArguments(Arguments.CUSTOM_CODECS)
 				.orElse(List.of());

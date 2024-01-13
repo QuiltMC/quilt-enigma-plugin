@@ -16,9 +16,42 @@
 
 package org.quiltmc.enigma_plugin.index;
 
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
+import org.quiltmc.enigma.api.class_provider.ClassProvider;
+import org.quiltmc.enigma.api.service.EnigmaServiceContext;
+import org.quiltmc.enigma.api.service.JarIndexerService;
+import org.quiltmc.enigma_plugin.Arguments;
 
-public interface Index extends Opcodes {
-	void visitClassNode(ClassNode classNode);
+public abstract class Index implements Opcodes {
+	@Nullable
+	private final String toggleKey;
+	private boolean enabled;
+
+	protected Index(@Nullable String toggleKey, boolean enabled) {
+		this.toggleKey = toggleKey;
+		this.enabled = enabled;
+	}
+
+	protected Index(@Nullable String toggleKey) {
+		this(toggleKey, true);
+	}
+
+	public void withContext(EnigmaServiceContext<JarIndexerService> context) {
+		if (this.toggleKey != null) {
+			this.enabled ^= Arguments.getBoolean(context, this.toggleKey);
+		}
+	}
+
+	public void visitClassNode(ClassProvider classProvider, ClassNode classNode) {
+		this.visitClassNode(classNode);
+	}
+
+	public void visitClassNode(ClassNode classNode) {
+	}
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
 }

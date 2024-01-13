@@ -25,12 +25,12 @@ import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntr
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.ParameterNode;
+import org.quiltmc.enigma_plugin.index.Index;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Name;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.Descriptors;
@@ -47,11 +47,15 @@ import java.util.Set;
  * Index of fields/local variables that are of a rather simple type (as-in easy to guess the variable name) and which
  * they are entirely unique within their context (no other fields/local vars in the same scope have the same type).
  */
-public class SimpleTypeSingleIndex implements Opcodes {
+public class SimpleTypeSingleIndex extends Index {
 	private final Map<LocalVariableEntry, String> parameters = new HashMap<>();
 	private final Map<FieldEntry, String> fields = new HashMap<>();
 	private final Map<ClassNode, Map<String, FieldBuildingEntry>> fieldCache = new HashMap<>();
 	private SimpleTypeFieldNamesRegistry registry;
+
+	public SimpleTypeSingleIndex() {
+		super(null);
+	}
 
 	public void loadRegistry(Path path) {
 		if (path == null) {

@@ -37,6 +37,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
+import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.CasingUtil;
 import org.tinylog.Logger;
@@ -47,7 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class CodecIndex implements Index {
+public class CodecIndex extends Index {
 	private static final List<MethodInfo> CODEC_FIELD_METHODS = List.of(
 			new MethodInfo("fieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;")
 	);
@@ -79,6 +80,7 @@ public class CodecIndex implements Index {
 	private final Map<MethodEntry, String> methodNames = new HashMap<>();
 
 	public CodecIndex() {
+		super(Arguments.DISABLE_CODECS);
 		this.analyzer = new Analyzer<>(new SourceInterpreter());
 	}
 
