@@ -45,8 +45,8 @@ public class GetterSetterIndex extends Index {
 	}
 
 	@Override
-	public void visitClassNode(ClassNode classNode) {
-		for (var method : classNode.methods) {
+	public void visitClassNode(ClassNode node) {
+		for (var method : node.methods) {
 			if (!AsmUtil.matchAccess(method, ACC_STATIC) && !AsmUtil.matchAccess(method, ACC_NATIVE)) {
 				var descriptor = new MethodDescriptor(method.desc);
 
@@ -56,18 +56,18 @@ public class GetterSetterIndex extends Index {
 						continue; // Ignore booleans for now.
 					}
 
-					AsmUtil.getFieldFromSetter(classNode, method)
+					AsmUtil.getFieldFromSetter(node, method)
 							.ifPresent(field -> {
-								this.linkField(classNode, method, descriptor, field);
+								this.linkField(node, method, descriptor, field);
 							});
 				} else { // Potential getter.
 					if (descriptor.getReturnDesc().equals(Descriptors.BOOLEAN_TYPE)) {
 						continue; // Ignore booleans for now.
 					}
 
-					AsmUtil.getFieldFromGetter(classNode, method)
+					AsmUtil.getFieldFromGetter(node, method)
 							.ifPresent(field -> {
-								this.linkField(classNode, method, descriptor, field);
+								this.linkField(node, method, descriptor, field);
 							});
 				}
 			}

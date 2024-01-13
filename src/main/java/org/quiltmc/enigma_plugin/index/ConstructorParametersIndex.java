@@ -45,10 +45,10 @@ public class ConstructorParametersIndex extends Index {
 	}
 
 	@Override
-	public void visitClassNode(ClassNode classNode) {
-		for (var method : classNode.methods) {
+	public void visitClassNode(ClassNode node) {
+		for (var method : node.methods) {
 			if (method.name.equals("<init>")) {
-				this.visitConstructor(classNode, method);
+				this.visitConstructor(node, method);
 			}
 		}
 	}

@@ -17,6 +17,8 @@
 package org.quiltmc.enigma_plugin.index.simple_type_single;
 
 import org.quiltmc.enigma.api.class_provider.ClassProvider;
+import org.quiltmc.enigma.api.service.EnigmaServiceContext;
+import org.quiltmc.enigma.api.service.JarIndexerService;
 import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
 import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
@@ -30,6 +32,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.ParameterNode;
+import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.index.Index;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Name;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
@@ -57,6 +60,14 @@ public class SimpleTypeSingleIndex extends Index {
 		super(null);
 	}
 
+	@Override
+	public void withContext(EnigmaServiceContext<JarIndexerService> context) {
+		super.withContext(context);
+
+		this.loadRegistry(context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
+				.map(context::getPath).orElse(null));
+	}
+
 	public void loadRegistry(Path path) {
 		if (path == null) {
 			this.registry = null;
@@ -67,6 +78,7 @@ public class SimpleTypeSingleIndex extends Index {
 		this.registry.read();
 	}
 
+	@Override
 	public boolean isEnabled() {
 		return this.registry != null;
 	}
@@ -104,12 +116,18 @@ public class SimpleTypeSingleIndex extends Index {
 		return params;
 	}
 
-	public void visitClassNode(ClassProvider provider, ClassNode classNode) {
+	@Override
+	public void onIndexingEnded() {
+		this.dropCache();
+	}
+
+	@Override
+	public void visitClassNode(ClassProvider provider, ClassNode node) {
 		if (!this.isEnabled()) return;
 
-		var parentEntry = new ClassEntry(classNode.name);
+		var parentEntry = new ClassEntry(node.name);
 
-		this.collectMatchingFields(provider, classNode).forEach((name, entry) -> {
+		this.collectMatchingFields(provider, node).forEach((name, entry) -> {
 			if (entry != FieldBuildingEntry.NULL) {
 				var fieldEntry = new FieldEntry(parentEntry, entry.node().name, new TypeDescriptor(entry.node().desc));
 				this.fields.put(fieldEntry,
@@ -120,7 +138,7 @@ public class SimpleTypeSingleIndex extends Index {
 			}
 		});
 
-		for (var method : classNode.methods) {
+		for (var method : node.methods) {
 			if (method.parameters == null) continue;
 
 			var methodDescriptor = new MethodDescriptor(method.desc);

@@ -35,7 +35,7 @@ public class GetterSetterNameProposer extends NameProposer {
 
 	public GetterSetterNameProposer(JarIndexer index) {
 		super(ID);
-		this.index = index.getGetterSetterIndex();
+		this.index = index.getIndex(GetterSetterIndex.class);
 	}
 
 	private static String getMethodName(String newName, MethodEntry method) {

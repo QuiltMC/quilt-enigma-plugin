@@ -44,11 +44,17 @@ public abstract class Index implements Opcodes {
 		}
 	}
 
-	public void visitClassNode(ClassProvider classProvider, ClassNode classNode) {
-		this.visitClassNode(classNode);
+	public void visitClassNode(ClassProvider classProvider, ClassNode node) {
+		this.visitClassNode(node);
 	}
 
-	public void visitClassNode(ClassNode classNode) {
+	public void visitClassNode(ClassNode node) {
+	}
+
+	public void onIndexingEnded() {
+	}
+
+	public void reset() {
 	}
 
 	public boolean isEnabled() {

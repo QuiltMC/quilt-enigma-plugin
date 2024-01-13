@@ -36,10 +36,10 @@ public class LoggerIndex extends Index {
 	}
 
 	@Override
-	public void visitClassNode(ClassNode parent) {
-		var parentEntry = new ClassEntry(parent.name);
+	public void visitClassNode(ClassNode node) {
+		var parentEntry = new ClassEntry(node.name);
 
-		for (var field : parent.fields) {
+		for (var field : node.fields) {
 			if (AsmUtil.matchAccess(field, ACC_STATIC, ACC_FINAL)) {
 				if (field.desc.equals(LOGGER_TYPE)) {
 					var fieldEntry = new FieldEntry(parentEntry, field.name, new TypeDescriptor(field.desc));

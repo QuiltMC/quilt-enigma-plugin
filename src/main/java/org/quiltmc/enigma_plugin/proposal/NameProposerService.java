@@ -25,6 +25,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
+import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,7 +45,7 @@ public class NameProposerService implements NameProposalService {
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CODECS, CodecNameProposer::new);
 		this.addIfNotDisabled(context, Arguments.DISABLE_MAP_NON_HASHED, MojangNameProposer::new);
 
-		if (indexer.getSimpleTypeSingleIndex().isEnabled()) {
+		if (indexer.getIndex(SimpleTypeSingleIndex.class).isEnabled()) {
 			this.nameProposers.add(new SimpleTypeFieldNameProposer(indexer));
 		}
 

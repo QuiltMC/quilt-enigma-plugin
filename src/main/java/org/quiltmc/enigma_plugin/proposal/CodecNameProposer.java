@@ -32,7 +32,7 @@ public class CodecNameProposer extends NameProposer {
 
 	public CodecNameProposer(JarIndexer index) {
 		super(ID);
-		this.index = index.getCodecIndex();
+		this.index = index.getIndex(CodecIndex.class);
 	}
 
 	@Override

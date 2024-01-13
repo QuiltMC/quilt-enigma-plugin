@@ -184,6 +184,10 @@ public class RecordIndex extends Index {
 
 	@Override
 	public void visitClassNode(ClassNode node) {
+		if ((node.access & ACC_RECORD) == 0 && !node.superName.equals("java/lang/Record")) {
+			return;
+		}
+
 		ClassEntry classEntry = getClassEntry(node);
 		if (this.records.containsKey(classEntry) && this.records.get(classEntry).hasComponents()) {
 			return;

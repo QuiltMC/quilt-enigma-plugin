@@ -16,11 +16,10 @@
 
 package org.quiltmc.enigma_plugin.index.constant_fields;
 
-import org.jetbrains.annotations.Nullable;
-import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.index.Index;
 
@@ -65,7 +64,13 @@ public class ConstantFieldIndex extends Index {
 		}
 	}
 
-	public void clear() {
+	@Override
+	public void onIndexingEnded() {
+		this.findFieldNames();
+	}
+
+	@Override
+	public void reset() {
 		this.enumFields.clear();
 		this.staticInitializers.clear();
 		this.fieldNames = null;

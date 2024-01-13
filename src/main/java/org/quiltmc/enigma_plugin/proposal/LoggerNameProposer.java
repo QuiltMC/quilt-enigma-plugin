@@ -34,7 +34,7 @@ public class LoggerNameProposer extends NameProposer {
 
 	public LoggerNameProposer(JarIndexer index) {
 		super(ID);
-		this.index = index.getLoggerIndex();
+		this.index = index.getIndex(LoggerIndex.class);
 	}
 
 	@Override

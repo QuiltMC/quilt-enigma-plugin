@@ -32,7 +32,7 @@ public class SimpleTypeFieldNameProposer extends NameProposer {
 
 	public SimpleTypeFieldNameProposer(JarIndexer index) {
 		super(ID);
-		this.index = index.getSimpleTypeSingleIndex();
+		this.index = index.getIndex(SimpleTypeSingleIndex.class);
 	}
 
 	@Override

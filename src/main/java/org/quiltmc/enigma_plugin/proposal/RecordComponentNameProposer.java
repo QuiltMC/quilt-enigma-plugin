@@ -33,7 +33,7 @@ public class RecordComponentNameProposer extends NameProposer {
 
 	public RecordComponentNameProposer(JarIndexer index) {
 		super(ID);
-		this.index = index.getRecordIndex();
+		this.index = index.getIndex(RecordIndex.class);
 	}
 
 	@Override

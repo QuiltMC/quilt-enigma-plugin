@@ -17,6 +17,8 @@
 package org.quiltmc.enigma_plugin.index;
 
 import org.jetbrains.annotations.TestOnly;
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
@@ -30,13 +32,13 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.SourceInterpreter;
 import org.objectweb.asm.tree.analysis.SourceValue;
+import org.quiltmc.enigma.api.service.EnigmaServiceContext;
+import org.quiltmc.enigma.api.service.JarIndexerService;
 import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
 import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Type;
 import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.CasingUtil;
@@ -82,6 +84,14 @@ public class CodecIndex extends Index {
 	public CodecIndex() {
 		super(Arguments.DISABLE_CODECS);
 		this.analyzer = new Analyzer<>(new SourceInterpreter());
+	}
+
+	@Override
+	public void withContext(EnigmaServiceContext<JarIndexerService> context) {
+		super.withContext(context);
+
+		List<String> codecs = context.getMultipleArguments(Arguments.CUSTOM_CODECS).orElse(List.of());
+		this.addCustomCodecs(codecs);
 	}
 
 	public void addCustomCodecs(List<String> customCodecClasses) {
