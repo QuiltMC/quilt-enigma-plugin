@@ -42,15 +42,21 @@ public class NameProposalTest {
 	public static void assertProposal(String name, Entry<?> entry) {
 		var mapping = remapper.getMapping(entry);
 		Assertions.assertNotNull(mapping);
-		Assertions.assertEquals(TokenType.JAR_PROPOSED, mapping.tokenType());
 		Assertions.assertEquals(name, mapping.targetName());
+		Assertions.assertEquals(TokenType.JAR_PROPOSED, mapping.tokenType());
 	}
 
 	public static void assertDynamicProposal(String name, Entry<?> entry) {
 		var mapping = remapper.getMapping(entry);
 		Assertions.assertNotNull(mapping);
-		Assertions.assertEquals(TokenType.DYNAMIC_PROPOSED, mapping.tokenType());
 		Assertions.assertEquals(name, mapping.targetName());
+		Assertions.assertEquals(TokenType.DYNAMIC_PROPOSED, mapping.tokenType());
+	}
+
+	public static void assertNotProposed(Entry<?> entry) {
+		var mapping = remapper.getMapping(entry);
+		Assertions.assertNotNull(mapping);
+		Assertions.assertEquals(EntryMapping.DEFAULT, mapping);
 	}
 
 	@Test
@@ -165,6 +171,62 @@ public class NameProposalTest {
 
 	@Test
 	public void testSimpleTypeSingleNames() {
-		// TODO
+		var classEntry = new ClassEntry("com/a/d");
+		var fieldsClassEntry = new ClassEntry(classEntry, "a");
+
+		var owner = new ClassEntry(fieldsClassEntry, "a");
+		assertNotProposed(new FieldEntry(owner, "a", new TypeDescriptor("Lcom/a/b/g;")));
+		// assertNotProposed(new FieldEntry(owner, "b", new TypeDescriptor("Lcom/a/b/g;"))); // TODO
+
+		owner = new ClassEntry(fieldsClassEntry, "b");
+		assertProposal("POS", new FieldEntry(owner, "a", new TypeDescriptor("Lcom/a/b/b;")));
+		assertProposal("position", new FieldEntry(owner, "b", new TypeDescriptor("Lcom/a/b/c;")));
+		assertProposal("randomPosition", new FieldEntry(owner, "c", new TypeDescriptor("Lcom/a/b/d;")));
+		assertProposal("STATIC_STATE_A", new FieldEntry(owner, "d", new TypeDescriptor("Lcom/a/b/e;")));
+		assertProposal("STATIC_STATE_B", new FieldEntry(owner, "e", new TypeDescriptor("Lcom/a/b/f;")));
+		assertProposal("VALUE_A", new FieldEntry(owner, "f", new TypeDescriptor("Lcom/a/b/g;")));
+		assertProposal("VALUE_B", new FieldEntry(owner, "g", new TypeDescriptor("Lcom/a/b/h;")));
+		assertProposal("valueC", new FieldEntry(owner, "h", new TypeDescriptor("Lcom/a/b/i;")));
+
+		owner = new ClassEntry(fieldsClassEntry, "c");
+		assertProposal("CONFIG", new FieldEntry(owner, "a", new TypeDescriptor("Lcom/a/b/a;")));
+		assertProposal("STATIC_STATE", new FieldEntry(owner, "b", new TypeDescriptor("Lcom/a/b/e;")));
+		assertProposal("value", new FieldEntry(owner, "c", new TypeDescriptor("Lcom/a/b/i;")));
+
+		owner = new ClassEntry(classEntry, "b");
+		var parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/a;)V"));
+		assertProposal("config", new LocalVariableEntry(parent, 0, "", true, null));
+
+		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/b;)V"));
+		assertProposal("pos", new LocalVariableEntry(parent, 1, "", true, null));
+
+		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/b;Lcom/a/b/c;)V"));
+		assertProposal("pos", new LocalVariableEntry(parent, 1, "", true, null));
+		assertProposal("position", new LocalVariableEntry(parent, 2, "", true, null));
+
+		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/b;Lcom/a/b/d;)V"));
+		assertProposal("pos", new LocalVariableEntry(parent, 1, "", true, null));
+		assertProposal("position", new LocalVariableEntry(parent, 2, "", true, null));
+
+		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/b;Lcom/a/b/c;Lcom/a/b/d;)V"));
+		assertProposal("pos", new LocalVariableEntry(parent, 1, "", true, null));
+		assertProposal("position", new LocalVariableEntry(parent, 2, "", true, null));
+		assertProposal("randomPosition", new LocalVariableEntry(parent, 3, "", true, null));
+
+		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/e;)V"));
+		assertProposal("state", new LocalVariableEntry(parent, 1, "", true, null));
+
+		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/e;Lcom/a/b/f;)V"));
+		assertProposal("stateA", new LocalVariableEntry(parent, 0, "", true, null));
+		assertProposal("stateB", new LocalVariableEntry(parent, 1, "", true, null));
+
+		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/g;Lcom/a/b/h;Lcom/a/b/i;)V"));
+		assertProposal("valueA", new LocalVariableEntry(parent, 0, "", true, null));
+		assertProposal("valueB", new LocalVariableEntry(parent, 1, "", true, null));
+		assertProposal("valueC", new LocalVariableEntry(parent, 2, "", true, null));
+
+		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/g;Lcom/a/b/g;)V"));
+		assertNotProposed(new LocalVariableEntry(parent, 0, "", true, null));
+		assertNotProposed(new LocalVariableEntry(parent, 1, "", true, null));
 	}
 }

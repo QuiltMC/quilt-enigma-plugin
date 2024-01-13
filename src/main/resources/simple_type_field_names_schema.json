@@ -1,0 +1,57 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema",
+    "title": "Simple Type Field Names Registry",
+    "description": "Definitions for the proposed names of \"simple\" types",
+    "type": "object",
+    "definitions": {
+        "identifier": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "(?:\\b[_a-zA-Z]|\\B\\$)[_$a-zA-Z0-9]*",
+            "description": "A valid java identifier"
+        },
+        "name": {
+            "description": "Names to use for a type",
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "local_name": {
+                            "$ref": "#/definitions/identifier",
+                            "description": "The name to use for non-static-final fields and parameters. Should be in camelCase"
+                        },
+                        "static_name": {
+                            "$ref": "#/definitions/identifier",
+                            "description": "The name to use for static-final fields. Should be in UPPER_SNAKE_CASE"
+                        }
+                    },
+                    "required": ["local_name"]
+                },
+                {
+                    "$ref": "#/definitions/identifier"
+                }
+            ]
+        },
+        "entry": {
+            "allOf": [{"$ref": "#/definitions/name"}],
+            "properties": {
+                "exclusive": {
+                    "type": "boolean",
+                    "description": "Whether the default name should be used if there's only a single entry using that name. Only applies if there is any fallback name"
+                },
+                "fallback": {
+                    "type": "array",
+                    "description": "Fallback names to use in case an entry with the default name already exists",
+                    "items": {
+                        "$ref": "#/definitions/name"
+                    }
+                }
+            }
+        }
+    },
+    "patternProperties": {
+        "^.*$": {
+            "$ref": "#/definitions/entry"
+        }
+    }
+}
