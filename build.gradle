@@ -119,6 +119,7 @@ license {
 	rule file('codeformat/HEADER')
 
 	include '**/*.java'
+	exclude 'com/example/**/*.java'
 }
 
 java {

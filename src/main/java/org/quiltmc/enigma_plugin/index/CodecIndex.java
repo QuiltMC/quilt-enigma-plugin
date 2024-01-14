@@ -24,7 +24,6 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
-import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.Analyzer;
@@ -75,6 +74,8 @@ public class CodecIndex extends Index {
 	);
 	private static final MethodInfo FOR_GETTER_METHOD = new MethodInfo("forGetter", "(Ljava/util/function/Function;)Lcom/mojang/serialization/codecs/RecordCodecBuilder;");
 	private static final String FOR_GETTER_METHOD_OWNER = "com/mojang/serialization/MapCodec";
+	private static final String GROUP_METHOD_OWNER = "com/mojang/serialization/codecs/RecordCodecBuilder$Instance";
+	private static final String GROUP_METHOD_NAME = "group";
 	private final Analyzer<SourceValue> analyzer;
 	private final Set<String> customCodecClasses = new HashSet<>();
 
@@ -125,8 +126,8 @@ public class CodecIndex extends Index {
 
 		for (int i = 1; i < instructions.size() && i < frames.length - 1; i++) {
 			AbstractInsnNode insn = instructions.get(i);
-			if (insn instanceof MethodInsnNode mInsn && this.isCodecFieldMethod(mInsn)) {
-				// Logger.info(mInsn.getOpcode() + " " + mInsn.owner + "." + mInsn.name + " " + mInsn.desc + " in " + parent.name + "." + node.name + " " + node.desc + " (" + i + ")");
+			if (insn instanceof MethodInsnNode methodInsn && this.isCodecFieldMethod(methodInsn)) {
+				// Logger.info(methodInsn.getOpcode() + " " + methodInsn.owner + "." + methodInsn.name + " " + methodInsn.desc + " in " + parent.name + "." + node.name + " " + node.desc + " (" + i + ")");
 				// Find the field name in the stack
 				String name = AsmUtil.shallowSearchStringCstInStack(instructions, insn, frames);
 
@@ -134,7 +135,7 @@ public class CodecIndex extends Index {
 					continue;
 				}
 
-				MethodInsnNode codecInsn = mInsn;
+				MethodInsnNode codecInsn = methodInsn;
 				// Find a forGetter call
 				for (int j = i + 1; j < instructions.size(); j++) {
 					Frame<SourceValue> frame = frames[j];
@@ -159,9 +160,9 @@ public class CodecIndex extends Index {
 					}
 
 					AbstractInsnNode insn2 = instructions.get(j);
-					if (insn2 instanceof MethodInsnNode mInsn2) {
-						if (mInsn2.owner.equals(FOR_GETTER_METHOD_OWNER) && FOR_GETTER_METHOD.matches(mInsn2)) {
-							// Logger.info("Found forGetter call " + mInsn2.getOpcode() + " (" + j + ")");
+					if (insn2 instanceof MethodInsnNode methodInsn2) {
+						if (methodInsn2.owner.equals(FOR_GETTER_METHOD_OWNER) && FOR_GETTER_METHOD.matches(methodInsn2)) {
+							// Logger.info("Found forGetter call " + methodInsn2.getOpcode() + " (" + j + ")");
 							AbstractInsnNode getterInsn = instructions.get(j - 1);
 							if (!(getterInsn instanceof InvokeDynamicInsnNode getterInvokeInsn)) {
 								continue;
@@ -172,7 +173,7 @@ public class CodecIndex extends Index {
 							break;
 						} else {
 							// Check the return type of the method is a codec
-							Type type = Type.getMethodType(mInsn2.desc);
+							Type type = Type.getMethodType(methodInsn2.desc);
 							Type ret = type.getReturnType();
 							if (ret.getSort() != Type.OBJECT || !this.isCodecClass(ret.getInternalName())) {
 								continue;
@@ -180,19 +181,19 @@ public class CodecIndex extends Index {
 
 							// Update the insn returning the codec if needed
 							// For example, `fieldOf("foo").orElse(0)` would remove the `fieldOf` instruction from the stack, so now we have to track the `orElse` instruction
-							boolean hasThis = mInsn2.getOpcode() != INVOKESTATIC;
+							boolean hasThis = methodInsn2.getOpcode() != INVOKESTATIC;
 							int argsSize = type.getArgumentsAndReturnSizes() >> 2;
 							// Skip the first argument (automatically-added 'this' pointer) if the method doesn't have one (is static)
 							int offset = (hasThis ? 0 : 1) + frame.getStackSize() - argsSize;
 
 							// The first argument 'this' may be the codec
 							if (hasThis && codecInsnIndex == offset) {
-								// Logger.info("Found field codec call " + mInsn2.getOpcode() + " (" + j + ")");
-								codecInsn = mInsn2;
+								// Logger.info("Found field codec call " + methodInsn2.getOpcode() + " (" + j + ")");
+								codecInsn = methodInsn2;
 								continue;
 							}
 
-							// If the method is static, check the args passed to it to check if the codec was passed to it
+							// If the method is static, check the args passed to it to check if the codec was one of them
 							Type[] args = type.getArgumentTypes();
 							for (int k = 0; k < args.length; k++) {
 								if (args[k].getSort() != Type.OBJECT || !this.isCodecClass(args[k].getInternalName())) {
@@ -202,8 +203,8 @@ public class CodecIndex extends Index {
 								// Offset by one slot if there's a 'this' pointer
 								if (codecInsnIndex == offset + k + (hasThis ? 1 : 0)) {
 									// The codec was passed to a static method, track the result of that method
-									// Logger.info("Found field codec consuming call " + mInsn2.getOpcode() + " (" + j + ")");
-									codecInsn = mInsn2;
+									// Logger.info("Found field codec consuming call " + methodInsn2.getOpcode() + " (" + j + ")");
+									codecInsn = methodInsn2;
 									break;
 								}
 							}
