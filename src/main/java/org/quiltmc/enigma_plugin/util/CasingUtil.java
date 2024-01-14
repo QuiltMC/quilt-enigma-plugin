@@ -16,6 +16,8 @@
 
 package org.quiltmc.enigma_plugin.util;
 
+import org.jetbrains.annotations.Nullable;
+
 public class CasingUtil {
 	public static String toCamelCase(String name) {
 		// Make sure the first letter is lower case
@@ -45,5 +47,52 @@ public class CasingUtil {
 		}
 
 		return builder.toString();
+	}
+
+	/**
+	 * {@return whether a character is alphanumeric}
+	 */
+	public static boolean isCharacterUsable(char c) {
+		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_';
+	}
+
+	/**
+	 * Convert a string to UPPER_SNAKE_CASE, removing or replacing non-alphanumeric characters with underscores.
+	 *
+	 * @return the string in UPPER_SNAKE_CASE, or null if it didn't contain any letter
+	 */
+	@Nullable
+	public static String toSafeScreamingSnakeCase(String name) {
+		StringBuilder usableName = new StringBuilder();
+		boolean hasAlphabetic = false;
+		boolean prevUsable = false;
+
+		for (int j = 0; j < name.length(); j++) {
+			char c = name.charAt(j);
+
+			if (isCharacterUsable(c)) {
+				if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+					hasAlphabetic = true;
+				}
+
+				// Add an underscore before if the current character follows another letter/number and is the start of a camel cased word
+				if (j > 0 && Character.isUpperCase(c) && j < name.length() - 1 && Character.isLowerCase(name.charAt(j + 1)) && prevUsable) {
+					usableName.append('_');
+				}
+
+				usableName.append(Character.toUpperCase(c));
+				prevUsable = true;
+			} else if (j > 0 && j < name.length() - 1 && prevUsable) {
+				// Replace unusable characters with underscores if they aren't at the start or end, and are following another usable character
+				usableName.append('_');
+				prevUsable = false;
+			}
+		}
+
+		if (!hasAlphabetic) {
+			return null;
+		}
+
+		return usableName.toString();
 	}
 }

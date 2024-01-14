@@ -20,18 +20,17 @@ package org.quiltmc.enigma_plugin.index.constant_fields;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.SourceInterpreter;
 import org.objectweb.asm.tree.analysis.SourceValue;
 import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma_plugin.util.AsmUtil;
+import org.quiltmc.enigma_plugin.util.CasingUtil;
 import org.tinylog.Logger;
 
 import java.util.Collections;
@@ -40,7 +39,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 
 public class ConstantFieldNameFinder implements Opcodes {
 	private final HashMap<String, Set<String>> usedNamesByClass = new HashMap<>();
@@ -53,10 +51,6 @@ public class ConstantFieldNameFinder implements Opcodes {
 
 	private static boolean isInit(AbstractInsnNode insn) {
 		return insn.getOpcode() == INVOKESPECIAL && ((MethodInsnNode) insn).name.equals("<init>");
-	}
-
-	private static boolean isCharacterUsable(char c) {
-		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_';
 	}
 
 	private static String processIdentifierPath(String name) {
@@ -91,116 +85,8 @@ public class ConstantFieldNameFinder implements Opcodes {
 		return name;
 	}
 
-	private static String stringToUpperSnakeCase(String s) {
-		StringBuilder usableName = new StringBuilder();
-		boolean hasAlphabetic = false;
-		boolean prevUsable = false;
-
-		for (int j = 0; j < s.length(); j++) {
-			char c = s.charAt(j);
-
-			if (isCharacterUsable(c)) {
-				if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
-					hasAlphabetic = true;
-				}
-
-				// Add an underscore before if the current character follows another letter/number and is the start of a camel cased word
-				if (j > 0 && Character.isUpperCase(c) && j < s.length() - 1 && Character.isLowerCase(s.charAt(j + 1)) && prevUsable) {
-					usableName.append('_');
-				}
-
-				usableName.append(Character.toUpperCase(c));
-				prevUsable = true;
-			} else if (j > 0 && j < s.length() - 1 && prevUsable) {
-				// Replace unusable characters with underscores if they aren't at the start or end, and are following another usable character
-				usableName.append('_');
-				prevUsable = false;
-			}
-		}
-
-		if (!hasAlphabetic) {
-			return null;
-		}
-
-		return usableName.toString().toUpperCase();
-	}
-
 	private static FieldEntry fieldFromInsn(FieldInsnNode insn) {
 		return new FieldEntry(new ClassEntry(insn.owner), insn.name, new TypeDescriptor(insn.desc));
-	}
-
-	private static AbstractInsnNode searchInsnInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames, Predicate<AbstractInsnNode> insnPredicate) {
-		int frameIndex = insns.indexOf(frameInsn);
-		var frame = frames[frameIndex];
-
-		AbstractInsnNode lastStackInsn = null;
-		for (int i = 0; i < frame.getStackSize(); i++) {
-			var value = frame.getStack(i);
-			for (var stackInsn : value.insns) {
-				if (insnPredicate.test(stackInsn)) {
-					return stackInsn;
-				} else if (stackInsn.getOpcode() == INVOKESTATIC) {
-					if (!(frameInsn instanceof MethodInsnNode mInsn) || mInsn.owner.equals(((MethodInsnNode) stackInsn).owner)) {
-						return searchInsnInStack(insns, stackInsn, frames, insnPredicate);
-					}
-				}
-
-				lastStackInsn = stackInsn;
-			}
-		}
-
-		if (lastStackInsn != null && lastStackInsn.getOpcode() == NEW && lastStackInsn.getNext() != null && lastStackInsn.getNext().getOpcode() == DUP) {
-			// Find the last frame containing the DUP instruction
-			var dup = lastStackInsn.getNext();
-			int searchFrameIndex = insns.indexOf(dup) + 1;
-			var searchFrame = frames[searchFrameIndex];
-
-			while (searchFrame != null && searchFrameIndex <= frameIndex) {
-				boolean contains = false;
-				for (int j = 0; j < searchFrame.getStackSize(); j++) {
-					if (frame.getStack(j).insns.contains(dup)) {
-						contains = true;
-						break;
-					}
-				}
-
-				if (contains) {
-					searchFrameIndex++;
-					if (searchFrameIndex < frames.length) {
-						searchFrame = frames[searchFrameIndex];
-					} else {
-						searchFrame = null;
-					}
-				} else {
-					var insn = insns.get(searchFrameIndex - 1); // This was the last instruction with a frame with a dup
-					if (insn != frameInsn) {
-						return searchInsnInStack(insns, insn, frames, insnPredicate);
-					}
-				}
-			}
-		}
-
-		return null;
-	}
-
-	private static String searchStringCstInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames) {
-		var insn = searchInsnInStack(insns, frameInsn, frames,
-				insnNode -> insnNode instanceof LdcInsnNode ldc && ldc.cst instanceof String constant && !constant.isBlank());
-		if (insn instanceof LdcInsnNode ldc) {
-			return (String) ldc.cst;
-		}
-
-		return null;
-	}
-
-	private static FieldInsnNode searchFieldReferenceInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames, String clazz) {
-		var insn = searchInsnInStack(insns, frameInsn, frames,
-				insnNode -> insnNode instanceof FieldInsnNode fieldInsn && fieldInsn.getOpcode() == GETSTATIC && !fieldInsn.owner.equals(clazz));
-		if (insn instanceof FieldInsnNode fieldInsn) {
-			return fieldInsn;
-		}
-
-		return null;
 	}
 
 	private FieldEntry followFieldLink(FieldEntry field, Map<FieldEntry, String> names) {
@@ -289,12 +175,12 @@ public class ConstantFieldNameFinder implements Opcodes {
 				}
 
 				// Search for a name within the frame for the invocation instruction
-				String name = searchStringCstInStack(instructions, invokeInsn, frames);
+				String name = AsmUtil.searchStringCstInStack(instructions, invokeInsn, frames);
 
 				FieldEntry fieldEntry = fieldFromInsn(putStatic);
 				if (name == null) {
 					// If we couldn't find a name, try to link this field to one from another class instead
-					FieldInsnNode otherFieldInsn = searchFieldReferenceInStack(instructions, invokeInsn, frames, clazz);
+					FieldInsnNode otherFieldInsn = AsmUtil.searchStaticFieldReferenceInStack(instructions, invokeInsn, frames, clazz);
 
 					if (otherFieldInsn != null) {
 						this.linkedFields.put(fieldEntry, fieldFromInsn(otherFieldInsn));
@@ -303,7 +189,8 @@ public class ConstantFieldNameFinder implements Opcodes {
 					continue; // Done with the current putStatic
 				}
 
-				var fieldName = stringToUpperSnakeCase(processIdentifierPath(name));
+				String s = processIdentifierPath(name);
+				var fieldName = CasingUtil.toSafeScreamingSnakeCase(s);
 
 				if (fieldName == null || fieldName.isEmpty()) {
 					continue;

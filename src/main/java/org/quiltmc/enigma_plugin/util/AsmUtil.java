@@ -17,14 +17,21 @@
 package org.quiltmc.enigma_plugin.util;
 
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.analysis.Frame;
+import org.objectweb.asm.tree.analysis.SourceValue;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
-public class AsmUtil {
+public class AsmUtil implements Opcodes {
 	public static boolean maskMatch(int value, int... masks) {
 		boolean matched = true;
 
@@ -66,18 +73,18 @@ public class AsmUtil {
 	public static Optional<FieldNode> getFieldFromGetter(ClassNode classNode, MethodNode node) {
 		if (!Descriptors.getDescriptor(node).getArgumentDescs().isEmpty()) return Optional.empty();
 		if (node.instructions.size() != 3) return Optional.empty();
-		if (node.instructions.get(0).getOpcode() != Opcodes.ALOAD) return Optional.empty();
+		if (node.instructions.get(0).getOpcode() != ALOAD) return Optional.empty();
 		var getFieldNode = node.instructions.get(1);
-		if (getFieldNode.getOpcode() != Opcodes.GETFIELD) return Optional.empty();
+		if (getFieldNode.getOpcode() != GETFIELD) return Optional.empty();
 
 		var fieldInsnNode = (FieldInsnNode) getFieldNode;
 
 		int expectedReturnOpcode = switch (fieldInsnNode.desc) {
-			case "I" -> Opcodes.IRETURN;
-			case "L" -> Opcodes.LRETURN;
-			case "F" -> Opcodes.FRETURN;
-			case "D" -> Opcodes.DRETURN;
-			default -> Opcodes.ARETURN;
+			case "I" -> IRETURN;
+			case "L" -> LRETURN;
+			case "F" -> FRETURN;
+			case "D" -> DRETURN;
+			default -> ARETURN;
 		};
 
 		if (node.instructions.get(2).getOpcode() != expectedReturnOpcode) return Optional.empty();
@@ -92,19 +99,19 @@ public class AsmUtil {
 	public static Optional<FieldNode> getFieldFromSetter(ClassNode classNode, MethodNode node) {
 		if (Descriptors.getDescriptor(node).getArgumentDescs().size() != 1) return Optional.empty();
 		if (node.instructions.size() != 4) return Optional.empty();
-		if (node.instructions.get(0).getOpcode() != Opcodes.ALOAD) return Optional.empty();
-		if (node.instructions.get(3).getOpcode() != Opcodes.RETURN) return Optional.empty();
+		if (node.instructions.get(0).getOpcode() != ALOAD) return Optional.empty();
+		if (node.instructions.get(3).getOpcode() != RETURN) return Optional.empty();
 		var putFieldNode = node.instructions.get(2);
-		if (putFieldNode.getOpcode() != Opcodes.PUTFIELD) return Optional.empty();
+		if (putFieldNode.getOpcode() != PUTFIELD) return Optional.empty();
 
 		var fieldInsnNode = (FieldInsnNode) putFieldNode;
 
 		int expectedLoadOpcode = switch (fieldInsnNode.desc) {
-			case "I" -> Opcodes.ILOAD;
-			case "L" -> Opcodes.LLOAD;
-			case "F" -> Opcodes.FLOAD;
-			case "D" -> Opcodes.DLOAD;
-			default -> Opcodes.ALOAD;
+			case "I" -> ILOAD;
+			case "L" -> LLOAD;
+			case "F" -> FLOAD;
+			case "D" -> DLOAD;
+			default -> ALOAD;
 		};
 
 		if (node.instructions.get(1).getOpcode() != expectedLoadOpcode) return Optional.empty();
@@ -114,5 +121,119 @@ public class AsmUtil {
 		} else {
 			return Optional.empty();
 		}
+	}
+
+	/**
+	 * Search for an instruction matching the given predicate in the stack of a method.
+	 *
+	 * @see #searchInsnInStack(InsnList, AbstractInsnNode, Frame[], Predicate, boolean)
+	 */
+	public static AbstractInsnNode searchInsnInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames, Predicate<AbstractInsnNode> insnPredicate) {
+		return searchInsnInStack(insns, frameInsn, frames, insnPredicate, false);
+	}
+
+	/**
+	 * Search for an instruction matching the given predicate in the stack of a method.
+	 *
+	 * @see #searchInsnInStack(InsnList, AbstractInsnNode, Frame[], Predicate)
+	 */
+	public static AbstractInsnNode searchInsnInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames, Predicate<AbstractInsnNode> insnPredicate, boolean shallow) {
+		int frameIndex = insns.indexOf(frameInsn);
+		var frame = frames[frameIndex];
+
+		AbstractInsnNode lastStackInsn = null;
+		for (int i = 0; i < frame.getStackSize(); i++) {
+			var value = frame.getStack(i);
+			for (var stackInsn : value.insns) {
+				if (insnPredicate.test(stackInsn)) {
+					return stackInsn;
+				} else if (stackInsn.getOpcode() == INVOKESTATIC && !shallow) {
+					if (!(frameInsn instanceof MethodInsnNode mInsn) || mInsn.owner.equals(((MethodInsnNode) stackInsn).owner)) {
+						return searchInsnInStack(insns, stackInsn, frames, insnPredicate, false);
+					}
+				}
+
+				lastStackInsn = stackInsn;
+			}
+		}
+
+		if (!shallow && lastStackInsn != null && lastStackInsn.getOpcode() == NEW && lastStackInsn.getNext() != null && lastStackInsn.getNext().getOpcode() == DUP) {
+			// Find the last frame containing the DUP instruction
+			var dup = lastStackInsn.getNext();
+			int searchFrameIndex = insns.indexOf(dup) + 1;
+			var searchFrame = frames[searchFrameIndex];
+
+			while (searchFrame != null && searchFrameIndex <= frameIndex) {
+				boolean contains = false;
+				for (int j = 0; j < searchFrame.getStackSize(); j++) {
+					if (frame.getStack(j).insns.contains(dup)) {
+						contains = true;
+						break;
+					}
+				}
+
+				if (contains) {
+					searchFrameIndex++;
+					if (searchFrameIndex < frames.length) {
+						searchFrame = frames[searchFrameIndex];
+					} else {
+						searchFrame = null;
+					}
+				} else {
+					var insn = insns.get(searchFrameIndex - 1); // This was the last instruction with a frame with a dup
+					if (insn != frameInsn) {
+						return searchInsnInStack(insns, insn, frames, insnPredicate, false);
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Search a non-blank string constant in the stack of a method.
+	 *
+	 * @see #searchInsnInStack(InsnList, AbstractInsnNode, Frame[], Predicate)
+	 */
+	public static String searchStringCstInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames) {
+		var insn = searchInsnInStack(insns, frameInsn, frames,
+				insnNode -> insnNode instanceof LdcInsnNode ldc && ldc.cst instanceof String constant && !constant.isBlank());
+		if (insn instanceof LdcInsnNode ldc) {
+			return (String) ldc.cst;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Shallow search a non-blank string constant in the stack of a method.
+	 *
+	 * @see #searchInsnInStack(InsnList, AbstractInsnNode, Frame[], Predicate)
+	 */
+	public static String shallowSearchStringCstInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames) {
+		var insn = searchInsnInStack(insns, frameInsn, frames,
+				insnNode -> insnNode instanceof LdcInsnNode ldc && ldc.cst instanceof String constant && !constant.isBlank(),
+				true);
+		if (insn instanceof LdcInsnNode ldc) {
+			return (String) ldc.cst;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Search a static field, the parent of which isn't the given class, in the stack of a method.
+	 *
+	 * @see #searchInsnInStack(InsnList, AbstractInsnNode, Frame[], Predicate)
+	 */
+	public static FieldInsnNode searchStaticFieldReferenceInStack(InsnList insns, AbstractInsnNode frameInsn, Frame<SourceValue>[] frames, String clazz) {
+		var insn = searchInsnInStack(insns, frameInsn, frames,
+				insnNode -> insnNode instanceof FieldInsnNode fieldInsn && fieldInsn.getOpcode() == GETSTATIC && !fieldInsn.owner.equals(clazz));
+		if (insn instanceof FieldInsnNode fieldInsn) {
+			return fieldInsn;
+		}
+
+		return null;
 	}
 }
