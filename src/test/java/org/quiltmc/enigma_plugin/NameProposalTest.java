@@ -161,10 +161,10 @@ public class NameProposalTest {
 		var classEntry = new ClassEntry("com/a/a");
 		var constructor = new MethodEntry(classEntry, "<init>", new MethodDescriptor("(IDLjava/util/Optional;J)V"));
 
-		assertDynamicProposal("value", new LocalVariableEntry(constructor, 1, "", true, null));
-		assertDynamicProposal("scale", new LocalVariableEntry(constructor, 2, "", true, null));
-		assertDynamicProposal("factor", new LocalVariableEntry(constructor, 4, "", true, null));
-		assertDynamicProposal("seed", new LocalVariableEntry(constructor, 5, "", true, null));
+		assertDynamicProposal("value", new LocalVariableEntry(constructor, 1));
+		assertDynamicProposal("scale", new LocalVariableEntry(constructor, 2));
+		assertDynamicProposal("factor", new LocalVariableEntry(constructor, 4));
+		assertDynamicProposal("seed", new LocalVariableEntry(constructor, 5));
 	}
 
 	@Test
@@ -178,11 +178,11 @@ public class NameProposalTest {
 		MethodEntry method;
 		assertDynamicProposal("getSilliness", new MethodEntry(classEntry, "a", new MethodDescriptor("()I")));
 		assertDynamicProposal("setSilliness", (method = new MethodEntry(classEntry, "a", new MethodDescriptor("(I)V"))));
-		assertDynamicProposal("silliness", new LocalVariableEntry(method, 1, "", true, null));
+		assertDynamicProposal("silliness", new LocalVariableEntry(method, 1));
 
 		assertDynamicProposal("getName", new MethodEntry(classEntry, "b", new MethodDescriptor("()Ljava/lang/String;")));
 		assertDynamicProposal("setName", (method = new MethodEntry(classEntry, "b", new MethodDescriptor("(Ljava/lang/String;)V"))));
-		assertDynamicProposal("name", new LocalVariableEntry(method, 1, "", true, null));
+		assertDynamicProposal("name", new LocalVariableEntry(method, 1));
 	}
 
 	@Test
@@ -211,38 +211,38 @@ public class NameProposalTest {
 
 		owner = new ClassEntry(classEntry, "b");
 		var parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/a;)V"));
-		assertProposal("config", new LocalVariableEntry(parent, 0, "", true, null));
+		assertProposal("config", new LocalVariableEntry(parent, 0));
 
 		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/b;)V"));
-		assertProposal("pos", new LocalVariableEntry(parent, 1, "", true, null));
+		assertProposal("pos", new LocalVariableEntry(parent, 1));
 
 		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/b;Lcom/a/b/c;)V"));
-		assertProposal("pos", new LocalVariableEntry(parent, 1, "", true, null));
-		assertProposal("position", new LocalVariableEntry(parent, 2, "", true, null));
+		assertProposal("pos", new LocalVariableEntry(parent, 1));
+		assertProposal("position", new LocalVariableEntry(parent, 2));
 
 		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/b;Lcom/a/b/d;)V"));
-		assertProposal("pos", new LocalVariableEntry(parent, 1, "", true, null));
-		assertProposal("position", new LocalVariableEntry(parent, 2, "", true, null));
+		assertProposal("pos", new LocalVariableEntry(parent, 1));
+		assertProposal("position", new LocalVariableEntry(parent, 2));
 
 		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/b;Lcom/a/b/c;Lcom/a/b/d;)V"));
-		assertProposal("pos", new LocalVariableEntry(parent, 1, "", true, null));
-		assertProposal("position", new LocalVariableEntry(parent, 2, "", true, null));
-		assertProposal("randomPosition", new LocalVariableEntry(parent, 3, "", true, null));
+		assertProposal("pos", new LocalVariableEntry(parent, 1));
+		assertProposal("position", new LocalVariableEntry(parent, 2));
+		assertProposal("randomPosition", new LocalVariableEntry(parent, 3));
 
 		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/e;)V"));
-		assertProposal("state", new LocalVariableEntry(parent, 1, "", true, null));
+		assertProposal("state", new LocalVariableEntry(parent, 1));
 
 		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/e;Lcom/a/b/f;)V"));
-		assertProposal("stateA", new LocalVariableEntry(parent, 0, "", true, null));
-		assertProposal("stateB", new LocalVariableEntry(parent, 1, "", true, null));
+		assertProposal("stateA", new LocalVariableEntry(parent, 0));
+		assertProposal("stateB", new LocalVariableEntry(parent, 1));
 
 		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/g;Lcom/a/b/h;Lcom/a/b/i;)V"));
-		assertProposal("valueA", new LocalVariableEntry(parent, 0, "", true, null));
-		assertProposal("valueB", new LocalVariableEntry(parent, 1, "", true, null));
-		assertProposal("valueC", new LocalVariableEntry(parent, 2, "", true, null));
+		assertProposal("valueA", new LocalVariableEntry(parent, 0));
+		assertProposal("valueB", new LocalVariableEntry(parent, 1));
+		assertProposal("valueC", new LocalVariableEntry(parent, 2));
 
 		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/g;Lcom/a/b/g;)V"));
-		assertNotProposed(new LocalVariableEntry(parent, 0, "", true, null));
-		assertNotProposed(new LocalVariableEntry(parent, 1, "", true, null));
+		assertNotProposed(new LocalVariableEntry(parent, 0));
+		assertNotProposed(new LocalVariableEntry(parent, 1));
 	}
 }

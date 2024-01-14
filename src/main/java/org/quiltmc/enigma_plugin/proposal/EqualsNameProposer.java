@@ -41,7 +41,7 @@ public class EqualsNameProposer extends NameProposer {
 		for (MethodEntry method : entryIndex.getMethods()) {
 			String methodName = method.getName();
 			if (methodName.equals("equals") && method.getDesc().equals(EQUALS_DESCRIPTOR)) {
-				LocalVariableEntry param = new LocalVariableEntry(method, 1, "", true, null);
+				LocalVariableEntry param = new LocalVariableEntry(method, 1);
 				this.insertProposal(mappings, param, "o");
 			}
 		}

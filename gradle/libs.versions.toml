@@ -1,5 +1,5 @@
 [versions]
-enigma = "2.1.0"
+enigma = "2.1.0+local"
 
 asm = "9.6"
 quilt_json5 = "1.0.3"

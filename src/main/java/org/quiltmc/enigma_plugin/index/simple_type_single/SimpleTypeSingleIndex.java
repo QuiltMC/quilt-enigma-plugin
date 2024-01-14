@@ -168,7 +168,7 @@ public class SimpleTypeSingleIndex extends Index {
 				if (!param.isNull()) {
 					boolean isStatic = AsmUtil.maskMatch(method.access, ACC_STATIC);
 					int index = param.index() + (isStatic ? 0 : 1);
-					var paramEntry = new LocalVariableEntry(methodEntry, index, "", true, null);
+					var paramEntry = new LocalVariableEntry(methodEntry, index);
 					this.parameters.put(paramEntry, name);
 				}
 			});

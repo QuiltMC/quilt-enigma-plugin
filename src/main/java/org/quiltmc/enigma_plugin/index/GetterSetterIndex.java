@@ -83,7 +83,7 @@ public class GetterSetterIndex extends Index {
 		this.links.computeIfAbsent(fieldEntry, f -> new HashSet<>()).add(methodEntry);
 
 		if (descriptor.getArgumentDescs().size() == 1) {
-			var paramEntry = new LocalVariableEntry(methodEntry, 1, "", true, null);
+			var paramEntry = new LocalVariableEntry(methodEntry, 1);
 			this.linkedSetterParams.put(paramEntry, fieldEntry);
 			this.links.get(fieldEntry).add(paramEntry);
 		}

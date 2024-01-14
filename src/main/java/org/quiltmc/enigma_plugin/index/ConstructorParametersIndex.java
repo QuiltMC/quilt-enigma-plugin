@@ -80,7 +80,7 @@ public class ConstructorParametersIndex extends Index {
 						continue; // This load opcode does not correspond to a parameter.
 					}
 
-					var param = new LocalVariableEntry(methodEntry, loadInst.var, "", true, null);
+					var param = new LocalVariableEntry(methodEntry, loadInst.var);
 					var field = new FieldEntry(classEntry, fieldInst.name, new TypeDescriptor(fieldInst.desc));
 					this.entries.put(param, field);
 					this.entriesByField.computeIfAbsent(field, f -> new HashSet<>()).add(param);
