@@ -17,6 +17,7 @@
 package org.quiltmc.enigma_plugin.util;
 
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
@@ -25,6 +26,7 @@ import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.ParameterNode;
 import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.SourceValue;
 
@@ -32,6 +34,28 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 public class AsmUtil implements Opcodes {
+	public static int getLocalIndex(MethodNode node, int local) {
+		boolean isStatic = AsmUtil.matchAccess(node, ACC_STATIC);
+		return getLocalIndex(isStatic, node.desc, local);
+	}
+
+	public static int getLocalIndex(boolean isStatic, String desc, int local) {
+		var args = Type.getArgumentTypes(desc);
+		int size = isStatic ? 0 : 1;
+
+		for (int i = 0; i < args.length; i++) {
+			if (local == size) {
+				return i;
+			} else if (size > local) {
+				return -1;
+			}
+
+			size += args[i].getSize();
+		}
+
+		return -1;
+	}
+
 	public static boolean maskMatch(int value, int... masks) {
 		boolean matched = true;
 
@@ -47,6 +71,10 @@ public class AsmUtil implements Opcodes {
 	}
 
 	public static boolean matchAccess(MethodNode node, int... masks) {
+		return maskMatch(node.access, masks);
+	}
+
+	public static boolean matchAccess(ParameterNode node, int... masks) {
 		return maskMatch(node.access, masks);
 	}
 

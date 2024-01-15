@@ -68,6 +68,7 @@ public class DelegateParametersIndex extends Index {
 	}
 
 	public void visitMethodNode(ClassProvider classProvider, ClassNode classNode, MethodNode node) throws AnalyzerException {
+		var hasParameterInfo = node.parameters != null && !node.parameters.isEmpty();
 		var methodEntry = MethodEntry.parse(classNode.name, node.name, node.desc);
 
 		var frames = new Analyzer<>(new LocalVariableInterpreter()).analyze(classNode.name, node);
@@ -94,6 +95,14 @@ public class DelegateParametersIndex extends Index {
 					// If one of the passed arguments is a parameter of the original method, save it
 					if (value.parameter) {
 						// Logger.info("{}{} {} -> {}{} {}", node.name, node.desc, value.local, methodInsn.name, methodInsn.desc, local);
+						// Skip synthetic parameters
+						if (hasParameterInfo) {
+							var index = AsmUtil.getLocalIndex(node, value.local);
+							if (AsmUtil.matchAccess(node.parameters.get(index), ACC_SYNTHETIC)) {
+								continue;
+							}
+						}
+
 						var paramEntry = new LocalVariableEntry(methodEntry, value.local);
 
 						// Skip invalid parameters

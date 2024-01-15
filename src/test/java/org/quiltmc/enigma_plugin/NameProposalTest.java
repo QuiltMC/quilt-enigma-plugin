@@ -284,6 +284,13 @@ public class NameProposalTest {
 		classEntry = new ClassEntry("com/a/c");
 
 		assertDynamicProposal("bound", localVar(method(classEntry, "b", "(I)V"), 1));
+
+		// Names shouldn't be proposed for synthetic parameters (like Enum constructor name and ordinal)
+		classEntry = new ClassEntry("com/a/a/e");
+		var method = method(classEntry, "<init>", "(Ljava/lang/String;IZ)V");
+
+		assertNotProposed(localVar(method, 1));
+		assertNotProposed(localVar(method, 2));
 	}
 
 	private static FieldEntry field(ClassEntry parent, String name, String desc) {
