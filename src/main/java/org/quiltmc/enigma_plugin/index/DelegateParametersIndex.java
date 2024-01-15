@@ -226,15 +226,17 @@ public class DelegateParametersIndex extends Index {
 
 		@Override
 		public LocalVariableValue newOperation(AbstractInsnNode insn) {
-			return new LocalVariableValue(switch (insn.getOpcode()) {
-				case LCONST_0, LCONST_1, DCONST_0, DCONST_1 -> 2;
-				case LDC -> {
-					var value = ((LdcInsnNode) insn).cst;
-					yield value instanceof Double || value instanceof Long ? 2 : 1;
-				}
-				case GETSTATIC -> Type.getType(((FieldInsnNode) insn).desc).getSize();
-				default -> 1;
-			});
+			return new LocalVariableValue(
+					switch (insn.getOpcode()) {
+						case LCONST_0, LCONST_1, DCONST_0, DCONST_1 -> 2;
+						case LDC -> {
+							var value = ((LdcInsnNode) insn).cst;
+							yield value instanceof Double || value instanceof Long ? 2 : 1;
+						}
+						case GETSTATIC -> Type.getType(((FieldInsnNode) insn).desc).getSize();
+						default -> 1;
+					}
+			);
 		}
 
 		@Override
@@ -269,11 +271,13 @@ public class DelegateParametersIndex extends Index {
 
 		@Override
 		public LocalVariableValue naryOperation(AbstractInsnNode insn, List<? extends LocalVariableValue> values) {
-			return new LocalVariableValue(switch (insn.getOpcode()) {
-				case INVOKEVIRTUAL, INVOKESPECIAL, INVOKESTATIC, INVOKEINTERFACE -> Type.getReturnType(((MethodInsnNode) insn).desc).getSize();
-				case INVOKEDYNAMIC -> Type.getReturnType(((InvokeDynamicInsnNode) insn).desc).getSize();
-				default -> 1;
-			});
+			return new LocalVariableValue(
+					switch (insn.getOpcode()) {
+						case INVOKEVIRTUAL, INVOKESPECIAL, INVOKESTATIC, INVOKEINTERFACE -> Type.getReturnType(((MethodInsnNode) insn).desc).getSize();
+						case INVOKEDYNAMIC -> Type.getReturnType(((InvokeDynamicInsnNode) insn).desc).getSize();
+						default -> 1;
+					}
+			);
 		}
 
 		@Override

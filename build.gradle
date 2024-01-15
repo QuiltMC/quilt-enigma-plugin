@@ -92,6 +92,9 @@ task testEnigma(type: JavaExec, dependsOn: ["obfuscateTestInputs", "processTestI
 
 task testInputsJar(type: Jar) {
 	from sourceSets.testInputs.output
+
+	archiveFileName = "input.jar"
+	destinationDirectory = file("build/obf")
 }
 
 task obfuscateTestInputs(type: proguard.gradle.ProGuardTask) {

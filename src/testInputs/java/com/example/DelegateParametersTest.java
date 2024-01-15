@@ -3,7 +3,7 @@ package com.example;
 import java.util.Random;
 
 public class DelegateParametersTest {
-	record Test1(int val, long j, int index, String s) {
+	public record Test1(int val, long j, int index, String s) {
 		public Test1() {
 			this(-1);
 		}
@@ -30,7 +30,7 @@ public class DelegateParametersTest {
 	}
 
 	public void foo(int i) {
-		foo((long) i);
+		this.foo((long) i);
 	}
 
 	public int foo(long l) {
@@ -39,14 +39,14 @@ public class DelegateParametersTest {
 	}
 
 	public void bar(long l) {
-		bar(1 + foo(l));
+		this.bar(1 + this.foo(l));
 	}
 
 	public void bar(int val) {
 		if (new Random(-1).nextGaussian() < 0.5) {
 			new Test1(val);
 		} else {
-			foo(val);
+			this.foo(val);
 		}
 	}
 }

@@ -1,6 +1,14 @@
 package com.example;
 
-import com.example.simple_type_names.*;
+import com.example.simple_type_names.Config;
+import com.example.simple_type_names.Pos;
+import com.example.simple_type_names.Position;
+import com.example.simple_type_names.RandomPosition;
+import com.example.simple_type_names.StateA;
+import com.example.simple_type_names.StateB;
+import com.example.simple_type_names.ValueA;
+import com.example.simple_type_names.ValueB;
+import com.example.simple_type_names.ValueC;
 
 public class SimpleTypeNamesTest {
 	public static class Fields {

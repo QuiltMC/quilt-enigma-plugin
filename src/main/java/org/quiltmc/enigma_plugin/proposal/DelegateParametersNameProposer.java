@@ -64,7 +64,7 @@ public class DelegateParametersNameProposer extends NameProposer {
 	}
 
 	private void proposeNameUpwards(EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings, LocalVariableEntry entry, String name) {
-		proposeNameUpwards(remapper, mappings, entry, name, 0);
+		this.proposeNameUpwards(remapper, mappings, entry, name, 0);
 	}
 
 	private void proposeNameUpwards(EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings, LocalVariableEntry entry, String name, int depth) {
