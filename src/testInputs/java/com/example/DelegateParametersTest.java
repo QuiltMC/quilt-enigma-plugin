@@ -49,4 +49,12 @@ public class DelegateParametersTest {
 			this.foo(val);
 		}
 	}
+
+	public static int addTwoAbs(int a, int b) {
+		return Math.abs(a) + Math.abs(b);
+	}
+
+	public static int addFourAbs(int a, int b, int c, int d) {
+		return addTwoAbs(a, b) + addTwoAbs(c, d);
+	}
 }

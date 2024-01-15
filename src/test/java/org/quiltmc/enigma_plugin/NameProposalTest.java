@@ -256,6 +256,15 @@ public class NameProposalTest {
 
 		assertNotProposed(localVar(method(classEntry, "b", "(I)V"), 1));
 
+		// Multiple parameters passed to the same method call within a single method def shouldn't be named
+		assertNotProposed(localVar(method(classEntry, "a", "(II)I"), 0));
+		assertNotProposed(localVar(method(classEntry, "a", "(II)I"), 1));
+
+		assertNotProposed(localVar(method(classEntry, "a", "(IIII)I"), 0));
+		assertNotProposed(localVar(method(classEntry, "a", "(IIII)I"), 1));
+		assertNotProposed(localVar(method(classEntry, "a", "(IIII)I"), 2));
+		assertNotProposed(localVar(method(classEntry, "a", "(IIII)I"), 3));
+
 		classEntry = new ClassEntry(classEntry, "a");
 
 		assertDynamicProposal("val", localVar(method(classEntry, "<init>", "(I)V"), 1));

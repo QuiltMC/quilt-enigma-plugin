@@ -70,6 +70,8 @@ public class DelegateParametersIndex extends Index {
 	public void visitMethodNode(ClassProvider classProvider, ClassNode classNode, MethodNode node) throws AnalyzerException {
 		var hasParameterInfo = node.parameters != null && !node.parameters.isEmpty();
 		var methodEntry = MethodEntry.parse(classNode.name, node.name, node.desc);
+		var localLinks = new HashMap<LocalVariableEntry, LocalVariableEntry>();
+		var invalidTargets = new HashSet<LocalVariableEntry>();
 
 		var frames = new Analyzer<>(new LocalVariableInterpreter()).analyze(classNode.name, node);
 		var instructions = node.instructions;
@@ -103,16 +105,27 @@ public class DelegateParametersIndex extends Index {
 							}
 						}
 
-						var paramEntry = new LocalVariableEntry(methodEntry, value.local);
-
 						// Skip invalid parameters
+						var paramEntry = new LocalVariableEntry(methodEntry, value.local);
 						if (this.invalidParameters.contains(paramEntry)) {
 							continue;
 						}
 
+						// If an entry was already linked to within this method, invalidate it and skip
 						var targetEntry = new LocalVariableEntry(entry, local);
+						if (localLinks.containsKey(targetEntry)) {
+							invalidTargets.add(targetEntry);
+							var prevEntry = localLinks.remove(targetEntry);
+							this.invalidate(prevEntry);
+							continue;
+						} else if (invalidTargets.contains(targetEntry)) {
+							continue;
+						}
+
 						if (!this.tryLink(paramEntry, targetEntry)) {
 							continue;
+						} else {
+							localLinks.put(targetEntry, paramEntry);
 						}
 
 						// Try to load a variable name directly from a class file
