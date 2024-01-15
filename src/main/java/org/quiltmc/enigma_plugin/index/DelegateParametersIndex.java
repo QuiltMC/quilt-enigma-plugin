@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 QuiltMC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.quiltmc.enigma_plugin.index;
 
 import org.objectweb.asm.Type;
@@ -16,6 +32,7 @@ import org.quiltmc.enigma.api.class_provider.ClassProvider;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.Arguments;
+import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.tinylog.Logger;
 
 import java.util.HashMap;
@@ -25,6 +42,7 @@ import java.util.Set;
 
 public class DelegateParametersIndex extends Index {
 	private final Map<LocalVariableEntry, LocalVariableEntry> linkedParameters = new HashMap<>();
+	private final Map<LocalVariableEntry, String> parameterNames = new HashMap<>();
 
 	public DelegateParametersIndex() {
 		super(Arguments.DISABLE_DELEGATE_PARAMS);
@@ -34,7 +52,7 @@ public class DelegateParametersIndex extends Index {
 	public void visitClassNode(ClassProvider classProvider, ClassNode node) {
 		for (var method : node.methods) {
 			try {
-				this.visitMethodNode(node, method);
+				this.visitMethodNode(classProvider, node, method);
 			} catch (Exception e) {
 				Logger.error(e, "Error visiting method " + method.name + method.desc + " in class " + node.name);
 				throw new RuntimeException(e);
@@ -42,7 +60,7 @@ public class DelegateParametersIndex extends Index {
 		}
 	}
 
-	public void visitMethodNode(ClassNode classNode, MethodNode node) throws AnalyzerException {
+	public void visitMethodNode(ClassProvider classProvider, ClassNode classNode, MethodNode node) throws AnalyzerException {
 		var methodEntry = MethodEntry.parse(classNode.name, node.name, node.desc);
 
 		var frames = new Analyzer<>(new LocalVariableInterpreter()).analyze(classNode.name, node);
@@ -51,17 +69,52 @@ public class DelegateParametersIndex extends Index {
 		for (int i = 0; i < instructions.size(); i++) {
 			var insn = instructions.get(i);
 
+			// Check INVOKE* instructions, excluding INVOKEDYNAMICs
 			if (insn instanceof MethodInsnNode methodInsn) {
 				var entry = MethodEntry.parse(methodInsn.owner, methodInsn.name, methodInsn.desc);
 				var frame = frames[i];
 				var isStatic = methodInsn.getOpcode() == INVOKESTATIC;
 
-				for (int j = Type.getArgumentCount(methodInsn.desc) - 1; j >= 0; j--) {
-					var value = frame.pop();
-					var index = j + (isStatic ? 0 : 1);
+				var desc = Type.getMethodType(methodInsn.desc);
+				var local = desc.getArgumentsAndReturnSizes() >> 2;
+				local -= isStatic ? 1 : 0;
 
+				// Check each of the arguments passed to the invocation
+				for (int j = desc.getArgumentCount() - 1; j >= 0; j--) {
+					var value = frame.pop();
+					local -= value.getSize();
+
+					// If one of the passed arguments is a parameter of the original method, save it
 					if (value.parameter) {
-						this.linkedParameters.put(new LocalVariableEntry(methodEntry, value.local), new LocalVariableEntry(entry, index));
+						// Logger.info("{}{} {} -> {}{} {}", node.name, node.desc, value.local, methodInsn.name, methodInsn.desc, local);
+						var paramEntry = new LocalVariableEntry(methodEntry, value.local);
+						var targetEntry = new LocalVariableEntry(entry, local);
+						this.linkedParameters.put(paramEntry, targetEntry);
+
+						// If the argument passed was also used somewhere else, invalidate both
+						// TODO
+
+						// Try to load a variable name directly from a class file
+						if (!methodInsn.owner.startsWith(classNode.name) && !classNode.name.startsWith(methodInsn.owner)) {
+							var targetClass = classProvider.get(methodInsn.owner);
+							if (targetClass != null) {
+								var targetMethod = AsmUtil.getMethod(targetClass, methodInsn.name, methodInsn.desc);
+								if (targetMethod.isEmpty() || targetMethod.get().localVariables == null) {
+									continue;
+								}
+
+								var localVariables = targetMethod.get().localVariables;
+								for (var localVar : localVariables) {
+									if (localVar.index == local) {
+										if (localVar.name != null) {
+											this.parameterNames.put(paramEntry, localVar.name);
+										}
+
+										break;
+									}
+								}
+							}
+						}
 					}
 				}
 			}
@@ -81,6 +134,10 @@ public class DelegateParametersIndex extends Index {
 		return this.linkedParameters.get(entry);
 	}
 
+	public String getName(LocalVariableEntry entry) {
+		return this.parameterNames.get(entry);
+	}
+
 	public record LocalVariableValue(int size, boolean parameter, int local) implements Value {
 		public LocalVariableValue(int size) {
 			this(size, false, -1);
@@ -90,16 +147,15 @@ public class DelegateParametersIndex extends Index {
 			this(size, value.parameter, value.local);
 		}
 
-		public boolean isEmpty() {
-			return this.local == -1;
-		}
-
 		@Override
 		public int getSize() {
 			return this.size;
 		}
 	}
 
+	/**
+	 * Track values as {@link LocalVariableValue local variables}.
+	 */
 	public static class LocalVariableInterpreter extends Interpreter<LocalVariableValue> {
 		public LocalVariableInterpreter() {
 			super(ASM9);
@@ -145,10 +201,10 @@ public class DelegateParametersIndex extends Index {
 		@Override
 		public LocalVariableValue unaryOperation(AbstractInsnNode insn, LocalVariableValue value) {
 			return switch (insn.getOpcode()) {
-				case I2L, I2D, L2D, F2L, F2D, D2L -> new LocalVariableValue(2, value); // Casts should keep the variable they came from
-				case I2F, L2I, L2F, F2I, D2I, D2F, I2B, I2C, I2S, CHECKCAST -> new LocalVariableValue(1, value);
+				case I2L, I2D, L2D, F2D -> new LocalVariableValue(2, value); // Widening casts (automatic) should keep the variable they came from
+				case I2F, L2F -> new LocalVariableValue(1, value);
 
-				case LNEG, DNEG -> new LocalVariableValue(2);
+				case LNEG, DNEG, F2L, D2L -> new LocalVariableValue(2);
 				case GETFIELD -> new LocalVariableValue(Type.getType(((FieldInsnNode) insn).desc).getSize());
 				default -> new LocalVariableValue(1);
 			};

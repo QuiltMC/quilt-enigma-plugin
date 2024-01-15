@@ -3,7 +3,7 @@ package com.example;
 import java.util.Random;
 
 public class DelegateParametersTest {
-	record Test1(int val, int index, long j, String s) {
+	record Test1(int val, long j, int index, String s) {
 		public Test1() {
 			this(-1);
 		}
@@ -12,12 +12,20 @@ public class DelegateParametersTest {
 			this(val, -1);
 		}
 
-		public Test1(int val, int index) {
-			this(val, index, 0);
+		public Test1(int val, long j) {
+			this(val, j, 0);
 		}
 
-		public Test1(int val, int index, long j) {
-			this(val, index, j, "");
+		public Test1(int val, long j, int index) {
+			this(val, j, index, "");
+		}
+
+		public static Test1 create(int val) {
+			return create(val, -1);
+		}
+
+		public static Test1 create(int val, long j) {
+			return new Test1(val, j);
 		}
 	}
 

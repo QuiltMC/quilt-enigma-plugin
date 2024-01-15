@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 QuiltMC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.quiltmc.enigma_plugin.proposal;
 
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
@@ -24,20 +40,25 @@ public class DelegateParametersNameProposer extends NameProposer {
 		// TODO: Filter out non-renamable entries
 	}
 
-	private EntryMapping resolveMapping(EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings, LocalVariableEntry entry) {
+	private String resolveName(EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings, LocalVariableEntry entry) {
 		if (entry == null) {
-			return EntryMapping.DEFAULT;
+			return null;
+		}
+
+		var name = this.index.getName(entry);
+		if (name != null) {
+			return name;
 		}
 
 		var mapping = remapper.getMapping(entry);
 		if (mapping.targetName() != null) {
-			return mapping;
+			return mapping.targetName();
 		} else {
 			mapping = mappings.get(entry);
 			if (mapping != null && mapping.targetName() != null) {
-				return mapping;
+				return mapping.targetName();
 			} else {
-				return this.resolveMapping(remapper, mappings, this.index.get(entry));
+				return this.resolveName(remapper, mappings, this.index.get(entry));
 			}
 		}
 	}
@@ -50,12 +71,13 @@ public class DelegateParametersNameProposer extends NameProposer {
 					continue;
 				}
 
-				var mapping = this.resolveMapping(remapper, mappings, entry);
+				var name = this.resolveName(remapper, mappings, entry);
 
-				if (mapping.targetName() != null) {
-					this.insertDynamicProposal(mappings, entry, mapping);
+				if (name != null) {
+					this.insertDynamicProposal(mappings, entry, name);
 				}
 			}
 		}
+		// TODO: Changes
 	}
 }
