@@ -36,6 +36,7 @@ import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.tinylog.Logger;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +44,7 @@ import java.util.Set;
 public class DelegateParametersIndex extends Index {
 	private final Map<LocalVariableEntry, LocalVariableEntry> linkedParameters = new HashMap<>();
 	private final Map<LocalVariableEntry, String> parameterNames = new HashMap<>();
+	private final Set<LocalVariableEntry> invalidParameters = new HashSet<>(); // Parameters used more than once
 
 	public DelegateParametersIndex() {
 		super(Arguments.DISABLE_DELEGATE_PARAMS);
@@ -88,11 +90,22 @@ public class DelegateParametersIndex extends Index {
 					if (value.parameter) {
 						// Logger.info("{}{} {} -> {}{} {}", node.name, node.desc, value.local, methodInsn.name, methodInsn.desc, local);
 						var paramEntry = new LocalVariableEntry(methodEntry, value.local);
-						var targetEntry = new LocalVariableEntry(entry, local);
-						this.linkedParameters.put(paramEntry, targetEntry);
 
-						// If the argument passed was also used somewhere else, invalidate both
-						// TODO
+						// Skip invalid parameters
+						if (this.invalidParameters.contains(paramEntry)) {
+							continue;
+						}
+
+						var targetEntry = new LocalVariableEntry(entry, local);
+						var prev = this.linkedParameters.put(paramEntry, targetEntry);
+
+						// If the argument passed was already used somewhere else, invalidate it
+						if (prev != null && prev != targetEntry) {
+							this.invalidParameters.add(paramEntry);
+							this.linkedParameters.remove(paramEntry);
+							this.parameterNames.remove(paramEntry);
+							continue;
+						}
 
 						// Try to load a variable name directly from a class file
 						if (!methodInsn.owner.startsWith(classNode.name) && !classNode.name.startsWith(methodInsn.owner)) {
@@ -124,6 +137,8 @@ public class DelegateParametersIndex extends Index {
 	@Override
 	public void reset() {
 		this.linkedParameters.clear();
+		this.parameterNames.clear();
+		this.invalidParameters.clear();
 	}
 
 	public Set<LocalVariableEntry> getKeys() {

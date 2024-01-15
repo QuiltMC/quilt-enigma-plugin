@@ -40,10 +40,10 @@ public class NameProposerService implements NameProposalService {
 	public NameProposerService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_RECORDS, RecordComponentNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CONSTANT_FIELDS, ConstantFieldNameProposer::new);
-		// this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
-		// this.addIfEnabled(context, indexer, Arguments.DISABLE_LOGGER, LoggerNameProposer::new);
-		// this.addIfEnabled(context, indexer, Arguments.DISABLE_CODECS, CodecNameProposer::new);
-		// this.addIfNotDisabled(context, Arguments.DISABLE_MAP_NON_HASHED, MojangNameProposer::new);
+		this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_LOGGER, LoggerNameProposer::new);
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_CODECS, CodecNameProposer::new);
+		this.addIfNotDisabled(context, Arguments.DISABLE_MAP_NON_HASHED, MojangNameProposer::new);
 
 		if (indexer.getIndex(SimpleTypeSingleIndex.class).isEnabled()) {
 			this.nameProposers.add(new SimpleTypeFieldNameProposer(indexer));

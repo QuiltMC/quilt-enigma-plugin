@@ -54,6 +54,10 @@ repositories {
 	}
 }
 
+configurations {
+	enigmaRuntime
+}
+
 dependencies {
 	implementation libs.bundles.asm
 	implementation libs.enigma
@@ -67,6 +71,7 @@ dependencies {
 	testImplementation libs.enigma.swing
 
 	testInputsImplementation libs.dfu
+	enigmaRuntime libs.dfu
 }
 
 var obfJar = file('build/obf/obf.jar')
@@ -75,7 +80,7 @@ var profile = file('build/resources/testInputs/profile.json')
 
 task testEnigma(type: JavaExec, dependsOn: ["obfuscateTestInputs", "processTestInputsResources"]) {
 	mainClass = "org.quiltmc.enigma.gui.Main"
-	classpath = sourceSets.test.runtimeClasspath
+	classpath = files(configurations.enigmaRuntime) + sourceSets.test.runtimeClasspath
 
 	args('-jar', obfJar, '-mappings', mappings.getAbsolutePath(), '-profile', profile.getAbsolutePath(), '--development')
 	doFirst {
