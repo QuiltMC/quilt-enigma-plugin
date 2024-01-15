@@ -51,6 +51,10 @@ public class DelegateParametersIndex extends Index {
 		super(Arguments.DISABLE_DELEGATE_PARAMS);
 	}
 
+	private static boolean isSameMethod(ClassNode owner, MethodNode node, MethodInsnNode methodInsn) {
+		return node.name.equals(methodInsn.name) && node.desc.equals(methodInsn.desc) && owner.name.equals(methodInsn.owner);
+	}
+
 	@Override
 	public void visitClassNode(ClassProvider classProvider, ClassNode node) {
 		for (var method : node.methods) {
@@ -72,8 +76,8 @@ public class DelegateParametersIndex extends Index {
 		for (int i = 0; i < instructions.size(); i++) {
 			var insn = instructions.get(i);
 
-			// Check INVOKE* instructions, excluding INVOKEDYNAMICs
-			if (insn instanceof MethodInsnNode methodInsn) {
+			// Check INVOKE* instructions, excluding INVOKEDYNAMICs and recursive invocations
+			if (insn instanceof MethodInsnNode methodInsn && !isSameMethod(classNode, node, methodInsn)) {
 				var entry = MethodEntry.parse(methodInsn.owner, methodInsn.name, methodInsn.desc);
 				var frame = frames[i];
 				var isStatic = methodInsn.getOpcode() == INVOKESTATIC;
