@@ -79,19 +79,19 @@ public class NameProposalTest {
 	public void testRecordNames() {
 		var classEntry = new ClassEntry("com/a/d");
 
-		assertProposal("value", new FieldEntry(classEntry, "b", new TypeDescriptor("I")));
-		assertProposal("value", new MethodEntry(classEntry, "a", new MethodDescriptor("()I")));
+		assertProposal("value", field(classEntry, "b", "I"));
+		assertProposal("value", method(classEntry, "a", "()I"));
 
-		assertProposal("scale", new FieldEntry(classEntry, "c", new TypeDescriptor("D")));
-		assertProposal("scale", new MethodEntry(classEntry, "b", new MethodDescriptor("()D")));
+		assertProposal("scale", field(classEntry, "c", "D"));
+		assertProposal("scale", method(classEntry, "b", "()D"));
 
-		assertProposal("s", new FieldEntry(classEntry, "d", new TypeDescriptor("Ljava/util/Optional;")));
-		assertProposal("s", new MethodEntry(classEntry, "c", new MethodDescriptor("()Ljava/util/Optional;")));
+		assertProposal("s", field(classEntry, "d", "Ljava/util/Optional;"));
+		assertProposal("s", method(classEntry, "c", "()Ljava/util/Optional;"));
 
 		var withCodecEntry = new ClassEntry("com/a/a$a");
 
-		assertProposal("value", new FieldEntry(withCodecEntry, "b", new TypeDescriptor("I")));
-		assertProposal("value", new MethodEntry(withCodecEntry, "a", new MethodDescriptor("()I")));
+		assertProposal("value", field(withCodecEntry, "b", "I"));
+		assertProposal("value", method(withCodecEntry, "a", "()I"));
 	}
 
 	@Test
@@ -144,27 +144,27 @@ public class NameProposalTest {
 	public void testCodecNames() {
 		var classEntry = new ClassEntry("com/a/a");
 
-		assertProposal("value", new FieldEntry(classEntry, "c", new TypeDescriptor("I")));
-		assertProposal("getValue", new MethodEntry(classEntry, "a", new MethodDescriptor("()I")));
+		assertProposal("value", field(classEntry, "c", "I"));
+		assertProposal("getValue", method(classEntry, "a", "()I"));
 
-		assertProposal("scale", new FieldEntry(classEntry, "d", new TypeDescriptor("D")));
-		assertProposal("getScale", new MethodEntry(classEntry, "b", new MethodDescriptor("()D")));
+		assertProposal("scale", field(classEntry, "d", "D"));
+		assertProposal("getScale", method(classEntry, "b", "()D"));
 
-		assertProposal("factor", new FieldEntry(classEntry, "e", new TypeDescriptor("Ljava/util/Optional;")));
-		assertProposal("getFactor", new MethodEntry(classEntry, "c", new MethodDescriptor("()Ljava/util/Optional;")));
+		assertProposal("factor", field(classEntry, "e", "Ljava/util/Optional;"));
+		assertProposal("getFactor", method(classEntry, "c", "()Ljava/util/Optional;"));
 
-		assertProposal("seed", new FieldEntry(classEntry, "b", new TypeDescriptor("J")));
+		assertProposal("seed", field(classEntry, "b", "J"));
 	}
 
 	@Test
 	public void testConstructorParameterNames() {
 		var classEntry = new ClassEntry("com/a/a");
-		var constructor = new MethodEntry(classEntry, "<init>", new MethodDescriptor("(IDLjava/util/Optional;J)V"));
+		var constructor = method(classEntry, "<init>", "(IDLjava/util/Optional;J)V");
 
-		assertDynamicProposal("value", new LocalVariableEntry(constructor, 1));
-		assertDynamicProposal("scale", new LocalVariableEntry(constructor, 2));
-		assertDynamicProposal("factor", new LocalVariableEntry(constructor, 4));
-		assertDynamicProposal("seed", new LocalVariableEntry(constructor, 5));
+		assertDynamicProposal("value", localVar(constructor, 1));
+		assertDynamicProposal("scale", localVar(constructor, 2));
+		assertDynamicProposal("factor", localVar(constructor, 4));
+		assertDynamicProposal("seed", localVar(constructor, 5));
 	}
 
 	@Test
@@ -172,17 +172,17 @@ public class NameProposalTest {
 		var classEntry = new ClassEntry("com/a/c");
 
 		var vc = new ValidationContext(null);
-		remapper.putMapping(vc, new FieldEntry(classEntry, "a", new TypeDescriptor("I")), new EntryMapping("silliness"));
-		remapper.putMapping(vc, new FieldEntry(classEntry, "b", new TypeDescriptor("Ljava/lang/String;")), new EntryMapping("name"));
+		remapper.putMapping(vc, field(classEntry, "a", "I"), new EntryMapping("silliness"));
+		remapper.putMapping(vc, field(classEntry, "b", "Ljava/lang/String;"), new EntryMapping("name"));
 
 		MethodEntry method;
-		assertDynamicProposal("getSilliness", new MethodEntry(classEntry, "a", new MethodDescriptor("()I")));
-		assertDynamicProposal("setSilliness", (method = new MethodEntry(classEntry, "a", new MethodDescriptor("(I)V"))));
-		assertDynamicProposal("silliness", new LocalVariableEntry(method, 1));
+		assertDynamicProposal("getSilliness", method(classEntry, "a", "()I"));
+		assertDynamicProposal("setSilliness", (method = method(classEntry, "a", "(I)V")));
+		assertDynamicProposal("silliness", localVar(method, 1));
 
-		assertDynamicProposal("getName", new MethodEntry(classEntry, "b", new MethodDescriptor("()Ljava/lang/String;")));
-		assertDynamicProposal("setName", (method = new MethodEntry(classEntry, "b", new MethodDescriptor("(Ljava/lang/String;)V"))));
-		assertDynamicProposal("name", new LocalVariableEntry(method, 1));
+		assertDynamicProposal("getName", method(classEntry, "b", "()Ljava/lang/String;"));
+		assertDynamicProposal("setName", (method = method(classEntry, "b", "(Ljava/lang/String;)V")));
+		assertDynamicProposal("name", localVar(method, 1));
 	}
 
 	@Test
@@ -191,58 +191,99 @@ public class NameProposalTest {
 		var fieldsClassEntry = new ClassEntry(classEntry, "a");
 
 		var owner = new ClassEntry(fieldsClassEntry, "a");
-		assertNotProposed(new FieldEntry(owner, "a", new TypeDescriptor("Lcom/a/b/g;")));
-		assertNotProposed(new FieldEntry(owner, "b", new TypeDescriptor("Lcom/a/b/g;")));
+		assertNotProposed(field(owner, "a", "Lcom/a/b/g;"));
+		assertNotProposed(field(owner, "b", "Lcom/a/b/g;"));
 
 		owner = new ClassEntry(fieldsClassEntry, "b");
-		assertProposal("POS", new FieldEntry(owner, "a", new TypeDescriptor("Lcom/a/b/b;")));
-		assertProposal("position", new FieldEntry(owner, "b", new TypeDescriptor("Lcom/a/b/c;")));
-		assertProposal("randomPosition", new FieldEntry(owner, "c", new TypeDescriptor("Lcom/a/b/d;")));
-		assertProposal("STATIC_STATE_A", new FieldEntry(owner, "d", new TypeDescriptor("Lcom/a/b/e;")));
-		assertProposal("STATIC_STATE_B", new FieldEntry(owner, "e", new TypeDescriptor("Lcom/a/b/f;")));
-		assertProposal("VALUE_A", new FieldEntry(owner, "f", new TypeDescriptor("Lcom/a/b/g;")));
-		assertProposal("VALUE_B", new FieldEntry(owner, "g", new TypeDescriptor("Lcom/a/b/h;")));
-		assertProposal("valueC", new FieldEntry(owner, "h", new TypeDescriptor("Lcom/a/b/i;")));
+		assertProposal("POS", field(owner, "a", "Lcom/a/b/b;"));
+		assertProposal("position", field(owner, "b", "Lcom/a/b/c;"));
+		assertProposal("randomPosition", field(owner, "c", "Lcom/a/b/d;"));
+		assertProposal("STATIC_STATE_A", field(owner, "d", "Lcom/a/b/e;"));
+		assertProposal("STATIC_STATE_B", field(owner, "e", "Lcom/a/b/f;"));
+		assertProposal("VALUE_A", field(owner, "f", "Lcom/a/b/g;"));
+		assertProposal("VALUE_B", field(owner, "g", "Lcom/a/b/h;"));
+		assertProposal("valueC", field(owner, "h", "Lcom/a/b/i;"));
 
 		owner = new ClassEntry(fieldsClassEntry, "c");
-		assertProposal("CONFIG", new FieldEntry(owner, "a", new TypeDescriptor("Lcom/a/b/a;")));
-		assertProposal("STATIC_STATE", new FieldEntry(owner, "b", new TypeDescriptor("Lcom/a/b/e;")));
-		assertProposal("value", new FieldEntry(owner, "c", new TypeDescriptor("Lcom/a/b/i;")));
+		assertProposal("CONFIG", field(owner, "a", "Lcom/a/b/a;"));
+		assertProposal("STATIC_STATE", field(owner, "b", "Lcom/a/b/e;"));
+		assertProposal("value", field(owner, "c", "Lcom/a/b/i;"));
 
 		owner = new ClassEntry(classEntry, "b");
-		var parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/a;)V"));
-		assertProposal("config", new LocalVariableEntry(parent, 0));
+		var parent = method(owner, "a", "(Lcom/a/b/a;)V");
+		assertProposal("config", localVar(parent, 0));
 
-		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/b;)V"));
-		assertProposal("pos", new LocalVariableEntry(parent, 1));
+		parent = method(owner, "a", "(Lcom/a/b/b;)V");
+		assertProposal("pos", localVar(parent, 1));
 
-		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/b;Lcom/a/b/c;)V"));
-		assertProposal("pos", new LocalVariableEntry(parent, 1));
-		assertProposal("position", new LocalVariableEntry(parent, 2));
+		parent = method(owner, "a", "(Lcom/a/b/b;Lcom/a/b/c;)V");
+		assertProposal("pos", localVar(parent, 1));
+		assertProposal("position", localVar(parent, 2));
 
-		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/b;Lcom/a/b/d;)V"));
-		assertProposal("pos", new LocalVariableEntry(parent, 1));
-		assertProposal("position", new LocalVariableEntry(parent, 2));
+		parent = method(owner, "a", "(Lcom/a/b/b;Lcom/a/b/d;)V");
+		assertProposal("pos", localVar(parent, 1));
+		assertProposal("position", localVar(parent, 2));
 
-		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/b;Lcom/a/b/c;Lcom/a/b/d;)V"));
-		assertProposal("pos", new LocalVariableEntry(parent, 1));
-		assertProposal("position", new LocalVariableEntry(parent, 2));
-		assertProposal("randomPosition", new LocalVariableEntry(parent, 3));
+		parent = method(owner, "a", "(Lcom/a/b/b;Lcom/a/b/c;Lcom/a/b/d;)V");
+		assertProposal("pos", localVar(parent, 1));
+		assertProposal("position", localVar(parent, 2));
+		assertProposal("randomPosition", localVar(parent, 3));
 
-		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/e;)V"));
-		assertProposal("state", new LocalVariableEntry(parent, 1));
+		parent = method(owner, "a", "(Lcom/a/b/e;)V");
+		assertProposal("state", localVar(parent, 1));
 
-		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/e;Lcom/a/b/f;)V"));
-		assertProposal("stateA", new LocalVariableEntry(parent, 0));
-		assertProposal("stateB", new LocalVariableEntry(parent, 1));
+		parent = method(owner, "a", "(Lcom/a/b/e;Lcom/a/b/f;)V");
+		assertProposal("stateA", localVar(parent, 0));
+		assertProposal("stateB", localVar(parent, 1));
 
-		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/g;Lcom/a/b/h;Lcom/a/b/i;)V"));
-		assertProposal("valueA", new LocalVariableEntry(parent, 0));
-		assertProposal("valueB", new LocalVariableEntry(parent, 1));
-		assertProposal("valueC", new LocalVariableEntry(parent, 2));
+		parent = method(owner, "a", "(Lcom/a/b/g;Lcom/a/b/h;Lcom/a/b/i;)V");
+		assertProposal("valueA", localVar(parent, 0));
+		assertProposal("valueB", localVar(parent, 1));
+		assertProposal("valueC", localVar(parent, 2));
 
-		parent = new MethodEntry(owner, "a", new MethodDescriptor("(Lcom/a/b/g;Lcom/a/b/g;)V"));
-		assertNotProposed(new LocalVariableEntry(parent, 0));
-		assertNotProposed(new LocalVariableEntry(parent, 1));
+		parent = method(owner, "a", "(Lcom/a/b/g;Lcom/a/b/g;)V");
+		assertNotProposed(localVar(parent, 0));
+		assertNotProposed(localVar(parent, 1));
+	}
+
+	@Test
+	public void testDelegateParameterNames() {
+		var classEntry = new ClassEntry("com/a/b");
+
+		assertDynamicProposal("seed", localVar(method(classEntry, "a", "(J)I"), 1));
+		assertDynamicProposal("seed", localVar(method(classEntry, "a", "(I)V"), 1));
+		assertDynamicProposal("seed", localVar(method(classEntry, "b", "(J)V"), 1));
+
+		assertNotProposed(localVar(method(classEntry, "b", "(I)V"), 1));
+
+		classEntry = new ClassEntry(classEntry, "a");
+
+		assertDynamicProposal("val", localVar(method(classEntry, "<init>", "(I)V"), 1));
+		assertDynamicProposal("val", localVar(method(classEntry, "<init>", "(IJ)V"), 1));
+		assertDynamicProposal("val", localVar(method(classEntry, "<init>", "(IJI)V"), 1));
+		assertDynamicProposal("val", localVar(method(classEntry, "a", "(I)Lcom/a/b$a;"), 0));
+		assertDynamicProposal("val", localVar(method(classEntry, "a", "(IJ)Lcom/a/b$a;"), 0));
+
+		assertDynamicProposal("j", localVar(method(classEntry, "<init>", "(IJ)V"), 2));
+		assertDynamicProposal("j", localVar(method(classEntry, "a", "(IJ)Lcom/a/b$a;"), 1));
+
+		assertDynamicProposal("index", localVar(method(classEntry, "<init>", "(IJI)V"), 4));
+
+		// Ensure names are also loaded from external classes
+		classEntry = new ClassEntry("com/a/c");
+
+		assertDynamicProposal("bound", localVar(method(classEntry, "b", "(I)V"), 1));
+	}
+
+	private static FieldEntry field(ClassEntry parent, String name, String desc) {
+		return new FieldEntry(parent, name, new TypeDescriptor(desc));
+	}
+
+	private static MethodEntry method(ClassEntry parent, String name, String desc) {
+		return new MethodEntry(parent, name, new MethodDescriptor(desc));
+	}
+
+	private static LocalVariableEntry localVar(MethodEntry parent, int index) {
+		return new LocalVariableEntry(parent, index);
 	}
 }
