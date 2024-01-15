@@ -77,7 +77,7 @@ public class NameProposalTest {
 
 	@Test
 	public void testRecordNames() {
-		var classEntry = new ClassEntry("com/a/c");
+		var classEntry = new ClassEntry("com/a/d");
 
 		assertProposal("value", new FieldEntry(classEntry, "b", new TypeDescriptor("I")));
 		assertProposal("value", new MethodEntry(classEntry, "a", new MethodDescriptor("()I")));
@@ -169,7 +169,7 @@ public class NameProposalTest {
 
 	@Test
 	public void testGetterSetterNames() {
-		var classEntry = new ClassEntry("com/a/b");
+		var classEntry = new ClassEntry("com/a/c");
 
 		var vc = new ValidationContext(null);
 		remapper.putMapping(vc, new FieldEntry(classEntry, "a", new TypeDescriptor("I")), new EntryMapping("silliness"));
@@ -187,7 +187,7 @@ public class NameProposalTest {
 
 	@Test
 	public void testSimpleTypeSingleNames() {
-		var classEntry = new ClassEntry("com/a/d");
+		var classEntry = new ClassEntry("com/a/e");
 		var fieldsClassEntry = new ClassEntry(classEntry, "a");
 
 		var owner = new ClassEntry(fieldsClassEntry, "a");
