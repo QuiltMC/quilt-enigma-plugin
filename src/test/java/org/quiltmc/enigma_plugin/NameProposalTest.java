@@ -265,9 +265,20 @@ public class NameProposalTest {
 		assertDynamicProposal("val", localVar(method(classEntry, "a", "(IJ)Lcom/a/b$a;"), 0));
 
 		assertDynamicProposal("j", localVar(method(classEntry, "<init>", "(IJ)V"), 2));
+		assertDynamicProposal("j", localVar(method(classEntry, "<init>", "(IJI)V"), 2));
 		assertDynamicProposal("j", localVar(method(classEntry, "a", "(IJ)Lcom/a/b$a;"), 1));
 
 		assertDynamicProposal("index", localVar(method(classEntry, "<init>", "(IJI)V"), 4));
+
+		// Test dynamic renames
+		remapper.putMapping(new ValidationContext(null), localVar(method(classEntry, "<init>", "(IJI)V"), 2), new EntryMapping("silly"));
+		assertDynamicProposal("silly", localVar(method(classEntry, "<init>", "(IJ)V"), 2));
+		assertDynamicProposal("silly", localVar(method(classEntry, "a", "(IJ)Lcom/a/b$a;"), 1));
+
+		remapper.putMapping(new ValidationContext(null), localVar(method(classEntry, "<init>", "(IJI)V"), 2), EntryMapping.DEFAULT);
+		assertDynamicProposal("j", localVar(method(classEntry, "<init>", "(IJ)V"), 2));
+		assertDynamicProposal("j", localVar(method(classEntry, "<init>", "(IJI)V"), 2));
+		assertDynamicProposal("j", localVar(method(classEntry, "a", "(IJ)Lcom/a/b$a;"), 1));
 
 		// Ensure names are also loaded from external classes
 		classEntry = new ClassEntry("com/a/c");

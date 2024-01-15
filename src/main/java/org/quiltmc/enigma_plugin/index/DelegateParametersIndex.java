@@ -43,6 +43,7 @@ import java.util.Set;
 
 public class DelegateParametersIndex extends Index {
 	private final Map<LocalVariableEntry, LocalVariableEntry> linkedParameters = new HashMap<>();
+	private final Map<LocalVariableEntry, Set<LocalVariableEntry>> parameterLinks = new HashMap<>();
 	private final Map<LocalVariableEntry, String> parameterNames = new HashMap<>();
 	private final Set<LocalVariableEntry> invalidParameters = new HashSet<>(); // Parameters used more than once
 
@@ -97,13 +98,7 @@ public class DelegateParametersIndex extends Index {
 						}
 
 						var targetEntry = new LocalVariableEntry(entry, local);
-						var prev = this.linkedParameters.put(paramEntry, targetEntry);
-
-						// If the argument passed was already used somewhere else, invalidate it
-						if (prev != null && prev != targetEntry) {
-							this.invalidParameters.add(paramEntry);
-							this.linkedParameters.remove(paramEntry);
-							this.parameterNames.remove(paramEntry);
+						if (!this.tryLink(paramEntry, targetEntry)) {
 							continue;
 						}
 
@@ -134,6 +129,36 @@ public class DelegateParametersIndex extends Index {
 		}
 	}
 
+	private boolean tryLink(LocalVariableEntry paramEntry, LocalVariableEntry targetEntry) {
+		if (paramEntry.equals(targetEntry)) {
+			throw new IllegalArgumentException("Can't link a parameter to itself!");
+		}
+
+		if (this.linkedParameters.containsKey(paramEntry)) {
+			// If the argument passed was already used somewhere else, invalidate it
+			if (this.linkedParameters.get(paramEntry) != targetEntry) {
+				this.invalidate(paramEntry);
+			}
+
+			return false;
+		}
+
+		this.linkedParameters.put(paramEntry, targetEntry);
+		this.parameterLinks.computeIfAbsent(targetEntry, e -> new HashSet<>()).add(paramEntry);
+		return true;
+	}
+
+	private void invalidate(LocalVariableEntry paramEntry) {
+		this.invalidParameters.add(paramEntry);
+		this.parameterNames.remove(paramEntry);
+
+		var target = this.linkedParameters.remove(paramEntry);
+		var targetLinks = this.parameterLinks.get(target);
+		if (!targetLinks.isEmpty()) {
+			targetLinks.remove(paramEntry);
+		}
+	}
+
 	@Override
 	public void reset() {
 		this.linkedParameters.clear();
@@ -147,6 +172,10 @@ public class DelegateParametersIndex extends Index {
 
 	public LocalVariableEntry get(LocalVariableEntry entry) {
 		return this.linkedParameters.get(entry);
+	}
+
+	public Set<LocalVariableEntry> getLinks(LocalVariableEntry entry) {
+		return this.parameterLinks.getOrDefault(entry, Set.of());
 	}
 
 	public String getName(LocalVariableEntry entry) {

@@ -23,6 +23,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma_plugin.index.DelegateParametersIndex;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
+import org.tinylog.Logger;
 
 import java.util.Map;
 
@@ -37,7 +38,6 @@ public class DelegateParametersNameProposer extends NameProposer {
 
 	@Override
 	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
-		// TODO: Filter out non-renamable entries
 	}
 
 	private String resolveName(EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings, LocalVariableEntry entry) {
@@ -63,8 +63,31 @@ public class DelegateParametersNameProposer extends NameProposer {
 		}
 	}
 
+	private void proposeNameUpwards(EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings, LocalVariableEntry entry, String name) {
+		proposeNameUpwards(remapper, mappings, entry, name, 0);
+	}
+
+	private void proposeNameUpwards(EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings, LocalVariableEntry entry, String name, int depth) {
+		if (depth >= 15) {
+			Logger.warn("Tried to propose delegate parameters too deep!");
+			return;
+		}
+
+		// Propose a name for all the parameters pointing to the given parameter
+		var links = this.index.getLinks(entry);
+		for (var link : links) {
+			if (this.hasJarProposal(remapper, link)) {
+				continue;
+			}
+
+			this.insertDynamicProposal(mappings, link, name);
+			this.proposeNameUpwards(remapper, mappings, link, name, depth + 1);
+		}
+	}
+
 	@Override
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
+		// Mappings loaded
 		if (obfEntry == null) {
 			for (var entry : this.index.getKeys()) {
 				if (this.hasJarProposal(remapper, entry)) {
@@ -77,7 +100,23 @@ public class DelegateParametersNameProposer extends NameProposer {
 					this.insertDynamicProposal(mappings, entry, name);
 				}
 			}
+
+			return;
 		}
-		// TODO: Changes
+
+		if (obfEntry instanceof LocalVariableEntry paramEntry) {
+			String name;
+			if (newMapping.targetName() != null) {
+				name = newMapping.targetName();
+			} else {
+				name = this.resolveName(remapper, mappings, paramEntry);
+			}
+
+			if (newMapping.targetName() == null) {
+				this.insertDynamicProposal(mappings, paramEntry, name);
+			}
+
+			this.proposeNameUpwards(remapper, mappings, paramEntry, name);
+		}
 	}
 }

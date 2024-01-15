@@ -32,6 +32,10 @@ public abstract class NameProposer {
 		this.id = id;
 	}
 
+	public String getSourcePluginId() {
+		return QuiltEnigmaPlugin.NAME_PROPOSAL_SERVICE_ID + "/" + this.id;
+	}
+
 	public void insertProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, EntryMapping mapping) {
 		if (mapping != null) {
 			if (mapping.targetName() != null && !mapping.targetName().isEmpty()) {
@@ -63,7 +67,7 @@ public abstract class NameProposer {
 	private void insertProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name, TokenType tokenType) {
 		if (!mappings.containsKey(entry)) {
 			if (name != null) {
-				EntryMapping mapping = new EntryMapping(name, null, tokenType, QuiltEnigmaPlugin.NAME_PROPOSAL_SERVICE_ID + "/" + this.id);
+				EntryMapping mapping = new EntryMapping(name, null, tokenType, this.getSourcePluginId());
 				mappings.put(entry, mapping);
 			} else {
 				mappings.put(entry, null);
