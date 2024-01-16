@@ -57,6 +57,10 @@ public class DelegateParametersIndex extends Index {
 
 	@Override
 	public void visitClassNode(ClassProvider classProvider, ClassNode node) {
+		if (node.outerClass != null) {
+			return; // Skip anonymous/local classes
+		}
+
 		for (var method : node.methods) {
 			try {
 				this.visitMethodNode(classProvider, node, method);
@@ -68,7 +72,7 @@ public class DelegateParametersIndex extends Index {
 	}
 
 	public void visitMethodNode(ClassProvider classProvider, ClassNode classNode, MethodNode node) throws AnalyzerException {
-		if (AsmUtil.matchAccess(node, ACC_SYNTHETIC)) {
+		if (AsmUtil.matchAccess(node, ACC_SYNTHETIC) || AsmUtil.matchAccess(node, ACC_BRIDGE)) {
 			return;
 		}
 
@@ -135,11 +139,19 @@ public class DelegateParametersIndex extends Index {
 
 						// Try to load a variable name directly from a class file
 						if (!methodInsn.owner.startsWith(classNode.name) && !classNode.name.startsWith(methodInsn.owner)) {
+							if (classProvider.getClassNames().contains(methodInsn.owner)) {
+								// Relying on an impl detail! We only want external classes, and ClasspathClassProvider doesn't list any class
+								// therefore, if the class isn't listed, it could be external
+								continue;
+							}
+
 							var targetClass = classProvider.get(methodInsn.owner);
 
 							if (targetClass != null) {
 								var targetMethod = AsmUtil.getMethod(targetClass, methodInsn.name, methodInsn.desc);
-								if (targetMethod.isEmpty() || AsmUtil.matchAccess(targetMethod.get(), ACC_SYNTHETIC) || targetMethod.get().localVariables == null) {
+								if (targetMethod.isEmpty() || targetMethod.get().localVariables == null) {
+									continue;
+								} else if (AsmUtil.matchAccess(targetMethod.get(), ACC_SYNTHETIC) || AsmUtil.matchAccess(targetMethod.get(), ACC_BRIDGE)) {
 									continue;
 								}
 
