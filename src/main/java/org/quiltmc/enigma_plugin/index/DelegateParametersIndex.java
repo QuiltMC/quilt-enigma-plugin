@@ -28,7 +28,11 @@ import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Interpreter;
 import org.objectweb.asm.tree.analysis.Value;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.class_provider.ClassProvider;
+import org.quiltmc.enigma.api.translation.mapping.EntryResolver;
+import org.quiltmc.enigma.api.translation.mapping.IndexEntryResolver;
+import org.quiltmc.enigma.api.translation.mapping.ResolutionStrategy;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.Arguments;
@@ -47,12 +51,23 @@ public class DelegateParametersIndex extends Index {
 	private final Map<LocalVariableEntry, String> parameterNames = new HashMap<>();
 	private final Set<LocalVariableEntry> invalidParameters = new HashSet<>(); // Parameters used more than once
 
+	private Set<String> classes;
+	private JarIndex jarIndex;
+	private EntryResolver entryResolver;
+
 	public DelegateParametersIndex() {
 		super(Arguments.DISABLE_DELEGATE_PARAMS);
 	}
 
 	private static boolean isSameMethod(ClassNode owner, MethodNode node, MethodInsnNode methodInsn) {
 		return node.name.equals(methodInsn.name) && node.desc.equals(methodInsn.desc) && owner.name.equals(methodInsn.owner);
+	}
+
+	@Override
+	public void setIndexingContext(Set<String> classes, JarIndex jarIndex) {
+		this.classes = classes;
+		this.jarIndex = jarIndex;
+		this.entryResolver = new IndexEntryResolver(jarIndex);
 	}
 
 	@Override
@@ -76,8 +91,14 @@ public class DelegateParametersIndex extends Index {
 			return;
 		}
 
-		var hasParameterInfo = node.parameters != null && !node.parameters.isEmpty();
+		// Only index root methods
 		var methodEntry = MethodEntry.parse(classNode.name, node.name, node.desc);
+		var resolved = this.entryResolver.resolveEntry(methodEntry, ResolutionStrategy.RESOLVE_ROOT);
+		if (resolved.size() > 1 || !resolved.contains(methodEntry)) {
+			return;
+		}
+
+		var hasParameterInfo = node.parameters != null && !node.parameters.isEmpty();
 		var paramsByTarget = new HashMap<LocalVariableEntry, LocalVariableEntry>();
 
 		var frames = new Analyzer<>(new LocalVariableInterpreter()).analyze(classNode.name, node);
@@ -87,23 +108,23 @@ public class DelegateParametersIndex extends Index {
 			var insn = instructions.get(i);
 
 			// Check INVOKE* instructions, excluding INVOKEDYNAMICs and recursive invocations
-			if (insn instanceof MethodInsnNode methodInsn && !isSameMethod(classNode, node, methodInsn)) {
-				var entry = MethodEntry.parse(methodInsn.owner, methodInsn.name, methodInsn.desc);
+			if (insn instanceof MethodInsnNode invokedMethod && !isSameMethod(classNode, node, invokedMethod)) {
+				var invokedEntry = MethodEntry.parse(invokedMethod.owner, invokedMethod.name, invokedMethod.desc);
 				var frame = frames[i];
-				var isStatic = methodInsn.getOpcode() == INVOKESTATIC;
+				var isStatic = invokedMethod.getOpcode() == INVOKESTATIC;
 
-				var desc = Type.getMethodType(methodInsn.desc);
-				var local = desc.getArgumentsAndReturnSizes() >> 2;
+				var invokedDesc = Type.getMethodType(invokedMethod.desc);
+				var local = invokedDesc.getArgumentsAndReturnSizes() >> 2;
 				local -= isStatic ? 1 : 0;
 
 				// Check each of the arguments passed to the invocation
-				for (int j = desc.getArgumentCount() - 1; j >= 0; j--) {
+				for (int j = invokedDesc.getArgumentCount() - 1; j >= 0; j--) {
 					var value = frame.pop();
 					local -= value.getSize();
 
 					// If one of the passed arguments is a parameter of the original method, save it
 					if (value.parameter) {
-						// Logger.info("{}{} {} -> {}{} {}", node.name, node.desc, value.local, methodInsn.name, methodInsn.desc, local);
+						// Logger.info("{}{} {} -> {}{} {}", node.name, node.desc, value.local, invokedMethod.name, invokedMethod.desc, local);
 						// Skip synthetic parameters
 						if (hasParameterInfo) {
 							var index = AsmUtil.getLocalIndex(node, value.local);
@@ -119,7 +140,7 @@ public class DelegateParametersIndex extends Index {
 						}
 
 						// If another entry was linked to the same one inside this method, remove it and skip this one
-						var targetEntry = new LocalVariableEntry(entry, local);
+						var targetEntry = new LocalVariableEntry(invokedEntry, local);
 						if (paramsByTarget.containsKey(targetEntry)) {
 							var otherParam = paramsByTarget.get(targetEntry);
 
@@ -137,18 +158,12 @@ public class DelegateParametersIndex extends Index {
 							continue;
 						}
 
-						// Try to load a variable name directly from a class file
-						if (!methodInsn.owner.startsWith(classNode.name) && !classNode.name.startsWith(methodInsn.owner)) {
-							if (classProvider.getClassNames().contains(methodInsn.owner)) {
-								// Relying on an impl detail! We only want external classes, and ClasspathClassProvider doesn't list any class
-								// therefore, if the class isn't listed, it could be external
-								continue;
-							}
-
-							var targetClass = classProvider.get(methodInsn.owner);
+						// Try to load a variable name directly from an external class file
+						if (!this.classes.contains(invokedMethod.owner)) {
+							var targetClass = classProvider.get(invokedMethod.owner);
 
 							if (targetClass != null) {
-								var targetMethod = AsmUtil.getMethod(targetClass, methodInsn.name, methodInsn.desc);
+								var targetMethod = AsmUtil.getMethod(targetClass, invokedMethod.name, invokedMethod.desc);
 								if (targetMethod.isEmpty() || targetMethod.get().localVariables == null) {
 									continue;
 								} else if (AsmUtil.matchAccess(targetMethod.get(), ACC_SYNTHETIC) || AsmUtil.matchAccess(targetMethod.get(), ACC_BRIDGE)) {
@@ -208,6 +223,13 @@ public class DelegateParametersIndex extends Index {
 				targetLinks.remove(paramEntry);
 			}
 		}
+	}
+
+	@Override
+	public void onIndexingEnded() {
+		this.classes = null;
+		this.jarIndex = null;
+		this.entryResolver = null;
 	}
 
 	@Override

@@ -19,10 +19,13 @@ package org.quiltmc.enigma_plugin.index;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.class_provider.ClassProvider;
 import org.quiltmc.enigma.api.service.EnigmaServiceContext;
 import org.quiltmc.enigma.api.service.JarIndexerService;
 import org.quiltmc.enigma_plugin.Arguments;
+
+import java.util.Set;
 
 public abstract class Index implements Opcodes {
 	@Nullable
@@ -42,6 +45,9 @@ public abstract class Index implements Opcodes {
 		if (this.toggleKey != null) {
 			this.enabled ^= Arguments.getBoolean(context, this.toggleKey);
 		}
+	}
+
+	public void setIndexingContext(Set<String> classes, JarIndex jarIndex) {
 	}
 
 	public void visitClassNode(ClassProvider classProvider, ClassNode node) {

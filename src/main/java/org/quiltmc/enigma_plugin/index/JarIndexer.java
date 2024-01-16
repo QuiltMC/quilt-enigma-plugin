@@ -72,6 +72,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 
 			if (index.isEnabled()) {
 				enabledIndexes.add(index);
+				index.setIndexingContext(scope, jarIndex);
 			}
 		}
 
