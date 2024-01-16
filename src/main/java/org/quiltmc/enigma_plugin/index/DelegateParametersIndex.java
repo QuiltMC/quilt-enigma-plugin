@@ -68,6 +68,10 @@ public class DelegateParametersIndex extends Index {
 	}
 
 	public void visitMethodNode(ClassProvider classProvider, ClassNode classNode, MethodNode node) throws AnalyzerException {
+		if (AsmUtil.matchAccess(node, ACC_SYNTHETIC)) {
+			return;
+		}
+
 		var hasParameterInfo = node.parameters != null && !node.parameters.isEmpty();
 		var methodEntry = MethodEntry.parse(classNode.name, node.name, node.desc);
 		var paramsByTarget = new HashMap<LocalVariableEntry, LocalVariableEntry>();
@@ -135,7 +139,7 @@ public class DelegateParametersIndex extends Index {
 
 							if (targetClass != null) {
 								var targetMethod = AsmUtil.getMethod(targetClass, methodInsn.name, methodInsn.desc);
-								if (targetMethod.isEmpty() || targetMethod.get().localVariables == null) {
+								if (targetMethod.isEmpty() || AsmUtil.matchAccess(targetMethod.get(), ACC_SYNTHETIC) || targetMethod.get().localVariables == null) {
 									continue;
 								}
 
