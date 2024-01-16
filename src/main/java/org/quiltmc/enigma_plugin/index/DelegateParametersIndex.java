@@ -70,8 +70,7 @@ public class DelegateParametersIndex extends Index {
 	public void visitMethodNode(ClassProvider classProvider, ClassNode classNode, MethodNode node) throws AnalyzerException {
 		var hasParameterInfo = node.parameters != null && !node.parameters.isEmpty();
 		var methodEntry = MethodEntry.parse(classNode.name, node.name, node.desc);
-		var localLinks = new HashMap<LocalVariableEntry, LocalVariableEntry>();
-		var invalidTargets = new HashSet<LocalVariableEntry>();
+		var paramsByTarget = new HashMap<LocalVariableEntry, LocalVariableEntry>();
 
 		var frames = new Analyzer<>(new LocalVariableInterpreter()).analyze(classNode.name, node);
 		var instructions = node.instructions;
@@ -111,26 +110,29 @@ public class DelegateParametersIndex extends Index {
 							continue;
 						}
 
-						// If an entry was already linked to within this method, invalidate it and skip
+						// If another entry was linked to the same one inside this method, remove it and skip this one
 						var targetEntry = new LocalVariableEntry(entry, local);
-						if (localLinks.containsKey(targetEntry)) {
-							invalidTargets.add(targetEntry);
-							var prevEntry = localLinks.remove(targetEntry);
-							this.invalidate(prevEntry);
-							continue;
-						} else if (invalidTargets.contains(targetEntry)) {
+						if (paramsByTarget.containsKey(targetEntry)) {
+							var otherParam = paramsByTarget.get(targetEntry);
+
+							if (otherParam != null && !paramEntry.equals(otherParam)) {
+								paramsByTarget.put(targetEntry, null);
+								this.remove(otherParam);
+							}
+
 							continue;
 						}
 
-						if (!this.tryLink(paramEntry, targetEntry)) {
-							continue;
+						if (this.tryLink(paramEntry, targetEntry)) {
+							paramsByTarget.put(targetEntry, paramEntry);
 						} else {
-							localLinks.put(targetEntry, paramEntry);
+							continue;
 						}
 
 						// Try to load a variable name directly from a class file
 						if (!methodInsn.owner.startsWith(classNode.name) && !classNode.name.startsWith(methodInsn.owner)) {
 							var targetClass = classProvider.get(methodInsn.owner);
+
 							if (targetClass != null) {
 								var targetMethod = AsmUtil.getMethod(targetClass, methodInsn.name, methodInsn.desc);
 								if (targetMethod.isEmpty() || targetMethod.get().localVariables == null) {
@@ -176,12 +178,19 @@ public class DelegateParametersIndex extends Index {
 
 	private void invalidate(LocalVariableEntry paramEntry) {
 		this.invalidParameters.add(paramEntry);
+
+		this.remove(paramEntry);
+	}
+
+	private void remove(LocalVariableEntry paramEntry) {
 		this.parameterNames.remove(paramEntry);
 
 		var target = this.linkedParameters.remove(paramEntry);
-		var targetLinks = this.parameterLinks.get(target);
-		if (!targetLinks.isEmpty()) {
-			targetLinks.remove(paramEntry);
+		if (target != null) {
+			var targetLinks = this.parameterLinks.get(target);
+			if (!targetLinks.isEmpty()) {
+				targetLinks.remove(paramEntry);
+			}
 		}
 	}
 
