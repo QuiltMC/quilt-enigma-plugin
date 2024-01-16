@@ -21,10 +21,12 @@ import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.index.DelegateParametersIndex;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.tinylog.Logger;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class DelegateParametersNameProposer extends NameProposer {
@@ -89,6 +91,8 @@ public class DelegateParametersNameProposer extends NameProposer {
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
 		// Mappings loaded
 		if (obfEntry == null) {
+			var namesByMethod = new HashMap<MethodEntry, Map<String, LocalVariableEntry>>();
+
 			for (var entry : this.index.getKeys()) {
 				if (this.hasJarProposal(remapper, entry)) {
 					continue;
@@ -97,7 +101,22 @@ public class DelegateParametersNameProposer extends NameProposer {
 				var name = this.resolveName(remapper, mappings, entry);
 
 				if (name != null) {
-					this.insertDynamicProposal(mappings, entry, name);
+					var names = namesByMethod.computeIfAbsent(entry.getParent(), e -> new HashMap<>());
+
+					if (!names.containsKey(name)) {
+						names.put(name, entry);
+					} else {
+						// Duplicated names should not be used in any entry
+						names.remove(name);
+					}
+				}
+			}
+
+			for (var method : namesByMethod.keySet()) {
+				var parameterNames = namesByMethod.get(method);
+
+				for (var name : parameterNames.keySet()) {
+					this.insertDynamicProposal(mappings, parameterNames.get(name), name);
 				}
 			}
 

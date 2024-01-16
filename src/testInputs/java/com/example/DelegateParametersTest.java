@@ -57,4 +57,16 @@ public class DelegateParametersTest {
 	public static int addFourAbs(int a, int b, int c, int d) {
 		return addTwoAbs(a, b) + addTwoAbs(c, d);
 	}
+
+	public static int abs1(int a) {
+		return Math.abs(a);
+	}
+
+	public static int abs2(int a) {
+		return Math.abs(a);
+	}
+
+	public static int twoAbs(int a, int b) {
+		return abs1(a) - abs2(b);
+	}
 }

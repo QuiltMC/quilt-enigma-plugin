@@ -265,6 +265,10 @@ public class NameProposalTest {
 		assertNotProposed(localVar(method(classEntry, "a", "(IIII)I"), 2));
 		assertNotProposed(localVar(method(classEntry, "a", "(IIII)I"), 3));
 
+		// If multiple parameters would have the same name, don't name any of them
+		assertNotProposed(localVar(method(classEntry, "b", "(II)I"), 0));
+		assertNotProposed(localVar(method(classEntry, "b", "(II)I"), 1));
+
 		classEntry = new ClassEntry(classEntry, "a");
 
 		assertDynamicProposal("val", localVar(method(classEntry, "<init>", "(I)V"), 1));
