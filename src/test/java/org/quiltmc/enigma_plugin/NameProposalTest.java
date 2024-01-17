@@ -75,6 +75,16 @@ public class NameProposalTest {
 		Assertions.assertEquals(EntryMapping.DEFAULT, mapping);
 	}
 
+	public static void assertNotProposedBy(Entry<?> entry, String unexpectedSourceProposerId) {
+		var mapping = remapper.getMapping(entry);
+		Assertions.assertNotNull(mapping);
+		if (mapping.sourcePluginId() != null) {
+			Assertions.assertNotEquals(QuiltEnigmaPlugin.NAME_PROPOSAL_SERVICE_ID + "/" + unexpectedSourceProposerId, mapping.sourcePluginId());
+		} else {
+			Assertions.assertEquals(EntryMapping.DEFAULT, mapping);
+		}
+	}
+
 	@Test
 	public void testRecordNames() {
 		var classEntry = new ClassEntry("com/a/d");
@@ -87,6 +97,13 @@ public class NameProposalTest {
 
 		assertProposal("s", field(classEntry, "d", "Ljava/util/Optional;"));
 		assertProposal("s", method(classEntry, "c", "()Ljava/util/Optional;"));
+
+		// Overridden component getters could return other components, there's no way to be sure which (overridden) getter corresponds to which component
+		classEntry = new ClassEntry(classEntry, "a");
+
+		assertNotProposedBy(method(classEntry, "a", "()D"), "records");
+		assertNotProposed(method(classEntry, "b", "()D"));
+		assertProposal("value", method(classEntry, "c", "()I"));
 
 		var withCodecEntry = new ClassEntry("com/a/a$a");
 
