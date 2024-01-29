@@ -17,12 +17,13 @@
 package org.quiltmc.enigma_plugin.index;
 
 import org.jetbrains.annotations.TestOnly;
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
-import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.Analyzer;
@@ -30,13 +31,14 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.SourceInterpreter;
 import org.objectweb.asm.tree.analysis.SourceValue;
+import org.quiltmc.enigma.api.service.EnigmaServiceContext;
+import org.quiltmc.enigma.api.service.JarIndexerService;
 import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
 import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Type;
+import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.CasingUtil;
 import org.tinylog.Logger;
@@ -47,7 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class CodecIndex implements Index {
+public class CodecIndex extends Index {
 	private static final List<MethodInfo> CODEC_FIELD_METHODS = List.of(
 			new MethodInfo("fieldOf", "(Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;")
 	);
@@ -79,7 +81,16 @@ public class CodecIndex implements Index {
 	private final Map<MethodEntry, String> methodNames = new HashMap<>();
 
 	public CodecIndex() {
+		super(Arguments.DISABLE_CODECS);
 		this.analyzer = new Analyzer<>(new SourceInterpreter());
+	}
+
+	@Override
+	public void withContext(EnigmaServiceContext<JarIndexerService> context) {
+		super.withContext(context);
+
+		List<String> codecs = context.getMultipleArguments(Arguments.CUSTOM_CODECS).orElse(List.of());
+		this.addCustomCodecs(codecs);
 	}
 
 	public void addCustomCodecs(List<String> customCodecClasses) {
@@ -113,55 +124,43 @@ public class CodecIndex implements Index {
 
 		for (int i = 1; i < instructions.size() && i < frames.length - 1; i++) {
 			AbstractInsnNode insn = instructions.get(i);
-			if (insn instanceof MethodInsnNode mInsn && this.isCodecFieldMethod(mInsn)) {
-				// Logger.info(mInsn.getOpcode() + " " + mInsn.owner + "." + mInsn.name + " " + mInsn.desc + " in " + parent.name + "." + node.name + " " + node.desc + " (" + i + ")");
-				Frame<SourceValue> frame = frames[i];
-
+			if (insn instanceof MethodInsnNode methodInsn && this.isCodecFieldMethod(methodInsn)) {
+				// Logger.info(methodInsn.getOpcode() + " " + methodInsn.owner + "." + methodInsn.name + " " + methodInsn.desc + " in " + parent.name + "." + node.name + " " + node.desc + " (" + i + ")");
 				// Find the field name in the stack
-				String name = null;
-				for (int j = frame.getStackSize() - 1; j >= 0 && name == null; j--) { // Start searching from the top of the stack
-					SourceValue value = frame.getStack(j);
-					for (AbstractInsnNode insn2 : value.insns) {
-						if (insn2 instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String s && !s.isBlank()) {
-							name = s;
-							// Logger.info("Found name \"" + name + "\"");
-							break;
-						}
-					}
-				}
+				String name = AsmUtil.shallowSearchStringCstInStack(instructions, insn, frames);
 
-				if (name == null || name.isEmpty()) {
+				if (name == null) {
 					continue;
 				}
 
-				MethodInsnNode codecFieldInsn = mInsn;
+				MethodInsnNode codecInsn = methodInsn;
 				// Find a forGetter call
 				for (int j = i + 1; j < instructions.size(); j++) {
-					// Make sure the codec field is still in the stack
-					Frame<SourceValue> frame2 = frames[j];
-					if (frame2 == null) {
+					Frame<SourceValue> frame = frames[j];
+					if (frame == null) {
 						continue;
 					}
 
-					int fieldIndex = -1;
-					for (int k = 0; k < frame2.getStackSize(); k++) {
-						SourceValue value = frame2.getStack(k);
+					// Make sure the field codec is still in the stack
+					int codecInsnIndex = -1;
+					for (int k = 0; k < frame.getStackSize(); k++) {
+						SourceValue value = frame.getStack(k);
 						for (AbstractInsnNode insn2 : value.insns) {
-							if (insn2 == codecFieldInsn) {
-								fieldIndex = k;
+							if (insn2 == codecInsn) {
+								codecInsnIndex = k;
 								break;
 							}
 						}
 					}
 
-					if (fieldIndex == -1) {
+					if (codecInsnIndex == -1) {
 						break;
 					}
 
 					AbstractInsnNode insn2 = instructions.get(j);
-					if (insn2 instanceof MethodInsnNode mInsn2) {
-						if (mInsn2.owner.equals(FOR_GETTER_METHOD_OWNER) && FOR_GETTER_METHOD.matches(mInsn2)) {
-							// Logger.info("Found forGetter call " + mInsn2.getOpcode() + " (" + j + ")");
+					if (insn2 instanceof MethodInsnNode methodInsn2) {
+						if (methodInsn2.owner.equals(FOR_GETTER_METHOD_OWNER) && FOR_GETTER_METHOD.matches(methodInsn2)) {
+							// Logger.info("Found forGetter call " + methodInsn2.getOpcode() + " (" + j + ")");
 							AbstractInsnNode getterInsn = instructions.get(j - 1);
 							if (!(getterInsn instanceof InvokeDynamicInsnNode getterInvokeInsn)) {
 								continue;
@@ -171,25 +170,28 @@ public class CodecIndex implements Index {
 							this.visitGetterInvokeDynamicInsn(parent, getterInvokeInsn, name);
 							break;
 						} else {
-							// Update the codec field insn if needed
-							Type type = Type.getMethodType(mInsn2.desc);
+							// Check the return type of the method is a codec
+							Type type = Type.getMethodType(methodInsn2.desc);
 							Type ret = type.getReturnType();
 							if (ret.getSort() != Type.OBJECT || !this.isCodecClass(ret.getInternalName())) {
 								continue;
 							}
 
-							boolean hasThis = mInsn2.getOpcode() != INVOKESTATIC;
+							// Update the insn returning the codec if needed
+							// For example, `fieldOf("foo").orElse(0)` would remove the `fieldOf` instruction from the stack, so now we have to track the `orElse` instruction
+							boolean hasThis = methodInsn2.getOpcode() != INVOKESTATIC;
 							int argsSize = type.getArgumentsAndReturnSizes() >> 2;
 							// Skip the first argument (automatically-added 'this' pointer) if the method doesn't have one (is static)
-							int offset = (hasThis ? 0 : 1) + frame2.getStackSize() - argsSize;
+							int offset = (hasThis ? 0 : 1) + frame.getStackSize() - argsSize;
 
-							// The first argument 'this' may be our field
-							if (hasThis && fieldIndex == offset) {
-								// Logger.info("Found codec field call " + mInsn2.getOpcode() + " (" + j + ")");
-								codecFieldInsn = mInsn2;
+							// The first argument 'this' may be the codec
+							if (hasThis && codecInsnIndex == offset) {
+								// Logger.info("Found field codec call " + methodInsn2.getOpcode() + " (" + j + ")");
+								codecInsn = methodInsn2;
 								continue;
 							}
 
+							// If the method is static, check the args passed to it to check if the codec was one of them
 							Type[] args = type.getArgumentTypes();
 							for (int k = 0; k < args.length; k++) {
 								if (args[k].getSort() != Type.OBJECT || !this.isCodecClass(args[k].getInternalName())) {
@@ -197,9 +199,10 @@ public class CodecIndex implements Index {
 								}
 
 								// Offset by one slot if there's a 'this' pointer
-								if (fieldIndex == offset + k + (hasThis ? 1 : 0)) {
-									// Logger.info("Found codec field call " + mInsn2.getOpcode() + " (" + j + ")");
-									codecFieldInsn = mInsn2;
+								if (codecInsnIndex == offset + k + (hasThis ? 1 : 0)) {
+									// The codec was passed to a static method, track the result of that method
+									// Logger.info("Found field codec consuming call " + methodInsn2.getOpcode() + " (" + j + ")");
+									codecInsn = methodInsn2;
 									break;
 								}
 							}
@@ -211,6 +214,8 @@ public class CodecIndex implements Index {
 	}
 
 	private void visitGetterInvokeDynamicInsn(ClassNode parent, InvokeDynamicInsnNode insn, String name) {
+		// Last three args for LambdaMetafactory.metafactory: the lambda method descriptor, a handle to the lambda impl, and the lambda method descriptor to be enforced at runtime
+		// We only need the second to last arg, the handle to the getter lambda impl
 		if (insn.bsmArgs.length != 3) {
 			return;
 		}
@@ -223,10 +228,13 @@ public class CodecIndex implements Index {
 		var parentEntry = new ClassEntry(parent.name);
 		String camelCaseName = CasingUtil.toCamelCase(name);
 		String getterName = "get" + camelCaseName.substring(0, 1).toUpperCase() + camelCaseName.substring(1);
+
 		if (getterHandle.getTag() == H_INVOKEVIRTUAL) {
+			// Name the getter
 			var entry = new MethodEntry(parentEntry, getterHandle.getName(), new MethodDescriptor(getterHandle.getDesc()));
 			this.methodNames.put(entry, getterName);
 
+			// Try to find and name the field from the getter
 			AsmUtil.getMethod(parent, getterHandle.getName(), getterHandle.getDesc())
 					.flatMap(m -> AsmUtil.getFieldFromGetter(parent, m))
 					.ifPresent(f -> {
@@ -234,21 +242,16 @@ public class CodecIndex implements Index {
 						this.fieldNames.put(fieldEntry, camelCaseName);
 					});
 		} else if (getterHandle.getTag() == H_INVOKESTATIC) {
-			MethodNode method = null;
-			for (MethodNode m : parent.methods) {
-				if (m.name.equals(getterHandle.getName()) && m.desc.equals(getterHandle.getDesc())) {
-					method = m;
-					break;
-				}
-			}
+			var method = AsmUtil.getMethod(parent, getterHandle.getName(), getterHandle.getDesc());
 
-			if (method == null) {
+			if (method.isEmpty()) {
 				return;
 			}
 
+			// Search a method or field in the lambda body
 			FieldInsnNode fieldInsn = null;
 			MethodInsnNode methodInsn = null;
-			InsnList instructions = method.instructions;
+			InsnList instructions = method.get().instructions;
 			for (int i = 0; i < instructions.size(); i++) {
 				AbstractInsnNode insn2 = instructions.get(i);
 				if (insn2 instanceof FieldInsnNode fInsn && fInsn.owner.equals(parent.name)) {
@@ -259,12 +262,15 @@ public class CodecIndex implements Index {
 			}
 
 			if (fieldInsn != null) {
+				// Name the field directly
 				var entry = new FieldEntry(parentEntry, fieldInsn.name, new TypeDescriptor(fieldInsn.desc));
 				this.fieldNames.put(entry, camelCaseName);
 			} else if (methodInsn != null) {
+				// Name the getter
 				var entry = new MethodEntry(parentEntry, methodInsn.name, new MethodDescriptor(methodInsn.desc));
 				this.methodNames.put(entry, getterName);
 
+				// Try to find and name the field from the getter
 				AsmUtil.getMethod(parent, methodInsn.name, methodInsn.desc)
 						.flatMap(m -> AsmUtil.getFieldFromGetter(parent, m))
 						.ifPresent(f -> {

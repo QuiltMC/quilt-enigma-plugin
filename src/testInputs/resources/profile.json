@@ -20,7 +20,8 @@
         "args": {
           "disable_constant_fields": "false",
           "disable_records": "false",
-          "disable_codecs": "false"
+          "disable_codecs": "false",
+          "simple_type_field_names_path": "./simple_type_field_names.json5"
         }
       }
     ]

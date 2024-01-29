@@ -17,6 +17,8 @@
 package org.quiltmc.enigma_plugin.index.simple_type_single;
 
 import org.quiltmc.enigma.api.class_provider.ClassProvider;
+import org.quiltmc.enigma.api.service.EnigmaServiceContext;
+import org.quiltmc.enigma.api.service.JarIndexerService;
 import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
 import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
@@ -25,12 +27,13 @@ import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntr
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.ParameterNode;
+import org.quiltmc.enigma_plugin.Arguments;
+import org.quiltmc.enigma_plugin.index.Index;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Name;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.Descriptors;
@@ -47,11 +50,23 @@ import java.util.Set;
  * Index of fields/local variables that are of a rather simple type (as-in easy to guess the variable name) and which
  * they are entirely unique within their context (no other fields/local vars in the same scope have the same type).
  */
-public class SimpleTypeSingleIndex implements Opcodes {
+public class SimpleTypeSingleIndex extends Index {
 	private final Map<LocalVariableEntry, String> parameters = new HashMap<>();
 	private final Map<FieldEntry, String> fields = new HashMap<>();
 	private final Map<ClassNode, Map<String, FieldBuildingEntry>> fieldCache = new HashMap<>();
 	private SimpleTypeFieldNamesRegistry registry;
+
+	public SimpleTypeSingleIndex() {
+		super(null);
+	}
+
+	@Override
+	public void withContext(EnigmaServiceContext<JarIndexerService> context) {
+		super.withContext(context);
+
+		this.loadRegistry(context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
+				.map(context::getPath).orElse(null));
+	}
 
 	public void loadRegistry(Path path) {
 		if (path == null) {
@@ -63,6 +78,7 @@ public class SimpleTypeSingleIndex implements Opcodes {
 		this.registry.read();
 	}
 
+	@Override
 	public boolean isEnabled() {
 		return this.registry != null;
 	}
@@ -100,13 +116,19 @@ public class SimpleTypeSingleIndex implements Opcodes {
 		return params;
 	}
 
-	public void visitClassNode(ClassProvider provider, ClassNode classNode) {
+	@Override
+	public void onIndexingEnded() {
+		this.dropCache();
+	}
+
+	@Override
+	public void visitClassNode(ClassProvider provider, ClassNode node) {
 		if (!this.isEnabled()) return;
 
-		var parentEntry = new ClassEntry(classNode.name);
+		var parentEntry = new ClassEntry(node.name);
 
-		this.collectMatchingFields(provider, classNode).forEach((name, entry) -> {
-			if (entry != FieldBuildingEntry.NULL) {
+		this.collectMatchingFields(provider, node).forEach((name, entry) -> {
+			if (!entry.isNull()) {
 				var fieldEntry = new FieldEntry(parentEntry, entry.node().name, new TypeDescriptor(entry.node().desc));
 				this.fields.put(fieldEntry,
 						AsmUtil.matchAccess(entry.node(), ACC_STATIC, ACC_FINAL)
@@ -116,13 +138,14 @@ public class SimpleTypeSingleIndex implements Opcodes {
 			}
 		});
 
-		for (var method : classNode.methods) {
+		for (var method : node.methods) {
 			if (method.parameters == null) continue;
 
 			var methodDescriptor = new MethodDescriptor(method.desc);
 			var methodEntry = new MethodEntry(parentEntry, method.name, methodDescriptor);
 			var parameters = Descriptors.getParameters(method);
 
+			// Count the times a type is used in the descriptor
 			var types = new HashMap<Type, Integer>();
 
 			for (var param : parameters) {
@@ -135,6 +158,7 @@ public class SimpleTypeSingleIndex implements Opcodes {
 				});
 			}
 
+			// Don't propose names for types appearing more than once
 			var bannedTypes = new HashSet<Type>();
 			types.forEach((type, amount) -> {
 				if (amount > 1) bannedTypes.add(type);
@@ -144,7 +168,7 @@ public class SimpleTypeSingleIndex implements Opcodes {
 				if (!param.isNull()) {
 					boolean isStatic = AsmUtil.maskMatch(method.access, ACC_STATIC);
 					int index = param.index() + (isStatic ? 0 : 1);
-					var paramEntry = new LocalVariableEntry(methodEntry, index, "", true, null);
+					var paramEntry = new LocalVariableEntry(methodEntry, index);
 					this.parameters.put(paramEntry, name);
 				}
 			});
@@ -159,6 +183,7 @@ public class SimpleTypeSingleIndex implements Opcodes {
 
 		var knownFields = new HashMap<String, FieldBuildingEntry>();
 		for (var field : classNode.fields) {
+			// Collect names from the outer class as initial context
 			if (classNode.outerClass != null) {
 				ClassNode outerClass = classProvider.get(classNode.outerClass);
 
@@ -172,20 +197,29 @@ public class SimpleTypeSingleIndex implements Opcodes {
 
 			var entry = this.registry.getEntry(type);
 			if (entry != null) {
+				// Check if there's a field by the default name
 				var existingEntry = knownFields.get(entry.name().local());
 
 				if (existingEntry != null) {
+					// If the existing field is of the same type, remove it and skip this one
+					if (existingEntry.entry() == entry) {
+						knownFields.put(entry.name().local(), FieldBuildingEntry.createNull(entry));
+						continue;
+					}
+
+					// If there's already a field by the default name, find a fallback name
 					Name foundFallback = entry.findFallback(fallback -> !knownFields.containsKey(fallback.local()));
 
 					if (foundFallback != null) {
 						knownFields.put(foundFallback.local(), new FieldBuildingEntry(field, foundFallback, entry));
 
-						if (existingEntry != FieldBuildingEntry.NULL && existingEntry.entry().exclusive()) {
+						// If the existing entry is exclusive, remove it and if possible replace it with one of its fallbacks
+						if (!existingEntry.isNull() && existingEntry.entry().exclusive()) {
 							Name replacement = existingEntry.entry().findFallback(
 									fallback -> !knownFields.containsKey(fallback.local())
 							);
 
-							knownFields.put(entry.name().local(), FieldBuildingEntry.NULL);
+							knownFields.put(entry.name().local(), FieldBuildingEntry.createNull(entry));
 
 							if (replacement != null) {
 								knownFields.put(replacement.local(),
@@ -194,9 +228,11 @@ public class SimpleTypeSingleIndex implements Opcodes {
 							}
 						}
 					} else {
-						knownFields.put(entry.name().local(), FieldBuildingEntry.NULL);
+						// If a fallback name couldn't be found, remove the name for the existing field
+						knownFields.put(entry.name().local(), FieldBuildingEntry.createNull(entry));
 					}
 				} else {
+					// Another field with the name doesn't exist, proceed as usual
 					knownFields.put(entry.name().local(), new FieldBuildingEntry(field, entry.name(), entry));
 				}
 			}
@@ -262,7 +298,13 @@ public class SimpleTypeSingleIndex implements Opcodes {
 	}
 
 	private record FieldBuildingEntry(FieldNode node, Name name, SimpleTypeFieldNamesRegistry.Entry entry) {
-		public static final FieldBuildingEntry NULL = new FieldBuildingEntry(null, null, null);
+		public static FieldBuildingEntry createNull(SimpleTypeFieldNamesRegistry.Entry entry) {
+			return new FieldBuildingEntry(null, null, entry);
+		}
+
+		public boolean isNull() {
+			return this.node == null;
+		}
 	}
 
 	private record ParameterBuildingEntry(ParameterNode node, int index, SimpleTypeFieldNamesRegistry.Entry entry) {

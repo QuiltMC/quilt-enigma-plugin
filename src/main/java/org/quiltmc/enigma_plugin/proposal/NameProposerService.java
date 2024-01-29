@@ -25,6 +25,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
+import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,12 +45,13 @@ public class NameProposerService implements NameProposalService {
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CODECS, CodecNameProposer::new);
 		this.addIfNotDisabled(context, Arguments.DISABLE_MAP_NON_HASHED, MojangNameProposer::new);
 
-		if (indexer.getSimpleTypeSingleIndex().isEnabled()) {
+		if (indexer.getIndex(SimpleTypeSingleIndex.class).isEnabled()) {
 			this.nameProposers.add(new SimpleTypeFieldNameProposer(indexer));
 		}
 
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CONSTRUCTOR_PARAMS, ConstructorParamsNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_GETTER_SETTER, GetterSetterNameProposer::new);
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_DELEGATE_PARAMS, DelegateParametersNameProposer::new);
 	}
 
 	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer> factory) {
@@ -57,13 +59,13 @@ public class NameProposerService implements NameProposalService {
 	}
 
 	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, JarIndexer indexer, String name, Function<JarIndexer, NameProposer> factory) {
-		if (!Arguments.isDisabled(context, name)) {
+		if (!Arguments.getBoolean(context, name)) {
 			this.nameProposers.add(factory.apply(indexer));
 		}
 	}
 
 	private void addIfNotDisabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer> factory) {
-		if (!Arguments.isDisabled(context, name, true)) {
+		if (!Arguments.getBoolean(context, name, true)) {
 			this.nameProposers.add(factory.get());
 		}
 	}

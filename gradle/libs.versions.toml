@@ -1,10 +1,13 @@
 [versions]
-enigma = "2.1.0"
+enigma = "2.2.0"
 
 asm = "9.6"
 quilt_json5 = "1.0.3"
 tinylog = "2.6.2"
 annotations = "23.0.0"
+
+junit = "5.9.3"
+hamcrest = "2.2"
 
 dfu = "4.1.27"
 
@@ -19,6 +22,10 @@ asm_util = { module = "org.ow2.asm:asm-util", version.ref = "asm" }
 quilt_json5 = { module = "org.quiltmc:quilt-json5", version.ref = "quilt_json5" }
 tinylog = { module = "org.tinylog:tinylog-api", version.ref = "tinylog" }
 annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
+
+junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit_engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 
 dfu = { module = "com.mojang:datafixerupper", version.ref = "dfu" }
 

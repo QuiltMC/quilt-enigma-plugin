@@ -30,6 +30,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Handle;
+import org.quiltmc.enigma_plugin.Arguments;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,11 +41,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class RecordIndex implements Index {
+public class RecordIndex extends Index {
 	private static final Handle TO_STRING_HANDLE = new Handle(H_INVOKESTATIC, "java/lang/runtime/ObjectMethods", "bootstrap", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;", false);
 	private static final Handle HASH_CODE_HANDLE = new Handle(H_INVOKESTATIC, "java/lang/runtime/ObjectMethods", "bootstrap", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;", false);
 	private static final Handle EQUALS_HANDLE = new Handle(H_INVOKESTATIC, "java/lang/runtime/ObjectMethods", "bootstrap", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;", false);
 	private final Map<ClassEntry, RecordComponentData> records = new HashMap<>();
+
+	public RecordIndex() {
+		super(Arguments.DISABLE_RECORDS);
+	}
 
 	private static ClassEntry getClassEntry(ClassNode node) {
 		return new ClassEntry(node.name);
@@ -179,6 +184,10 @@ public class RecordIndex implements Index {
 
 	@Override
 	public void visitClassNode(ClassNode node) {
+		if ((node.access & ACC_RECORD) == 0 && !node.superName.equals("java/lang/Record")) {
+			return;
+		}
+
 		ClassEntry classEntry = getClassEntry(node);
 		if (this.records.containsKey(classEntry) && this.records.get(classEntry).hasComponents()) {
 			return;

@@ -33,7 +33,7 @@ public class ConstructorParamsNameProposer extends NameProposer {
 
 	public ConstructorParamsNameProposer(JarIndexer index) {
 		super(ID);
-		this.index = index.getConstructorParametersIndex();
+		this.index = index.getIndex(ConstructorParametersIndex.class);
 	}
 
 	@Override

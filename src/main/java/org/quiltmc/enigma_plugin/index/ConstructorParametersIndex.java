@@ -28,6 +28,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.Opcodes;
+import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.util.Descriptors;
 
 import java.util.HashMap;
@@ -35,15 +36,19 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class ConstructorParametersIndex implements Index {
+public class ConstructorParametersIndex extends Index {
 	private final Map<LocalVariableEntry, FieldEntry> entries = new HashMap<>();
 	private final Map<FieldEntry, Set<LocalVariableEntry>> entriesByField = new HashMap<>();
 
+	public ConstructorParametersIndex() {
+		super(Arguments.DISABLE_CONSTRUCTOR_PARAMS);
+	}
+
 	@Override
-	public void visitClassNode(ClassNode classNode) {
-		for (var method : classNode.methods) {
+	public void visitClassNode(ClassNode node) {
+		for (var method : node.methods) {
 			if (method.name.equals("<init>")) {
-				this.visitConstructor(classNode, method);
+				this.visitConstructor(node, method);
 			}
 		}
 	}
@@ -75,7 +80,7 @@ public class ConstructorParametersIndex implements Index {
 						continue; // This load opcode does not correspond to a parameter.
 					}
 
-					var param = new LocalVariableEntry(methodEntry, loadInst.var, "", true, null);
+					var param = new LocalVariableEntry(methodEntry, loadInst.var);
 					var field = new FieldEntry(classEntry, fieldInst.name, new TypeDescriptor(fieldInst.desc));
 					this.entries.put(param, field);
 					this.entriesByField.computeIfAbsent(field, f -> new HashSet<>()).add(param);

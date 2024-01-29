@@ -26,6 +26,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.Descriptors;
 
@@ -34,14 +35,18 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class GetterSetterIndex implements Index {
+public class GetterSetterIndex extends Index {
 	private final Map<MethodEntry, FieldEntry> linked = new HashMap<>();
 	private final Map<LocalVariableEntry, FieldEntry> linkedSetterParams = new HashMap<>();
 	private final Map<FieldEntry, Set<Entry<?>>> links = new HashMap<>();
 
+	public GetterSetterIndex() {
+		super(Arguments.DISABLE_GETTER_SETTER);
+	}
+
 	@Override
-	public void visitClassNode(ClassNode classNode) {
-		for (var method : classNode.methods) {
+	public void visitClassNode(ClassNode node) {
+		for (var method : node.methods) {
 			if (!AsmUtil.matchAccess(method, ACC_STATIC) && !AsmUtil.matchAccess(method, ACC_NATIVE)) {
 				var descriptor = new MethodDescriptor(method.desc);
 
@@ -51,18 +56,18 @@ public class GetterSetterIndex implements Index {
 						continue; // Ignore booleans for now.
 					}
 
-					AsmUtil.getFieldFromSetter(classNode, method)
+					AsmUtil.getFieldFromSetter(node, method)
 							.ifPresent(field -> {
-								this.linkField(classNode, method, descriptor, field);
+								this.linkField(node, method, descriptor, field);
 							});
 				} else { // Potential getter.
 					if (descriptor.getReturnDesc().equals(Descriptors.BOOLEAN_TYPE)) {
 						continue; // Ignore booleans for now.
 					}
 
-					AsmUtil.getFieldFromGetter(classNode, method)
+					AsmUtil.getFieldFromGetter(node, method)
 							.ifPresent(field -> {
-								this.linkField(classNode, method, descriptor, field);
+								this.linkField(node, method, descriptor, field);
 							});
 				}
 			}
@@ -78,7 +83,7 @@ public class GetterSetterIndex implements Index {
 		this.links.computeIfAbsent(fieldEntry, f -> new HashSet<>()).add(methodEntry);
 
 		if (descriptor.getArgumentDescs().size() == 1) {
-			var paramEntry = new LocalVariableEntry(methodEntry, 1, "", true, null);
+			var paramEntry = new LocalVariableEntry(methodEntry, 1);
 			this.linkedSetterParams.put(paramEntry, fieldEntry);
 			this.links.get(fieldEntry).add(paramEntry);
 		}

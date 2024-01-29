@@ -20,21 +20,26 @@ import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.objectweb.asm.tree.ClassNode;
+import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class LoggerIndex implements Index {
+public class LoggerIndex extends Index {
 	private static final String LOGGER_TYPE = "Lorg/slf4j/Logger;";
 
 	private final Set<FieldEntry> fields = new HashSet<>();
 
-	@Override
-	public void visitClassNode(ClassNode parent) {
-		var parentEntry = new ClassEntry(parent.name);
+	public LoggerIndex() {
+		super(Arguments.DISABLE_LOGGER);
+	}
 
-		for (var field : parent.fields) {
+	@Override
+	public void visitClassNode(ClassNode node) {
+		var parentEntry = new ClassEntry(node.name);
+
+		for (var field : node.fields) {
 			if (AsmUtil.matchAccess(field, ACC_STATIC, ACC_FINAL)) {
 				if (field.desc.equals(LOGGER_TYPE)) {
 					var fieldEntry = new FieldEntry(parentEntry, field.name, new TypeDescriptor(field.desc));
