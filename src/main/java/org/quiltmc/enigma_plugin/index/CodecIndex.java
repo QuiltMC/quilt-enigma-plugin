@@ -74,8 +74,6 @@ public class CodecIndex extends Index {
 	);
 	private static final MethodInfo FOR_GETTER_METHOD = new MethodInfo("forGetter", "(Ljava/util/function/Function;)Lcom/mojang/serialization/codecs/RecordCodecBuilder;");
 	private static final String FOR_GETTER_METHOD_OWNER = "com/mojang/serialization/MapCodec";
-	private static final String GROUP_METHOD_OWNER = "com/mojang/serialization/codecs/RecordCodecBuilder$Instance";
-	private static final String GROUP_METHOD_NAME = "group";
 	private final Analyzer<SourceValue> analyzer;
 	private final Set<String> customCodecClasses = new HashSet<>();
 

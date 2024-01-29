@@ -33,8 +33,6 @@ repositories {
 		name 'Quilt Snapshots'
 		url 'https://maven.quiltmc.org/repository/snapshot/'
 	}
-	// TODO: Remove
-	maven { url 'https://maven.iotabread.dev/' }
 	mavenLocal()
 
 	// Enigma dependencies
