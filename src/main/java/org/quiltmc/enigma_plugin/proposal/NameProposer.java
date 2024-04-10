@@ -33,7 +33,11 @@ public abstract class NameProposer {
 	}
 
 	public String getSourcePluginId() {
-		return QuiltEnigmaPlugin.NAME_PROPOSAL_SERVICE_ID + "/" + this.id;
+		return getSourcePluginId(this.id);
+	}
+
+	public static String getSourcePluginId(String id) {
+		return QuiltEnigmaPlugin.NAME_PROPOSAL_SERVICE_ID + "/" + id;
 	}
 
 	public void insertProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, EntryMapping mapping) {

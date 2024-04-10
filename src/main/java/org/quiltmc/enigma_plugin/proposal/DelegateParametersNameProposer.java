@@ -27,10 +27,13 @@ import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.tinylog.Logger;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class DelegateParametersNameProposer extends NameProposer {
 	public static final String ID = "delegate_params";
+	private static final List<String> IGNORED_SOURCE_PLUGIN_IDS = Stream.of(ID, SimpleTypeFieldNameProposer.ID).map(NameProposer::getSourcePluginId).toList();
 	private final DelegateParametersIndex index;
 
 	public DelegateParametersNameProposer(JarIndexer index) {
@@ -40,6 +43,14 @@ public class DelegateParametersNameProposer extends NameProposer {
 
 	@Override
 	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+	}
+
+	private static boolean shouldNotIgnoreMapping(EntryMapping mapping) {
+		if (mapping == null) {
+			return false;
+		}
+
+		return mapping.sourcePluginId() == null || !IGNORED_SOURCE_PLUGIN_IDS.contains(mapping.sourcePluginId());
 	}
 
 	private String resolveName(EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings, LocalVariableEntry entry) {
@@ -53,11 +64,11 @@ public class DelegateParametersNameProposer extends NameProposer {
 		}
 
 		var mapping = remapper.getMapping(entry);
-		if (mapping.targetName() != null) {
+		if (mapping.targetName() != null && shouldNotIgnoreMapping(mapping)) {
 			return mapping.targetName();
 		} else {
 			mapping = mappings.get(entry);
-			if (mapping != null && mapping.targetName() != null) {
+			if (mapping != null && mapping.targetName() != null && shouldNotIgnoreMapping(mapping)) {
 				return mapping.targetName();
 			} else {
 				return this.resolveName(remapper, mappings, this.index.get(entry));

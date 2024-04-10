@@ -1,7 +1,7 @@
 [versions]
-enigma = "2.2.0"
+enigma = "2.3.0"
 
-asm = "9.6"
+asm = "9.8-20240409.145119-3"
 quilt_json5 = "1.0.3"
 tinylog = "2.6.2"
 annotations = "23.0.0"
