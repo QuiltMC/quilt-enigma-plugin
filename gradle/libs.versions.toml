@@ -1,8 +1,8 @@
 [versions]
-enigma = "2.3.0"
+enigma = "2.3.1"
 
-asm = "9.8-20240409.145119-3"
-quilt_json5 = "1.0.3"
+asm = "9.8-SNAPSHOT"
+quilt_json5 = "1.0.4+final"
 tinylog = "2.6.2"
 annotations = "23.0.0"
 
