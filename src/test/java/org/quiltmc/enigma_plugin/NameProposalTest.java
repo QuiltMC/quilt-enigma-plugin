@@ -48,7 +48,7 @@ public class NameProposalTest {
 		var profile = EnigmaProfile.read(PROFILE);
 		var enigma = Enigma.builder().setProfile(profile).build();
 
-		var project = enigma.openJar(JAR, new ClasspathClassProvider(), ProgressListener.none());
+		var project = enigma.openJar(JAR, new ClasspathClassProvider(), ProgressListener.createEmpty());
 		remapper = project.getRemapper();
 
 		// Manually fire dynamic proposals

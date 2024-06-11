@@ -18,8 +18,8 @@ package org.quiltmc.enigma_plugin.index.simple_type_single;
 
 import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma_plugin.util.CasingUtil;
-import org.quiltmc.json5.JsonReader;
-import org.quiltmc.json5.JsonToken;
+import org.quiltmc.parsers.json.JsonReader;
+import org.quiltmc.parsers.json.JsonToken;
 import org.tinylog.Logger;
 
 import java.io.IOException;

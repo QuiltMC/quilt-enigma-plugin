@@ -1,8 +1,8 @@
 [versions]
-enigma = "2.3.1"
+enigma = "2.4.0"
 
 asm = "9.8-SNAPSHOT"
-quilt_json5 = "1.0.4+final"
+quilt_json_parser = "0.3.0"
 tinylog = "2.6.2"
 annotations = "23.0.0"
 
@@ -19,7 +19,7 @@ asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
 asm_commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
 asm_tree = { module = "org.ow2.asm:asm-tree", version.ref = "asm" }
 asm_util = { module = "org.ow2.asm:asm-util", version.ref = "asm" }
-quilt_json5 = { module = "org.quiltmc:quilt-json5", version.ref = "quilt_json5" }
+quilt_json5 = { module = "org.quiltmc.parsers:json", version.ref = "quilt_json_parser" }
 tinylog = { module = "org.tinylog:tinylog-api", version.ref = "tinylog" }
 annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 
