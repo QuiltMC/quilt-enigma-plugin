@@ -34,6 +34,11 @@ public class SimpleTypeNamesTest {
 			public final ValueC valueC = new ValueC();
 		}
 
+		public static class Inheritance {
+			public final ValueDD valueD = new ValueDD();
+			public final ValueEE valueE = new ValueEE();
+		}
+
 		public static class Unique {
 			public static final Config CONFIG = new Config();
 			public static final StateA STATIC_STATE = new StateA();

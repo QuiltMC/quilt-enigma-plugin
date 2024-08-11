@@ -222,6 +222,10 @@ public class NameProposalTest {
 		assertProposal("valueC", field(owner, "h", "Lcom/a/b/i;"));
 
 		owner = new ClassEntry(fieldsClassEntry, "c");
+		assertProposal("valueD", field(owner, "a", "Lcom/a/b/k;"));
+		assertNotProposed(field(owner, "b", "Lcom/a/b/m;"));
+
+		owner = new ClassEntry(fieldsClassEntry, "d");
 		assertProposal("CONFIG", field(owner, "a", "Lcom/a/b/a;"));
 		assertProposal("STATIC_STATE", field(owner, "b", "Lcom/a/b/e;"));
 		assertProposal("value", field(owner, "c", "Lcom/a/b/i;"));
