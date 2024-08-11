@@ -66,5 +66,14 @@
         fallback: [
             "valueC"
         ]
+    },
+    "com/a/b/j": { // ValueD
+        local_name: "valueD",
+        exclusive: true,
+        inherit: true
+    },
+    "com/a/b/l": { // ValueE
+        local_name: "valueE",
+        exclusive: true
     }
 }

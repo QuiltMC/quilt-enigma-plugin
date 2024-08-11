@@ -70,6 +70,7 @@ public class SimpleTypeFieldNamesRegistry {
 						String localName = null;
 						String staticName = null;
 						boolean exclusive = false;
+						boolean inherit = false;
 						List<Name> fallback = Collections.emptyList();
 
 						reader.beginObject();
@@ -81,6 +82,7 @@ public class SimpleTypeFieldNamesRegistry {
 								case "local_name" -> localName = reader.nextString();
 								case "static_name" -> staticName = reader.nextString();
 								case "exclusive" -> exclusive = reader.nextBoolean();
+								case "inherit" -> inherit = reader.nextBoolean();
 								case "fallback" -> {
 									reader.beginArray();
 
@@ -101,7 +103,7 @@ public class SimpleTypeFieldNamesRegistry {
 
 						if (staticName == null) staticName = CasingUtil.toScreamingSnakeCase(localName);
 
-						this.entries.put(type, new Entry(type, new Name(localName, staticName), exclusive, fallback));
+						this.entries.put(type, new Entry(type, new Name(localName, staticName), exclusive, inherit, fallback));
 					}
 					default -> reader.skipValue();
 				}
@@ -154,9 +156,9 @@ public class SimpleTypeFieldNamesRegistry {
 		return list;
 	}
 
-	public record Entry(String type, Name name, boolean exclusive, List<Name> fallback) {
+	public record Entry(String type, Name name, boolean exclusive, boolean inherit, List<Name> fallback) {
 		public Entry(String type, String localName, String staticName) {
-			this(type, new Name(localName, staticName), false, Collections.emptyList());
+			this(type, new Name(localName, staticName), false, false, Collections.emptyList());
 		}
 
 		public @Nullable Name findFallback(Predicate<Name> predicate) {

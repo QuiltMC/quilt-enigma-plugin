@@ -261,6 +261,18 @@ public class NameProposalTest {
 		parent = method(owner, "a", "(Lcom/a/b/g;Lcom/a/b/g;)V");
 		assertNotProposed(localVar(parent, 0));
 		assertNotProposed(localVar(parent, 1));
+
+		parent = method(owner, "a", "(Lcom/a/b/j;)V");
+		assertProposal("valueD", localVar(parent, 0));
+
+		parent = method(owner, "a", "(Lcom/a/b/k;)V");
+		assertProposal("valueD", localVar(parent, 0));
+
+		parent = method(owner, "a", "(Lcom/a/b/l;)V");
+		assertProposal("valueE", localVar(parent, 0));
+
+		parent = method(owner, "a", "(Lcom/a/b/m;)V");
+		assertNotProposed(localVar(parent, 0));
 	}
 
 	@Test

@@ -9,6 +9,10 @@ import com.example.simple_type_names.StateB;
 import com.example.simple_type_names.ValueA;
 import com.example.simple_type_names.ValueB;
 import com.example.simple_type_names.ValueC;
+import com.example.simple_type_names.ValueD;
+import com.example.simple_type_names.ValueDD;
+import com.example.simple_type_names.ValueE;
+import com.example.simple_type_names.ValueEE;
 
 public class SimpleTypeNamesTest {
 	public static class Fields {
@@ -63,6 +67,18 @@ public class SimpleTypeNamesTest {
 		}
 
 		public static void value(ValueA unnamedValueA, ValueA unnamedValueA2) {
+		}
+
+		public static void value(ValueD valueD) {
+		}
+
+		public static void value(ValueDD valueD) {
+		}
+
+		public static void value(ValueE valueD) {
+		}
+
+		public static void value(ValueEE valueD) {
 		}
 	}
 }
