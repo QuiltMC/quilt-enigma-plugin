@@ -74,7 +74,7 @@ public class SimpleTypeSingleIndex extends Index {
 
 	@Override
 	public void setIndexingContext(Set<String> classes, JarIndex jarIndex) {
-		inheritance = jarIndex.getIndex(InheritanceIndex.class);
+		this.inheritance = jarIndex.getIndex(InheritanceIndex.class);
 	}
 
 	public void loadRegistry(Path path) {
@@ -204,7 +204,7 @@ public class SimpleTypeSingleIndex extends Index {
 			if (field.desc.charAt(0) != 'L') continue;
 			String type = field.desc.substring(1, field.desc.length() - 1);
 
-			var entry = getEntry(type);
+			var entry = this.getEntry(type);
 			if (entry != null) {
 				// Check if there's a field by the default name
 				var existingEntry = knownFields.get(entry.name().local());
@@ -266,7 +266,7 @@ public class SimpleTypeSingleIndex extends Index {
 			if (desc.charAt(0) != 'L') continue;
 			String type = desc.substring(1, desc.length() - 1);
 
-			var entry = getEntry(type);
+			var entry = this.getEntry(type);
 			if (entry != null) {
 				ParameterBuildingEntry existingEntry = knownParameters.get(entry.name().local());
 
