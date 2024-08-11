@@ -266,17 +266,27 @@ public class NameProposalTest {
 		assertNotProposed(localVar(parent, 0));
 		assertNotProposed(localVar(parent, 1));
 
+		// Check that both the parent and child class have names
 		parent = method(owner, "a", "(Lcom/a/b/j;)V");
 		assertProposal("valueD", localVar(parent, 0));
 
 		parent = method(owner, "a", "(Lcom/a/b/k;)V");
 		assertProposal("valueD", localVar(parent, 0));
 
+		// Check that just the parent class has a name
 		parent = method(owner, "a", "(Lcom/a/b/l;)V");
 		assertProposal("valueE", localVar(parent, 0));
 
 		parent = method(owner, "a", "(Lcom/a/b/m;)V");
 		assertNotProposed(localVar(parent, 0));
+
+		// Check that indexing order doesn't affect inheritance tree
+		owner = new ClassEntry("com/a/b/j");
+		parent = method(owner, "a", "(Lcom/a/b/j;)V");
+		assertProposal("valueD", localVar(parent, 0));
+
+		parent = method(owner, "a", "(Lcom/a/b/k;)V");
+		assertProposal("valueD", localVar(parent, 0));
 	}
 
 	@Test
