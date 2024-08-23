@@ -16,6 +16,8 @@
 
 package org.quiltmc.enigma_plugin.index.simple_type_single;
 
+import org.quiltmc.enigma.api.analysis.index.jar.InheritanceIndex;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.class_provider.ClassProvider;
 import org.quiltmc.enigma.api.service.EnigmaServiceContext;
 import org.quiltmc.enigma.api.service.JarIndexerService;
@@ -56,6 +58,8 @@ public class SimpleTypeSingleIndex extends Index {
 	private final Map<ClassNode, Map<String, FieldBuildingEntry>> fieldCache = new HashMap<>();
 	private SimpleTypeFieldNamesRegistry registry;
 
+	private InheritanceIndex inheritance;
+
 	public SimpleTypeSingleIndex() {
 		super(null);
 	}
@@ -66,6 +70,11 @@ public class SimpleTypeSingleIndex extends Index {
 
 		this.loadRegistry(context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
 				.map(context::getPath).orElse(null));
+	}
+
+	@Override
+	public void setIndexingContext(Set<String> classes, JarIndex jarIndex) {
+		this.inheritance = jarIndex.getIndex(InheritanceIndex.class);
 	}
 
 	public void loadRegistry(Path path) {
@@ -195,7 +204,7 @@ public class SimpleTypeSingleIndex extends Index {
 			if (field.desc.charAt(0) != 'L') continue;
 			String type = field.desc.substring(1, field.desc.length() - 1);
 
-			var entry = this.registry.getEntry(type);
+			var entry = this.getEntry(type);
 			if (entry != null) {
 				// Check if there's a field by the default name
 				var existingEntry = knownFields.get(entry.name().local());
@@ -257,7 +266,7 @@ public class SimpleTypeSingleIndex extends Index {
 			if (desc.charAt(0) != 'L') continue;
 			String type = desc.substring(1, desc.length() - 1);
 
-			var entry = this.registry.getEntry(type);
+			var entry = this.getEntry(type);
 			if (entry != null) {
 				ParameterBuildingEntry existingEntry = knownParameters.get(entry.name().local());
 
@@ -295,6 +304,28 @@ public class SimpleTypeSingleIndex extends Index {
 		}
 
 		return knownParameters;
+	}
+
+	@Nullable
+	private SimpleTypeFieldNamesRegistry.Entry getEntry(String type) {
+		// Default to returning this if it is specified
+		var entry = this.registry.getEntry(type);
+
+		if (entry != null) {
+			return entry;
+		}
+
+		// Check all parent classes for an entry. This goes in order of super/interface, supersuper/interfacesuper, etc
+		for (ClassEntry ancestor : this.inheritance.getAncestors(new ClassEntry(type))) {
+			entry = this.registry.getEntry(ancestor.getFullName());
+
+			// Only return if the entry allows inheritance
+			if (entry != null && entry.inherit()) {
+				return entry;
+			}
+		}
+
+		return null;
 	}
 
 	private record FieldBuildingEntry(FieldNode node, Name name, SimpleTypeFieldNamesRegistry.Entry entry) {

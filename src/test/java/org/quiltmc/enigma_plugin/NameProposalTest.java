@@ -222,6 +222,10 @@ public class NameProposalTest {
 		assertProposal("valueC", field(owner, "h", "Lcom/a/b/i;"));
 
 		owner = new ClassEntry(fieldsClassEntry, "c");
+		assertProposal("valueD", field(owner, "a", "Lcom/a/b/k;"));
+		assertNotProposed(field(owner, "b", "Lcom/a/b/m;"));
+
+		owner = new ClassEntry(fieldsClassEntry, "d");
 		assertProposal("CONFIG", field(owner, "a", "Lcom/a/b/a;"));
 		assertProposal("STATIC_STATE", field(owner, "b", "Lcom/a/b/e;"));
 		assertProposal("value", field(owner, "c", "Lcom/a/b/i;"));
@@ -261,6 +265,28 @@ public class NameProposalTest {
 		parent = method(owner, "a", "(Lcom/a/b/g;Lcom/a/b/g;)V");
 		assertNotProposed(localVar(parent, 0));
 		assertNotProposed(localVar(parent, 1));
+
+		// Check that both the parent and child class have names
+		parent = method(owner, "a", "(Lcom/a/b/j;)V");
+		assertProposal("valueD", localVar(parent, 0));
+
+		parent = method(owner, "a", "(Lcom/a/b/k;)V");
+		assertProposal("valueD", localVar(parent, 0));
+
+		// Check that just the parent class has a name
+		parent = method(owner, "a", "(Lcom/a/b/l;)V");
+		assertProposal("valueE", localVar(parent, 0));
+
+		parent = method(owner, "a", "(Lcom/a/b/m;)V");
+		assertNotProposed(localVar(parent, 0));
+
+		// Check that indexing order doesn't affect inheritance tree
+		owner = new ClassEntry("com/a/b/j");
+		parent = method(owner, "a", "(Lcom/a/b/j;)V");
+		assertProposal("valueD", localVar(parent, 0));
+
+		parent = method(owner, "a", "(Lcom/a/b/k;)V");
+		assertProposal("valueD", localVar(parent, 0));
 	}
 
 	@Test
