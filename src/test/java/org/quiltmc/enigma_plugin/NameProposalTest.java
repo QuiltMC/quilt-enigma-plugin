@@ -203,7 +203,7 @@ public class NameProposalTest {
 	}
 
 
-//	@Test
+	@Test
 	public void testSimpleTypeSingleNames() {
 		var classEntry = new ClassEntry("com/a/e");
 		var fieldsClassEntry = new ClassEntry(classEntry, "a");
@@ -223,8 +223,8 @@ public class NameProposalTest {
 		assertProposal("valueC", field(owner, "h", "Lcom/a/c/i;"));
 
 		owner = new ClassEntry(fieldsClassEntry, "c");
-		assertProposal("valueD", field(owner, "a", "Lcom/a/b/k;"));
-		assertNotProposed(field(owner, "b", "Lcom/a/b/m;"));
+		assertProposal("valueD", field(owner, "a", "Lcom/a/c/k;"));
+		assertNotProposed(field(owner, "b", "Lcom/a/c/m;"));
 
 		owner = new ClassEntry(fieldsClassEntry, "d");
 		assertProposal("CONFIG", field(owner, "a", "Lcom/a/c/a;"));
