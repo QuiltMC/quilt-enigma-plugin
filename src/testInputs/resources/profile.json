@@ -10,7 +10,8 @@
           "disable_constant_fields": "false",
           "disable_records": "false",
           "disable_codecs": "false",
-          "disable_map_non_hashed": "true"
+          "disable_map_non_hashed": "true",
+          "disable_mojang_packages": "false"
         }
       }
     ],

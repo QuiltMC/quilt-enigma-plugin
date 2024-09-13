@@ -38,9 +38,9 @@ repositories {
 	// Enigma dependencies
 	maven {
 		url 'https://maven.fabricmc.net/'
-		content {
-			includeModule('net.fabricmc', 'cfr')
-		}
+//		content {
+//			includeModule('net.fabricmc', 'cfr')
+//		}
 	}
 	// remove when ASM fix is released
 	maven {
@@ -52,6 +52,12 @@ repositories {
 		name 'Minecraft Libraries'
 		url 'https://libraries.minecraft.net'
 	}
+
+	maven {
+		name 'Shedaniel'
+		url 'https://maven.shedaniel.me/'
+	}
+	maven { url "https://jitpack.io" }
 }
 
 configurations {
@@ -64,6 +70,8 @@ dependencies {
 	implementation libs.quilt.json5
 	implementation libs.tinylog
 	implementation libs.annotations
+	implementation libs.mapping.io
+	implementation libs.launchermeta.parser
 
 	testImplementation libs.junit
 	testImplementation libs.hamcrest

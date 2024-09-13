@@ -30,6 +30,7 @@ public class Arguments {
 	public static final String DISABLE_CONSTRUCTOR_PARAMS = "disable_constructor_params";
 	public static final String DISABLE_GETTER_SETTER = "disable_getter_setter";
 	public static final String DISABLE_CODECS = "disable_codecs";
+	public static final String DISABLE_MOJANG_PACKAGES = "disable_mojang_packages";
 	public static final String DISABLE_MAP_NON_HASHED = "disable_map_non_hashed";
 	public static final String DISABLE_DELEGATE_PARAMS = "disable_delegate_params";
 	public static final String CUSTOM_CODECS = "custom_codecs";
