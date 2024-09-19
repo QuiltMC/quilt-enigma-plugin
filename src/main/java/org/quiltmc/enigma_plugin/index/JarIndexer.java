@@ -19,7 +19,7 @@ package org.quiltmc.enigma_plugin.index;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
-import org.quiltmc.enigma.api.class_provider.ClassProvider;
+import org.quiltmc.enigma.api.class_provider.ProjectClassProvider;
 import org.quiltmc.enigma.api.service.EnigmaServiceContext;
 import org.quiltmc.enigma.api.service.JarIndexerService;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
@@ -64,7 +64,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 	}
 
 	@Override
-	public void acceptJar(Set<String> scope, ClassProvider classProvider, JarIndex jarIndex) {
+	public void acceptJar(Set<String> scope, ProjectClassProvider classProvider, JarIndex jarIndex) {
 		List<Index> enabledIndexes = new ArrayList<>(this.indexes.size());
 
 		for (var index : this.indexes.values()) {

@@ -72,7 +72,7 @@ public class NameProposalTest {
 	public static void assertNotProposed(Entry<?> entry) {
 		var mapping = remapper.getMapping(entry);
 		Assertions.assertNotNull(mapping);
-		Assertions.assertEquals(EntryMapping.DEFAULT, mapping);
+		Assertions.assertEquals(EntryMapping.OBFUSCATED, mapping);
 	}
 
 	public static void assertNotProposedBy(Entry<?> entry, String unexpectedSourceProposerId) {
@@ -81,7 +81,7 @@ public class NameProposalTest {
 		if (mapping.sourcePluginId() != null) {
 			Assertions.assertNotEquals(QuiltEnigmaPlugin.NAME_PROPOSAL_SERVICE_ID + "/" + unexpectedSourceProposerId, mapping.sourcePluginId());
 		} else {
-			Assertions.assertEquals(EntryMapping.DEFAULT, mapping);
+			Assertions.assertEquals(EntryMapping.OBFUSCATED, mapping);
 		}
 	}
 
@@ -331,7 +331,7 @@ public class NameProposalTest {
 		assertDynamicProposal("silly", localVar(method(classEntry, "<init>", "(IJ)V"), 2));
 		assertDynamicProposal("silly", localVar(method(classEntry, "a", "(IJ)Lcom/a/b$a;"), 1));
 
-		remapper.putMapping(new ValidationContext(null), localVar(method(classEntry, "<init>", "(IJI)V"), 2), EntryMapping.DEFAULT);
+		remapper.putMapping(new ValidationContext(null), localVar(method(classEntry, "<init>", "(IJI)V"), 2), EntryMapping.OBFUSCATED);
 		assertDynamicProposal("j", localVar(method(classEntry, "<init>", "(IJ)V"), 2));
 		assertDynamicProposal("j", localVar(method(classEntry, "<init>", "(IJI)V"), 2));
 		assertDynamicProposal("j", localVar(method(classEntry, "a", "(IJ)Lcom/a/b$a;"), 1));
