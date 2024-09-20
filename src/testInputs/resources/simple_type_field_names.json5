@@ -1,18 +1,18 @@
 {
     $schema: "../../main/resources/simple_type_field_names_schema.json",
 
-    "com/a/b/a": "config",
+    "com/a/c/a": "config",
 
     // Position
-    "com/a/b/b": "pos", // Pos
-    "com/a/b/c": { // Position
+    "com/a/c/b": "pos", // Pos
+    "com/a/c/c": { // Position
         local_name: "pos",
         exclusive: true,
         fallback: [
             "position"
         ]
     },
-    "com/a/b/d": { // RandomPosition
+    "com/a/c/d": { // RandomPosition
         local_name: "pos",
         exclusive: true,
         fallback: [
@@ -22,7 +22,7 @@
     },
 
     // State
-    "com/a/b/e": { // StateA
+    "com/a/c/e": { // StateA
         local_name: "state",
         static_name: "STATIC_STATE",
         exclusive: true,
@@ -33,7 +33,7 @@
             }
         ]
     },
-    "com/a/b/f": { // StateB
+    "com/a/c/f": { // StateB
         local_name: "state",
         static_name: "STATIC_STATE",
         exclusive: true,
@@ -46,33 +46,33 @@
     },
 
     // Value
-    "com/a/b/g": { // ValueA
+    "com/a/c/g": { // ValueA
         local_name: "value",
         exclusive: true,
         fallback: [
             "valueA"
         ]
     },
-    "com/a/b/h": { // ValueB
+    "com/a/c/h": { // ValueB
         local_name: "value",
         exclusive: true,
         fallback: [
             "valueB"
         ]
     },
-    "com/a/b/i": { // ValueC
+    "com/a/c/i": { // ValueC
         local_name: "value",
         exclusive: true,
         fallback: [
             "valueC"
         ]
     },
-    "com/a/b/j": { // ValueD
+    "com/a/c/j": { // ValueD
         local_name: "valueD",
         exclusive: true,
         inherit: true
     },
-    "com/a/b/l": { // ValueE
+    "com/a/c/l": { // ValueE
         local_name: "valueE",
         exclusive: true
     }
