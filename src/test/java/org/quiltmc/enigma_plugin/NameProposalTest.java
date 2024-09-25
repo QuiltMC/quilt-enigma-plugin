@@ -295,13 +295,17 @@ public class NameProposalTest {
 
 	@Test
 	public void testSimpleTypeSingleNamesWithMapping() {
-		var classEntry = new ClassEntry("com/a/e");
-		var owner = new ClassEntry(classEntry, "b");
+		var owner = new ClassEntry("com/a/c");
+		var constructor = method(owner, "<init>", "(ILjava/lang/CharSequence;)V");
+
+		// param 2 is initially 'id'
+		assertProposal("id", localVar(constructor, 2));
 
 		var vc = new ValidationContext(null);
+		// fires dynamic proposal for the constructor parameter, creating a conflict
+		// conflict should then be automatically fixed by moving to the 'identifier' name
 		remapper.putMapping(vc, field(owner, "a", "Ljava/lang/String;"), new EntryMapping("id"));
 
-		var constructor = method(owner, "<init>", "(Ljava/lang/String;Ljava/lang/CharSequence;)V");
 		assertDynamicProposal("id", localVar(constructor, 1));
 		assertProposal("identifier", localVar(constructor, 2));
 	}
