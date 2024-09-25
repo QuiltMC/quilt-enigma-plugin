@@ -34,9 +34,12 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma.util.validation.ValidationContext;
+import org.quiltmc.enigma_plugin.index.JarIndexer;
+import org.quiltmc.enigma_plugin.proposal.SimpleTypeFieldNameProposer;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 
 public class NameProposalTest {
 	private static final Path JAR = Path.of("build/obf/obf.jar");
@@ -287,6 +290,20 @@ public class NameProposalTest {
 
 		parent = method(owner, "a", "(Lcom/a/b/k;)V");
 		assertProposal("valueD", localVar(parent, 0));
+	}
+
+
+	@Test
+	public void testSimpleTypeSingleNamesWithMapping() {
+		var classEntry = new ClassEntry("com/a/e");
+		var owner = new ClassEntry(classEntry, "b");
+
+		var vc = new ValidationContext(null);
+		remapper.putMapping(vc, field(owner, "a", "Ljava/lang/String;"), new EntryMapping("id"));
+
+		var constructor = method(owner, "<init>", "(Ljava/lang/String;Ljava/lang/CharSequence;)V");
+		assertDynamicProposal("id", localVar(constructor, 1));
+		assertProposal("identifier", localVar(constructor, 2));
 	}
 
 	@Test

@@ -16,19 +16,25 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.source.TokenType;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public abstract class NameProposer {
 	private final String id;
+	@Nullable
+	private final List<NameProposer> proposers = new ArrayList<>();
 
-	public NameProposer(String id) {
+	public NameProposer(String id, @Nullable List<NameProposer> proposerList) {
 		this.id = id;
 	}
 
@@ -51,28 +57,35 @@ public abstract class NameProposer {
 	}
 
 	public void insertProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name) {
-		this.insertProposal(mappings, entry, name, TokenType.JAR_PROPOSED);
+		this.insertProposal(mappings, null, entry, name, TokenType.JAR_PROPOSED);
 	}
 
-	public void insertDynamicProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, EntryMapping mapping) {
+	public void insertDynamicProposal(Map<Entry<?>, EntryMapping> mappings, EntryRemapper remapper, Entry<?> entry, EntryMapping mapping) {
 		if (mapping != null) {
 			if (mapping.targetName() != null && !mapping.targetName().isEmpty()) {
-				this.insertDynamicProposal(mappings, entry, mapping.targetName());
+				this.insertDynamicProposal(mappings, remapper, entry, mapping.targetName());
 			} else {
-				this.insertDynamicProposal(mappings, entry, (String) null);
+				this.insertDynamicProposal(mappings, remapper, entry, (String) null);
 			}
 		}
 	}
 
-	public void insertDynamicProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name) {
-		this.insertProposal(mappings, entry, name, TokenType.DYNAMIC_PROPOSED);
+	public void insertDynamicProposal(Map<Entry<?>, EntryMapping> mappings, EntryRemapper remapper, Entry<?> entry, String name) {
+		this.insertProposal(mappings, remapper, entry, name, TokenType.DYNAMIC_PROPOSED);
 	}
 
-	private void insertProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name, TokenType tokenType) {
+	private void insertProposal(Map<Entry<?>, EntryMapping> mappings, @Nullable EntryRemapper remapper, Entry<?> entry, String name, TokenType tokenType) {
 		if (!mappings.containsKey(entry)) {
 			if (name != null) {
 				EntryMapping mapping = new EntryMapping(name, null, tokenType, this.getSourcePluginId());
 				mappings.put(entry, mapping);
+
+				// god awful
+				if (tokenType == TokenType.DYNAMIC_PROPOSED && entry instanceof LocalVariableEntry param && !(this instanceof SimpleTypeFieldNameProposer)) {
+					this.proposers.stream().filter(nameProposer -> nameProposer instanceof SimpleTypeFieldNameProposer).findFirst().ifPresent(nameProposer -> {
+						((SimpleTypeFieldNameProposer) nameProposer).fixConflicts(mappings, remapper, param, name);
+					});
+				}
 			} else {
 				mappings.put(entry, null);
 			}

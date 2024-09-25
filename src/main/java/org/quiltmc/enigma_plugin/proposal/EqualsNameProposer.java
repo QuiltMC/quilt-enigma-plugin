@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
@@ -24,14 +25,15 @@ import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 
+import java.util.List;
 import java.util.Map;
 
 public class EqualsNameProposer extends NameProposer {
 	public static final String ID = "equals";
 	private static final MethodDescriptor EQUALS_DESCRIPTOR = new MethodDescriptor("(Ljava/lang/Object;)Z");
 
-	public EqualsNameProposer() {
-		super(ID);
+	public EqualsNameProposer(@Nullable List<NameProposer> proposerList) {
+		super(ID, proposerList);
 	}
 
 	@Override

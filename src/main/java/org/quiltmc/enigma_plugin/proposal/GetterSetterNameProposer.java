@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
@@ -27,14 +28,15 @@ import org.quiltmc.enigma_plugin.index.GetterSetterIndex;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.quiltmc.enigma_plugin.util.Descriptors;
 
+import java.util.List;
 import java.util.Map;
 
 public class GetterSetterNameProposer extends NameProposer {
 	public static final String ID = "getter_setter";
 	private final GetterSetterIndex index;
 
-	public GetterSetterNameProposer(JarIndexer index) {
-		super(ID);
+	public GetterSetterNameProposer(JarIndexer index, @Nullable List<NameProposer> proposerList) {
+		super(ID, proposerList);
 		this.index = index.getIndex(GetterSetterIndex.class);
 	}
 
@@ -73,7 +75,7 @@ public class GetterSetterNameProposer extends NameProposer {
 					continue;
 				}
 
-				this.insertDynamicProposal(mappings, method, newName);
+				this.insertDynamicProposal(mappings, remapper, method, newName);
 			}
 
 			for (LocalVariableEntry parameter : this.index.getLinkedParameters()) {
@@ -89,7 +91,7 @@ public class GetterSetterNameProposer extends NameProposer {
 					continue;
 				}
 
-				this.insertDynamicProposal(mappings, parameter, newName);
+				this.insertDynamicProposal(mappings, remapper, parameter, newName);
 			}
 
 			return;
@@ -105,9 +107,9 @@ public class GetterSetterNameProposer extends NameProposer {
 
 				if (link instanceof MethodEntry method) {
 					var newName = getMethodName(name, method);
-					this.insertDynamicProposal(mappings, method, newName);
+					this.insertDynamicProposal(mappings, remapper, method, newName);
 				} else if (link instanceof LocalVariableEntry parameter) {
-					this.insertDynamicProposal(mappings, parameter, name);
+					this.insertDynamicProposal(mappings, remapper, parameter, name);
 				}
 			}
 		}

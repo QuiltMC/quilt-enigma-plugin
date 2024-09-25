@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
@@ -24,6 +25,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,8 +35,8 @@ import java.util.Map;
 public class MojangNameProposer extends NameProposer {
 	public static final String ID = "map_non_hashed";
 
-	public MojangNameProposer() {
-		super(ID);
+	public MojangNameProposer(@Nullable List<NameProposer> proposerList) {
+		super(ID, proposerList);
 	}
 
 	@Override
@@ -50,7 +52,7 @@ public class MojangNameProposer extends NameProposer {
 
 		for (MethodEntry method : entryIndex.getMethods()) {
 			String name = method.getName();
-			if (!name.startsWith("m_")) {
+			if (!name.startsWith("m_") && !method.isConstructor()) {
 				this.insertProposal(mappings, method, name);
 			}
 		}

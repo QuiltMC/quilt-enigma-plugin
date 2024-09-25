@@ -38,20 +38,24 @@ public class NameProposerService implements NameProposalService {
 	private final List<NameProposer> nameProposers = new ArrayList<>();
 
 	public NameProposerService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
-		this.addIfEnabled(context, indexer, Arguments.DISABLE_RECORDS, RecordComponentNameProposer::new);
-		this.addIfEnabled(context, indexer, Arguments.DISABLE_CONSTANT_FIELDS, ConstantFieldNameProposer::new);
-		this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
-		this.addIfEnabled(context, indexer, Arguments.DISABLE_LOGGER, LoggerNameProposer::new);
-		this.addIfEnabled(context, indexer, Arguments.DISABLE_CODECS, CodecNameProposer::new);
-		this.addIfNotDisabled(context, Arguments.DISABLE_MAP_NON_HASHED, MojangNameProposer::new);
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_RECORDS, (index) -> new RecordComponentNameProposer(index, this.nameProposers));
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_CONSTANT_FIELDS, (index) -> new ConstantFieldNameProposer(index, this.nameProposers));
+		this.addIfEnabled(context, Arguments.DISABLE_EQUALS, () -> new EqualsNameProposer(this.nameProposers));
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_LOGGER, (index) -> new LoggerNameProposer(index, this.nameProposers));
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_CODECS, (index) -> new CodecNameProposer(index, this.nameProposers));
+		this.addIfNotDisabled(context, Arguments.DISABLE_MAP_NON_HASHED, () -> new MojangNameProposer(this.nameProposers));
 
+		SimpleTypeFieldNameProposer proposer;
 		if (indexer.getIndex(SimpleTypeSingleIndex.class).isEnabled()) {
-			this.nameProposers.add(new SimpleTypeFieldNameProposer(indexer));
+			proposer = new SimpleTypeFieldNameProposer(indexer);
+			this.nameProposers.add(proposer);
+		} else {
+			proposer = null;
 		}
 
-		this.addIfEnabled(context, indexer, Arguments.DISABLE_CONSTRUCTOR_PARAMS, ConstructorParamsNameProposer::new);
-		this.addIfEnabled(context, indexer, Arguments.DISABLE_GETTER_SETTER, GetterSetterNameProposer::new);
-		this.addIfEnabled(context, indexer, Arguments.DISABLE_DELEGATE_PARAMS, DelegateParametersNameProposer::new);
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_CONSTRUCTOR_PARAMS, (index) -> new ConstructorParamsNameProposer(index, List.of(proposer)));
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_GETTER_SETTER, (index) -> new GetterSetterNameProposer(index, this.nameProposers));
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_DELEGATE_PARAMS, (index) -> new DelegateParametersNameProposer(index, List.of(proposer)));
 	}
 
 	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer> factory) {

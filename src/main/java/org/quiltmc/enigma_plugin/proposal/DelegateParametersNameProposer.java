@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
@@ -36,8 +37,8 @@ public class DelegateParametersNameProposer extends NameProposer {
 	private static final List<String> IGNORED_SOURCE_PLUGIN_IDS = Stream.of(ID, SimpleTypeFieldNameProposer.ID).map(NameProposer::getSourcePluginId).toList();
 	private final DelegateParametersIndex index;
 
-	public DelegateParametersNameProposer(JarIndexer index) {
-		super(ID);
+	public DelegateParametersNameProposer(JarIndexer index, @Nullable List<NameProposer> proposerList) {
+		super(ID, proposerList);
 		this.index = index.getIndex(DelegateParametersIndex.class);
 	}
 
@@ -93,7 +94,7 @@ public class DelegateParametersNameProposer extends NameProposer {
 				continue;
 			}
 
-			this.insertDynamicProposal(mappings, link, name);
+			this.insertDynamicProposal(mappings, remapper, link, name);
 			this.proposeNameUpwards(remapper, mappings, link, name, depth + 1);
 		}
 	}
@@ -127,7 +128,7 @@ public class DelegateParametersNameProposer extends NameProposer {
 				var parameterNames = namesByMethod.get(method);
 
 				for (var name : parameterNames.keySet()) {
-					this.insertDynamicProposal(mappings, parameterNames.get(name), name);
+					this.insertDynamicProposal(mappings, remapper, parameterNames.get(name), name);
 				}
 			}
 
@@ -143,7 +144,7 @@ public class DelegateParametersNameProposer extends NameProposer {
 			}
 
 			if (newMapping.targetName() == null) {
-				this.insertDynamicProposal(mappings, paramEntry, name);
+				this.insertDynamicProposal(mappings, remapper, paramEntry, name);
 			}
 
 			this.proposeNameUpwards(remapper, mappings, paramEntry, name);

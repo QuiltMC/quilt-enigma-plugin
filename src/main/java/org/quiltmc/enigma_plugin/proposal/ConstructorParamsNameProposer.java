@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
@@ -25,14 +26,15 @@ import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntr
 import org.quiltmc.enigma_plugin.index.ConstructorParametersIndex;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 
+import java.util.List;
 import java.util.Map;
 
 public class ConstructorParamsNameProposer extends NameProposer {
 	public static final String ID = "constructor_params";
 	private final ConstructorParametersIndex index;
 
-	public ConstructorParamsNameProposer(JarIndexer index) {
-		super(ID);
+	public ConstructorParamsNameProposer(JarIndexer index, @Nullable List<NameProposer> proposerList) {
+		super(ID, proposerList);
 		this.index = index.getIndex(ConstructorParametersIndex.class);
 	}
 
@@ -48,13 +50,13 @@ public class ConstructorParamsNameProposer extends NameProposer {
 					continue;
 				}
 
-				this.insertDynamicProposal(mappings, parameter, newMapping);
+				this.insertDynamicProposal(mappings, remapper, parameter, newMapping);
 			}
 		} else if (obfEntry instanceof LocalVariableEntry parameter && this.index.isParameterLinked(parameter)) {
 			FieldEntry linkedField = this.index.getLinkedField(parameter);
 
 			if (!this.hasJarProposal(remapper, linkedField)) {
-				this.insertDynamicProposal(mappings, linkedField, newMapping);
+				this.insertDynamicProposal(mappings, remapper, linkedField, newMapping);
 			}
 
 			for (LocalVariableEntry param : this.index.getParametersForField(linkedField)) {
@@ -63,7 +65,7 @@ public class ConstructorParamsNameProposer extends NameProposer {
 				}
 
 				if (param != parameter) {
-					this.insertDynamicProposal(mappings, param, newMapping);
+					this.insertDynamicProposal(mappings, remapper, param, newMapping);
 				}
 			}
 		} else if (obfEntry == null) {
@@ -76,7 +78,7 @@ public class ConstructorParamsNameProposer extends NameProposer {
 				FieldEntry linkedField = this.index.getLinkedField(parameter);
 				EntryMapping mapping = remapper.getMapping(linkedField);
 
-				this.insertDynamicProposal(mappings, parameter, mapping);
+				this.insertDynamicProposal(mappings, remapper, parameter, mapping);
 			}
 		}
 	}

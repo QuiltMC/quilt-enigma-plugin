@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
@@ -23,14 +24,15 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.quiltmc.enigma_plugin.index.constant_fields.ConstantFieldIndex;
 
+import java.util.List;
 import java.util.Map;
 
 public class ConstantFieldNameProposer extends NameProposer {
 	public static final String ID = "constant_fields";
 	private final ConstantFieldIndex fieldIndex;
 
-	public ConstantFieldNameProposer(JarIndexer index) {
-		super(ID);
+	public ConstantFieldNameProposer(JarIndexer index, @Nullable List<NameProposer> proposerList) {
+		super(ID, proposerList);
 		this.fieldIndex = index.getIndex(ConstantFieldIndex.class);
 	}
 
