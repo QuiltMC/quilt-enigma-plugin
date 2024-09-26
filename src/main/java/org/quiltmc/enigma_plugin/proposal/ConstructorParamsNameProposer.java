@@ -48,13 +48,13 @@ public class ConstructorParamsNameProposer extends NameProposer {
 					continue;
 				}
 
-				this.insertDynamicProposal(mappings, remapper, parameter, newMapping);
+				this.insertDynamicProposal(mappings, parameter, newMapping);
 			}
 		} else if (obfEntry instanceof LocalVariableEntry parameter && this.index.isParameterLinked(parameter)) {
 			FieldEntry linkedField = this.index.getLinkedField(parameter);
 
 			if (!this.hasJarProposal(remapper, linkedField)) {
-				this.insertDynamicProposal(mappings, remapper, linkedField, newMapping);
+				this.insertDynamicProposal(mappings, linkedField, newMapping);
 			}
 
 			for (LocalVariableEntry param : this.index.getParametersForField(linkedField)) {
@@ -63,7 +63,7 @@ public class ConstructorParamsNameProposer extends NameProposer {
 				}
 
 				if (param != parameter) {
-					this.insertDynamicProposal(mappings, remapper, param, newMapping);
+					this.insertDynamicProposal(mappings, param, newMapping);
 				}
 			}
 		} else if (obfEntry == null) {
@@ -76,7 +76,7 @@ public class ConstructorParamsNameProposer extends NameProposer {
 				FieldEntry linkedField = this.index.getLinkedField(parameter);
 				EntryMapping mapping = remapper.getMapping(linkedField);
 
-				this.insertDynamicProposal(mappings, remapper, parameter, mapping);
+				this.insertDynamicProposal(mappings, parameter, mapping);
 			}
 		}
 	}

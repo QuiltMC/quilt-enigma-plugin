@@ -16,7 +16,6 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
-import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.source.TokenType;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
@@ -52,24 +51,24 @@ public abstract class NameProposer {
 	}
 
 	public void insertProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name) {
-		this.insertProposal(mappings, null, entry, name, TokenType.JAR_PROPOSED);
+		this.insertProposal(mappings, entry, name, TokenType.JAR_PROPOSED);
 	}
 
-	public void insertDynamicProposal(Map<Entry<?>, EntryMapping> mappings, EntryRemapper remapper, Entry<?> entry, EntryMapping mapping) {
+	public void insertDynamicProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, EntryMapping mapping) {
 		if (mapping != null) {
 			if (mapping.targetName() != null && !mapping.targetName().isEmpty()) {
-				this.insertDynamicProposal(mappings, remapper, entry, mapping.targetName());
+				this.insertDynamicProposal(mappings, entry, mapping.targetName());
 			} else {
-				this.insertDynamicProposal(mappings, remapper, entry, (String) null);
+				this.insertDynamicProposal(mappings, entry, (String) null);
 			}
 		}
 	}
 
-	public void insertDynamicProposal(Map<Entry<?>, EntryMapping> mappings, EntryRemapper remapper, Entry<?> entry, String name) {
-		this.insertProposal(mappings, remapper, entry, name, TokenType.DYNAMIC_PROPOSED);
+	public void insertDynamicProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name) {
+		this.insertProposal(mappings, entry, name, TokenType.DYNAMIC_PROPOSED);
 	}
 
-	private void insertProposal(Map<Entry<?>, EntryMapping> mappings, @Nullable EntryRemapper remapper, Entry<?> entry, String name, TokenType tokenType) {
+	private void insertProposal(Map<Entry<?>, EntryMapping> mappings, Entry<?> entry, String name, TokenType tokenType) {
 		if (!mappings.containsKey(entry)) {
 			if (name != null) {
 				EntryMapping mapping = new EntryMapping(name, null, tokenType, this.getSourcePluginId());

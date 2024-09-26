@@ -73,7 +73,7 @@ public class GetterSetterNameProposer extends NameProposer {
 					continue;
 				}
 
-				this.insertDynamicProposal(mappings, remapper, method, newName);
+				this.insertDynamicProposal(mappings, method, newName);
 			}
 
 			for (LocalVariableEntry parameter : this.index.getLinkedParameters()) {
@@ -89,7 +89,7 @@ public class GetterSetterNameProposer extends NameProposer {
 					continue;
 				}
 
-				this.insertDynamicProposal(mappings, remapper, parameter, newName);
+				this.insertDynamicProposal(mappings, parameter, newName);
 			}
 
 			return;
@@ -105,9 +105,9 @@ public class GetterSetterNameProposer extends NameProposer {
 
 				if (link instanceof MethodEntry method) {
 					var newName = getMethodName(name, method);
-					this.insertDynamicProposal(mappings, remapper, method, newName);
+					this.insertDynamicProposal(mappings, method, newName);
 				} else if (link instanceof LocalVariableEntry parameter) {
-					this.insertDynamicProposal(mappings, remapper, parameter, name);
+					this.insertDynamicProposal(mappings, parameter, name);
 				}
 			}
 		}

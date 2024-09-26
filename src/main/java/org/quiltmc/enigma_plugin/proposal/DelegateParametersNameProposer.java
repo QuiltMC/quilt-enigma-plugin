@@ -93,7 +93,7 @@ public class DelegateParametersNameProposer extends NameProposer {
 				continue;
 			}
 
-			this.insertDynamicProposal(mappings, remapper, link, name);
+			this.insertDynamicProposal(mappings, link, name);
 			this.proposeNameUpwards(remapper, mappings, link, name, depth + 1);
 		}
 	}
@@ -127,7 +127,7 @@ public class DelegateParametersNameProposer extends NameProposer {
 				var parameterNames = namesByMethod.get(method);
 
 				for (var name : parameterNames.keySet()) {
-					this.insertDynamicProposal(mappings, remapper, parameterNames.get(name), name);
+					this.insertDynamicProposal(mappings, parameterNames.get(name), name);
 				}
 			}
 
@@ -143,7 +143,7 @@ public class DelegateParametersNameProposer extends NameProposer {
 			}
 
 			if (newMapping.targetName() == null) {
-				this.insertDynamicProposal(mappings, remapper, paramEntry, name);
+				this.insertDynamicProposal(mappings, paramEntry, name);
 			}
 
 			this.proposeNameUpwards(remapper, mappings, paramEntry, name);

@@ -49,7 +49,7 @@ public class ConflictFixProposer extends NameProposer {
 				for (String fallbackName : fallbacks) {
 					Optional<LocalVariableEntry> newConflict = getConflictingParam(remapper, conflictEntry, fallbackName);
 					if (newConflict.isEmpty()) {
-						this.insertDynamicProposal(mappings, remapper, conflictEntry, fallbackName);
+						this.insertDynamicProposal(mappings, conflictEntry, fallbackName);
 						conflict = getConflictingParam(remapper, conflictEntry, name);
 						fixed = true;
 						break;
@@ -58,7 +58,7 @@ public class ConflictFixProposer extends NameProposer {
 			}
 
 			if (!fixed) {
-				this.insertDynamicProposal(mappings, remapper, conflictEntry, (String) null);
+				this.insertDynamicProposal(mappings, conflictEntry, (String) null);
 			}
 		}
 	}
