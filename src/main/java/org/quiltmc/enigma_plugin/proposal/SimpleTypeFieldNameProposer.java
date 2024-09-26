@@ -24,7 +24,6 @@ import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntr
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 public class SimpleTypeFieldNameProposer extends NameProposer {
@@ -32,7 +31,7 @@ public class SimpleTypeFieldNameProposer extends NameProposer {
 	private final SimpleTypeSingleIndex index;
 
 	public SimpleTypeFieldNameProposer(JarIndexer index) {
-		super(ID, new ArrayList<>());
+		super(ID);
 		this.index = index.getIndex(SimpleTypeSingleIndex.class);
 	}
 

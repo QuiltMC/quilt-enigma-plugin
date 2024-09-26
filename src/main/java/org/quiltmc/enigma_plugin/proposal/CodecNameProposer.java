@@ -16,7 +16,6 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
-import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
@@ -25,15 +24,14 @@ import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.index.CodecIndex;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 
-import java.util.List;
 import java.util.Map;
 
 public class CodecNameProposer extends NameProposer {
 	public static final String ID = "codecs";
 	private final CodecIndex index;
 
-	public CodecNameProposer(JarIndexer index, @Nullable List<NameProposer> proposerList) {
-		super(ID, proposerList);
+	public CodecNameProposer(JarIndexer index) {
+		super(ID);
 		this.index = index.getIndex(CodecIndex.class);
 	}
 

@@ -16,7 +16,6 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
-import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
@@ -26,15 +25,14 @@ import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntr
 import org.quiltmc.enigma_plugin.index.ConstructorParametersIndex;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 
-import java.util.List;
 import java.util.Map;
 
 public class ConstructorParamsNameProposer extends NameProposer {
 	public static final String ID = "constructor_params";
 	private final ConstructorParametersIndex index;
 
-	public ConstructorParamsNameProposer(JarIndexer index, @Nullable List<NameProposer> proposerList) {
-		super(ID, proposerList);
+	public ConstructorParamsNameProposer(JarIndexer index) {
+		super(ID);
 		this.index = index.getIndex(ConstructorParametersIndex.class);
 	}
 

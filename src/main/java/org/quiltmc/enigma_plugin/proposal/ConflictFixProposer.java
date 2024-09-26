@@ -18,7 +18,7 @@ public class ConflictFixProposer extends NameProposer {
 	private final SimpleTypeSingleIndex index;
 
 	public ConflictFixProposer(JarIndexer jarIndex) {
-		super(ID, null);
+		super(ID);
 		this.index = jarIndex.getIndex(SimpleTypeSingleIndex.class);
 	}
 

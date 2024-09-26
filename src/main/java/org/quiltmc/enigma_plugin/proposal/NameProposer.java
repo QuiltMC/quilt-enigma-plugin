@@ -24,16 +24,13 @@ import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public abstract class NameProposer {
 	private final String id;
 
-	public NameProposer(String id, @Nullable List<NameProposer> proposerList) {
+	public NameProposer(String id) {
 		this.id = id;
-		//this.proposers.addAll(proposerList);
 	}
 
 	public String getSourcePluginId() {

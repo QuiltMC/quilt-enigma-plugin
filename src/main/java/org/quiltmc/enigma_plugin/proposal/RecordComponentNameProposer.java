@@ -16,7 +16,6 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
-import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
@@ -26,15 +25,14 @@ import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.quiltmc.enigma_plugin.index.RecordIndex;
 
-import java.util.List;
 import java.util.Map;
 
 public class RecordComponentNameProposer extends NameProposer {
 	public static final String ID = "records";
 	private final RecordIndex index;
 
-	public RecordComponentNameProposer(JarIndexer index, @Nullable List<NameProposer> proposerList) {
-		super(ID, proposerList);
+	public RecordComponentNameProposer(JarIndexer index) {
+		super(ID);
 		this.index = index.getIndex(RecordIndex.class);
 	}
 

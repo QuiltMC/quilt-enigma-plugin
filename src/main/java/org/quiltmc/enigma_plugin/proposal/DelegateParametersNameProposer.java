@@ -16,7 +16,6 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
-import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
@@ -37,8 +36,8 @@ public class DelegateParametersNameProposer extends NameProposer {
 	private static final List<String> IGNORED_SOURCE_PLUGIN_IDS = Stream.of(ID, SimpleTypeFieldNameProposer.ID).map(NameProposer::getSourcePluginId).toList();
 	private final DelegateParametersIndex index;
 
-	public DelegateParametersNameProposer(JarIndexer index, @Nullable List<NameProposer> proposerList) {
-		super(ID, proposerList);
+	public DelegateParametersNameProposer(JarIndexer index) {
+		super(ID);
 		this.index = index.getIndex(DelegateParametersIndex.class);
 	}
 
