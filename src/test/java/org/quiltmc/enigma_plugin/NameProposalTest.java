@@ -289,7 +289,6 @@ public class NameProposalTest {
 		assertProposal("valueD", localVar(parent, 0));
 	}
 
-
 	@Test
 	public void testSimpleTypeNameConflictFix() {
 		// tests the conflict fixer via introducing a conflict manually

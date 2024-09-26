@@ -41,7 +41,7 @@ public class ConflictFixProposer extends NameProposer {
 	@Override
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
 		for (Map.Entry<Entry<?>, EntryMapping> entry : mappings.entrySet()) {
-			fixConflicts(mappings, remapper, entry.getKey(), entry.getValue());
+			this.fixConflicts(mappings, remapper, entry.getKey(), entry.getValue());
 		}
 	}
 
@@ -53,7 +53,7 @@ public class ConflictFixProposer extends NameProposer {
 
 	private void fixParamConflicts(Map<Entry<?>, EntryMapping> mappings, EntryRemapper remapper, LocalVariableEntry entry, EntryMapping mapping) {
 		String name = mapping.targetName();
-		Optional<LocalVariableEntry> conflict = getConflictingParam(remapper, entry, name);
+		Optional<LocalVariableEntry> conflict = this.getConflictingParam(remapper, entry, name);
 
 		while (conflict.isPresent()) {
 			LocalVariableEntry conflictEntry = conflict.get();
@@ -63,10 +63,10 @@ public class ConflictFixProposer extends NameProposer {
 
 			if (fallbacks != null) {
 				for (String fallbackName : fallbacks) {
-					Optional<LocalVariableEntry> newConflict = getConflictingParam(remapper, conflictEntry, fallbackName);
+					Optional<LocalVariableEntry> newConflict = this.getConflictingParam(remapper, conflictEntry, fallbackName);
 					if (newConflict.isEmpty()) {
 						this.insertDynamicProposal(mappings, conflictEntry, fallbackName);
-						conflict = getConflictingParam(remapper, conflictEntry, name);
+						conflict = this.getConflictingParam(remapper, conflictEntry, name);
 						fixed = true;
 						break;
 					}
