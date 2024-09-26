@@ -32,6 +32,7 @@ public class Arguments {
 	public static final String DISABLE_CODECS = "disable_codecs";
 	public static final String DISABLE_MAP_NON_HASHED = "disable_map_non_hashed";
 	public static final String DISABLE_DELEGATE_PARAMS = "disable_delegate_params";
+	public static final String DISABLE_CONFLICT_FIXER = "disable_conflict_fixer";
 	public static final String CUSTOM_CODECS = "custom_codecs";
 	public static final String SIMPLE_TYPE_FIELD_NAMES_PATH = "simple_type_field_names_path";
 

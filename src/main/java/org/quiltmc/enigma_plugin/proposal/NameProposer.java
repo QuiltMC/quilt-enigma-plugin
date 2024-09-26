@@ -22,7 +22,6 @@ import org.quiltmc.enigma.api.source.TokenType;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
-import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
 
 import java.util.ArrayList;
@@ -31,12 +30,10 @@ import java.util.Map;
 
 public abstract class NameProposer {
 	private final String id;
-	@Nullable
-	private final List<NameProposer> proposers = new ArrayList<>();
 
 	public NameProposer(String id, @Nullable List<NameProposer> proposerList) {
 		this.id = id;
-		this.proposers.addAll(proposerList);
+		//this.proposers.addAll(proposerList);
 	}
 
 	public String getSourcePluginId() {
@@ -80,13 +77,6 @@ public abstract class NameProposer {
 			if (name != null) {
 				EntryMapping mapping = new EntryMapping(name, null, tokenType, this.getSourcePluginId());
 				mappings.put(entry, mapping);
-
-				// god awful
-				if (tokenType == TokenType.DYNAMIC_PROPOSED && entry instanceof LocalVariableEntry param && !(this instanceof SimpleTypeFieldNameProposer)) {
-					this.proposers.stream().filter(nameProposer -> nameProposer instanceof SimpleTypeFieldNameProposer).findFirst().ifPresent(nameProposer -> {
-						((SimpleTypeFieldNameProposer) nameProposer).fixConflicts(mappings, remapper, param, name);
-					});
-				}
 			} else {
 				mappings.put(entry, null);
 			}
