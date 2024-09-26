@@ -36,6 +36,7 @@ public abstract class NameProposer {
 
 	public NameProposer(String id, @Nullable List<NameProposer> proposerList) {
 		this.id = id;
+		this.proposers.addAll(proposerList);
 	}
 
 	public String getSourcePluginId() {

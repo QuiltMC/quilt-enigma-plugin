@@ -27,16 +27,16 @@ import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class SimpleTypeFieldNameProposer extends NameProposer {
 	public static final String ID = "simple_type_field_names";
 	private final SimpleTypeSingleIndex index;
 
 	public SimpleTypeFieldNameProposer(JarIndexer index) {
-		super(ID, null);
+		super(ID, new ArrayList<>());
 		this.index = index.getIndex(SimpleTypeSingleIndex.class);
 	}
 
@@ -55,7 +55,6 @@ public class SimpleTypeFieldNameProposer extends NameProposer {
 		}
 	}
 
-	// todo never called
 	public void fixConflicts(Map<Entry<?>, EntryMapping> mappings, EntryRemapper remapper, LocalVariableEntry entry, String name) {
 		Optional<LocalVariableEntry> conflict = getConflictingParam(remapper, entry, name);
 

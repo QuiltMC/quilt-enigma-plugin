@@ -34,12 +34,9 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma.util.validation.ValidationContext;
-import org.quiltmc.enigma_plugin.index.JarIndexer;
-import org.quiltmc.enigma_plugin.proposal.SimpleTypeFieldNameProposer;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
 
 public class NameProposalTest {
 	private static final Path JAR = Path.of("build/obf/obf.jar");
@@ -294,20 +291,23 @@ public class NameProposalTest {
 
 
 	@Test
-	public void testSimpleTypeSingleNamesWithMapping() {
-		var owner = new ClassEntry("com/a/c");
+	public void testSimpleTypeNameConflictFix() {
+		// tests the conflict fixer via introducing a conflict manually
+
+		var owner = new ClassEntry("com/a/c/a");
 		var constructor = method(owner, "<init>", "(ILjava/lang/CharSequence;)V");
 
 		// param 2 is initially 'id'
 		assertProposal("id", localVar(constructor, 2));
 
-		var vc = new ValidationContext(null);
 		// fires dynamic proposal for the constructor parameter, creating a conflict
-		// conflict should then be automatically fixed by moving to the 'identifier' name
-		remapper.putMapping(vc, field(owner, "a", "Ljava/lang/String;"), new EntryMapping("id"));
+		// the conflict should then be automatically fixed by moving to the 'identifier' name
+		// note we bypass putMapping so that we can create a conflict
+		remapper.getMappings().insert(field(owner, "a", "I"), new EntryMapping("id"));
+		remapper.insertDynamicallyProposedMappings(field(owner, "a", "I"), EntryMapping.OBFUSCATED, new EntryMapping("id"));
 
 		assertDynamicProposal("id", localVar(constructor, 1));
-		assertProposal("identifier", localVar(constructor, 2));
+		assertDynamicProposal("identifier", localVar(constructor, 2));
 	}
 
 	@Test
