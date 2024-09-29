@@ -185,22 +185,26 @@ public class AsmUtil implements Opcodes {
 			}
 		}
 
-		if (!shallow && lastStackInsn != null && lastStackInsn.getOpcode() == NEW && lastStackInsn.getNext() != null && lastStackInsn.getNext().getOpcode() == DUP) {
-			// Find the last frame containing the DUP instruction
-			var dup = lastStackInsn.getNext();
-			int searchFrameIndex = insns.indexOf(dup) + 1;
+		if (!shallow && lastStackInsn != null && lastStackInsn.getOpcode() == DUP && lastStackInsn.getPrevious() != null && lastStackInsn.getPrevious().getOpcode() == NEW) {
+			// Find the last frame containing two DUP instructions in the stack
+			// This used to search a single DUP following a NEW, but ASM commit 172221565c4347060d79285f183cdbca72344616
+			// changed the behavior for DUPS to replace the previous value
+			// Stack before: ..., NEW ..., DUP; after: ..., DUP, DUP
+			int searchFrameIndex = insns.indexOf(lastStackInsn) + 1;
 			var searchFrame = frames[searchFrameIndex];
 
 			while (searchFrame != null && searchFrameIndex <= frameIndex) {
-				boolean contains = false;
+				int count = 0;
 				for (int j = 0; j < searchFrame.getStackSize(); j++) {
-					if (frame.getStack(j).insns.contains(dup)) {
-						contains = true;
-						break;
+					if (frame.getStack(j).insns.contains(lastStackInsn)) {
+						count++;
+						if (count == 2) {
+							break;
+						}
 					}
 				}
 
-				if (contains) {
+				if (count == 2) {
 					searchFrameIndex++;
 					if (searchFrameIndex < frames.length) {
 						searchFrame = frames[searchFrameIndex];
@@ -208,7 +212,7 @@ public class AsmUtil implements Opcodes {
 						searchFrame = null;
 					}
 				} else {
-					var insn = insns.get(searchFrameIndex - 1); // This was the last instruction with a frame with a dup
+					var insn = insns.get(searchFrameIndex - 1); // This was the last instruction with a frame with two dups
 					if (insn != frameInsn) {
 						return searchInsnInStack(insns, insn, frames, insnPredicate, false);
 					}

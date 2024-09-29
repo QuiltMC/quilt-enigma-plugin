@@ -52,6 +52,9 @@ public class NameProposerService implements NameProposalService {
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CONSTRUCTOR_PARAMS, ConstructorParamsNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_GETTER_SETTER, GetterSetterNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_DELEGATE_PARAMS, DelegateParametersNameProposer::new);
+
+		// conflict fixer must be last in order to get context from other dynamic proposers
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_CONFLICT_FIXER, ConflictFixProposer::new);
 	}
 
 	private void addIfEnabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer> factory) {
@@ -65,8 +68,12 @@ public class NameProposerService implements NameProposalService {
 	}
 
 	private void addIfNotDisabled(EnigmaServiceContext<NameProposalService> context, String name, Supplier<NameProposer> factory) {
+		this.addIfNotDisabled(context, null, name, indexer -> factory.get());
+	}
+
+	private void addIfNotDisabled(EnigmaServiceContext<NameProposalService> context, JarIndexer indexer, String name, Function<JarIndexer, NameProposer> factory) {
 		if (!Arguments.getBoolean(context, name, true)) {
-			this.nameProposers.add(factory.get());
+			this.nameProposers.add(factory.apply(indexer));
 		}
 	}
 

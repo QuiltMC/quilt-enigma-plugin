@@ -54,6 +54,7 @@ import java.util.Set;
  */
 public class SimpleTypeSingleIndex extends Index {
 	private final Map<LocalVariableEntry, String> parameters = new HashMap<>();
+	private final Map<LocalVariableEntry, List<String>> parameterFallbacks = new HashMap<>();
 	private final Map<FieldEntry, String> fields = new HashMap<>();
 	private final Map<ClassNode, Map<String, FieldBuildingEntry>> fieldCache = new HashMap<>();
 	private SimpleTypeFieldNamesRegistry registry;
@@ -102,6 +103,10 @@ public class SimpleTypeSingleIndex extends Index {
 
 	public @Nullable String getParam(LocalVariableEntry paramEntry) {
 		return this.parameters.get(paramEntry);
+	}
+
+	public @Nullable List<String> getParamFallbacks(LocalVariableEntry paramEntry) {
+		return this.parameterFallbacks.get(paramEntry);
 	}
 
 	public Set<FieldEntry> getFields() {
@@ -179,6 +184,7 @@ public class SimpleTypeSingleIndex extends Index {
 					int index = param.index() + (isStatic ? 0 : 1);
 					var paramEntry = new LocalVariableEntry(methodEntry, index);
 					this.parameters.put(paramEntry, name);
+					this.parameterFallbacks.put(paramEntry, param.entry.fallback().stream().map(Name::local).toList());
 				}
 			});
 		}

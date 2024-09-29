@@ -3,6 +3,14 @@
 
     "com/a/b/a": "config",
 
+    "java/lang/CharSequence": {
+        local_name: "id",
+        exclusive: true,
+        fallback: [
+            "identifier"
+        ]
+    },
+
     // Position
     "com/a/b/b": "pos", // Pos
     "com/a/b/c": { // Position

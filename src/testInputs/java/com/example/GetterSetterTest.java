@@ -6,6 +6,11 @@ public class GetterSetterTest {
 	public int x;
 	public String y;
 
+	public GetterSetterTest(int x, String y) {
+		this.x = x;
+		this.y = y;
+	}
+
 	public int getX() {
 		return this.x;
 	}
