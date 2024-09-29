@@ -272,47 +272,4 @@ public class AsmUtil implements Opcodes {
 
 		return null;
 	}
-
-	public static void printFrames(MethodNode method, Frame<SourceValue>[] frames, PrintWriter printWriter) {
-		Textifier textifier = new Textifier();
-		TraceMethodVisitor traceMethodVisitor = new TraceMethodVisitor(textifier);
-
-		printWriter.println(method.name + method.desc);
-		for (int i = 0; i < method.instructions.size(); ++i) {
-			StringBuilder stringBuilder = new StringBuilder();
-			Frame<SourceValue> frame = frames[i];
-			if (frame == null) {
-				stringBuilder.append('?');
-			} else {
-				for (int j = 0; j < frame.getLocals(); ++j) {
-					stringBuilder.append('[')
-						.append(frame.getLocal(j).insns.stream().map(insn -> method.instructions.indexOf(insn) + 100000)
-							.map(k -> String.valueOf(k).substring(1))
-							.reduce((a, b) -> a + ", " + b).orElse("?"))
-						.append("] ");
-				}
-				stringBuilder.append(" : ");
-				for (int j = 0; j < frame.getStackSize(); ++j) {
-					stringBuilder.append('[')
-						.append(frame.getStack(j).insns.stream().map(insn -> method.instructions.indexOf(insn) + 100000)
-							.map(k -> String.valueOf(k).substring(1))
-							.reduce((a, b) -> a + ", " + b).orElse("?"))
-						.append("] ");
-				}
-			}
-			while (stringBuilder.length() < method.maxStack + method.maxLocals + 1) {
-				stringBuilder.append(' ');
-			}
-			printWriter.print(Integer.toString(i + 100000).substring(1));
-
-			method.instructions.get(i).accept(traceMethodVisitor);
-			printWriter.print(
-				" " + stringBuilder + " : " + textifier.text.get(textifier.text.size() - 1));
-		}
-		for (TryCatchBlockNode tryCatchBlock : method.tryCatchBlocks) {
-			tryCatchBlock.accept(traceMethodVisitor);
-			printWriter.print(" " + textifier.text.get(textifier.text.size() - 1));
-		}
-		printWriter.println();
-	}
 }
