@@ -290,6 +290,26 @@ public class NameProposalTest {
 	}
 
 	@Test
+	public void testSimpleTypeNameConflictFix() {
+		// tests the conflict fixer via introducing a conflict manually
+
+		var owner = new ClassEntry("com/a/c/a");
+		var constructor = method(owner, "<init>", "(ILjava/lang/CharSequence;)V");
+
+		// param 2 is initially 'id'
+		assertProposal("id", localVar(constructor, 2));
+
+		// fires dynamic proposal for the constructor parameter, creating a conflict
+		// the conflict should then be automatically fixed by moving to the 'identifier' name
+		// note we bypass putMapping so that we can create a conflict
+		remapper.getMappings().insert(field(owner, "a", "I"), new EntryMapping("id"));
+		remapper.insertDynamicallyProposedMappings(field(owner, "a", "I"), EntryMapping.OBFUSCATED, new EntryMapping("id"));
+
+		assertDynamicProposal("id", localVar(constructor, 1));
+		assertDynamicProposal("identifier", localVar(constructor, 2));
+	}
+
+	@Test
 	public void testDelegateParameterNames() {
 		var classEntry = new ClassEntry("com/a/b");
 

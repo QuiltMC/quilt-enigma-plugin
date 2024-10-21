@@ -50,7 +50,7 @@ public class MojangNameProposer extends NameProposer {
 
 		for (MethodEntry method : entryIndex.getMethods()) {
 			String name = method.getName();
-			if (!name.startsWith("m_")) {
+			if (!name.startsWith("m_") && !method.isConstructor()) {
 				this.insertProposal(mappings, method, name);
 			}
 		}
