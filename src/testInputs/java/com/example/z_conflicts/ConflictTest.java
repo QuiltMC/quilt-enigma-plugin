@@ -8,4 +8,9 @@ public class ConflictTest {
 		this.a = a;
 		this.b = b;
 	}
+
+	public ConflictTest(int a, StringBuilder string) {
+		this.a = a;
+		this.b = string.toString();
+	}
 }

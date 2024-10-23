@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
@@ -28,6 +29,7 @@ import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class ConflictFixProposer extends NameProposer {
 	public static final String ID = "conflict_fix";
@@ -40,7 +42,7 @@ public class ConflictFixProposer extends NameProposer {
 
 	@Override
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
-		for (Map.Entry<Entry<?>, EntryMapping> entry : mappings.entrySet()) {
+		for (Map.Entry<Entry<?>, EntryMapping> entry : Set.copyOf(mappings.entrySet())) {
 			this.fixConflicts(mappings, remapper, entry.getKey(), entry.getValue());
 		}
 	}
@@ -75,11 +77,12 @@ public class ConflictFixProposer extends NameProposer {
 
 			if (!fixed) {
 				this.insertDynamicProposal(mappings, conflictEntry, (String) null);
+				conflict = this.getConflictingParam(mappings, remapper, conflictEntry, null);
 			}
 		}
 	}
 
-	private Optional<LocalVariableEntry> getConflictingParam(Map<Entry<?>, EntryMapping> mappings, EntryRemapper remapper, LocalVariableEntry entry, String name) {
+	private Optional<LocalVariableEntry> getConflictingParam(Map<Entry<?>, EntryMapping> mappings, EntryRemapper remapper, LocalVariableEntry entry, @Nullable String name) {
 		MethodEntry method = entry.getParent();
 		if (method != null) {
 			var args = method.getParameterIterator(remapper.getJarIndex().getIndex(EntryIndex.class), remapper.getDeobfuscator());
@@ -87,9 +90,12 @@ public class ConflictFixProposer extends NameProposer {
 			while (args.hasNext()) {
 				LocalVariableEntry arg = args.next();
 				// check newly proposed mappings for a name
-				String remappedName = mappings.containsKey(arg) ? mappings.get(arg).targetName() : arg.getName();
+				String remappedName = arg.getName();
+				if (mappings.containsKey(arg)) {
+					remappedName = mappings.get(arg) == null ? null : mappings.get(arg).targetName();
+				}
 
-				if (arg.getIndex() != entry.getIndex() && name.equals(remappedName)) {
+				if (arg.getIndex() != entry.getIndex() && name != null && name.equals(remappedName)) {
 					return Optional.of(arg);
 				}
 			}

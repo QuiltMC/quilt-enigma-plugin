@@ -3,12 +3,17 @@
 
     "com/a/b/a": "config",
 
+    // for conflict fix test
     "java/lang/CharSequence": {
         local_name: "id",
         exclusive: true,
         fallback: [
             "identifier"
         ]
+    },
+    "java/lang/StringBuilder": {
+        "local_name": "stringBuilder",
+        exclusive: true
     },
 
     // Position
