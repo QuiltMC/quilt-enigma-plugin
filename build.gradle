@@ -14,7 +14,7 @@ plugins {
 	id 'org.quiltmc.gradle.licenser' version '2.0.1'
 }
 
-version '2.3.0'
+version '2.3.1'
 group 'org.quiltmc'
 
 version = version + (System.getenv("GITHUB_ACTIONS") ? "" : "+local")
