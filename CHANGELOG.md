@@ -17,3 +17,8 @@
 - automatically fix conflicts with proposed parameters
 - fix constant field name finding being broken by an ASM update
 - update ASM to `9.7.1`
+
+# 2.3.1
+
+- fix possible CME in conflict fixing
+- increase unit testing for conflict fixing
