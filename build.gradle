@@ -42,10 +42,6 @@ repositories {
 			includeModule('net.fabricmc', 'cfr')
 		}
 	}
-	// remove when ASM fix is released
-	maven {
-		url = "https://repository.ow2.org/nexus/content/repositories/snapshots/"
-	}
 
 	// Test inputs dependencies
 	maven {
