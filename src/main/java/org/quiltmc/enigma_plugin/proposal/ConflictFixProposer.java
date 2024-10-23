@@ -53,7 +53,7 @@ public class ConflictFixProposer extends NameProposer {
 
 	private void fixParamConflicts(Map<Entry<?>, EntryMapping> mappings, EntryRemapper remapper, LocalVariableEntry entry, EntryMapping mapping) {
 		String name = mapping.targetName();
-		Optional<LocalVariableEntry> conflict = this.getConflictingParam(remapper, entry, name);
+		Optional<LocalVariableEntry> conflict = this.getConflictingParam(mappings, remapper, entry, name);
 
 		while (conflict.isPresent()) {
 			LocalVariableEntry conflictEntry = conflict.get();
@@ -63,10 +63,10 @@ public class ConflictFixProposer extends NameProposer {
 
 			if (fallbacks != null) {
 				for (String fallbackName : fallbacks) {
-					Optional<LocalVariableEntry> newConflict = this.getConflictingParam(remapper, conflictEntry, fallbackName);
+					Optional<LocalVariableEntry> newConflict = this.getConflictingParam(mappings, remapper, conflictEntry, fallbackName);
 					if (newConflict.isEmpty()) {
 						this.insertDynamicProposal(mappings, conflictEntry, fallbackName);
-						conflict = this.getConflictingParam(remapper, conflictEntry, name);
+						conflict = this.getConflictingParam(mappings, remapper, conflictEntry, fallbackName);
 						fixed = true;
 						break;
 					}
@@ -79,14 +79,17 @@ public class ConflictFixProposer extends NameProposer {
 		}
 	}
 
-	private Optional<LocalVariableEntry> getConflictingParam(EntryRemapper remapper, LocalVariableEntry entry, String name) {
+	private Optional<LocalVariableEntry> getConflictingParam(Map<Entry<?>, EntryMapping> mappings, EntryRemapper remapper, LocalVariableEntry entry, String name) {
 		MethodEntry method = entry.getParent();
 		if (method != null) {
 			var args = method.getParameterIterator(remapper.getJarIndex().getIndex(EntryIndex.class), remapper.getDeobfuscator());
 
 			while (args.hasNext()) {
 				LocalVariableEntry arg = args.next();
-				if (arg.getIndex() != entry.getIndex() && arg.getName().equals(name)) {
+				// check newly proposed mappings for a name
+				String remappedName = mappings.containsKey(arg) ? mappings.get(arg).targetName() : arg.getName();
+
+				if (arg.getIndex() != entry.getIndex() && name.equals(remappedName)) {
 					return Optional.of(arg);
 				}
 			}
