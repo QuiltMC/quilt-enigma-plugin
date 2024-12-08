@@ -86,7 +86,10 @@ public class MojmapTest {
 					"services": {
 						"name_proposal": [
 							{
-								"id": "quiltmc:mojang_name_proposal"
+								"id": "quiltmc:mojang_name_proposal",
+								"args": {
+									"mojmap_path": "./mojmap_cache/server-mappings.txt"
+								}
 							}
 						]
 					}

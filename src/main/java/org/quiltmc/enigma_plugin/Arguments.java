@@ -33,8 +33,10 @@ public class Arguments {
 	public static final String DISABLE_MAP_NON_HASHED = "disable_map_non_hashed";
 	public static final String DISABLE_DELEGATE_PARAMS = "disable_delegate_params";
 	public static final String DISABLE_CONFLICT_FIXER = "disable_conflict_fixer";
+	public static final String DISABLE_MOJMAP = "disable_mojmap";
 	public static final String CUSTOM_CODECS = "custom_codecs";
 	public static final String SIMPLE_TYPE_FIELD_NAMES_PATH = "simple_type_field_names_path";
+	public static final String MOJMAP_PATH = "mojmap_path";
 
 	public static <T extends EnigmaService> boolean getBoolean(EnigmaServiceContext<T> context, String arg) {
 		return getBoolean(context, arg, false);

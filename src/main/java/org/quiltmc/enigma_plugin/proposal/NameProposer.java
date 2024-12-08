@@ -79,6 +79,10 @@ public abstract class NameProposer {
 		}
 	}
 
+	public boolean fallback() {
+		return false;
+	}
+
 	public boolean hasJarProposal(EntryRemapper remapper, Entry<?> entry) {
 		return remapper.getJarProposedMappings().contains(entry);
 	}
