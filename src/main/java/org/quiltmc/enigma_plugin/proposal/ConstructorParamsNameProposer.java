@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
@@ -37,7 +38,7 @@ public class ConstructorParamsNameProposer extends NameProposer {
 	}
 
 	@Override
-	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+	public void insertProposedNames(Enigma enigma, JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
 	}
 
 	@Override

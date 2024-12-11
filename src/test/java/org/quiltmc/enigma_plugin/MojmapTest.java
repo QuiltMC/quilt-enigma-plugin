@@ -1,5 +1,6 @@
 package org.quiltmc.enigma_plugin;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,8 +9,13 @@ import org.quiltmc.enigma.api.EnigmaProfile;
 import org.quiltmc.enigma.api.EnigmaProject;
 import org.quiltmc.enigma.api.ProgressListener;
 import org.quiltmc.enigma.api.class_provider.ClasspathClassProvider;
-import org.quiltmc.enigma.api.translation.mapping.serde.MappingParseException;
+import org.quiltmc.enigma.api.source.TokenType;
+import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
+import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.launchermeta.version.v1.DownloadableFile;
 import org.quiltmc.launchermeta.version.v1.Version;
 import org.quiltmc.launchermeta.version_manifest.VersionEntry;
@@ -24,6 +30,9 @@ import java.io.StringReader;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Optional;
+
+// todo evaluate whether this obsoletes any proposers (non-hashed proposer is def on the chopping block)
+// todo make sure of priority
 
 public class MojmapTest {
 	private static final Path cacheDir = Path.of("build/mojmap_cache");
@@ -79,16 +88,15 @@ public class MojmapTest {
 	}
 
 	@BeforeEach
-	@SuppressWarnings("OptionalGetWithoutIsPresent")
-	void setupEnigma() throws IOException, MappingParseException {
+	void setupEnigma() throws IOException {
 		var profile = EnigmaProfile.parse(new StringReader("""
 			{
 					"services": {
 						"name_proposal": [
 							{
-								"id": "quiltmc:mojang_name_proposal",
+								"id": "quiltmc:name_proposal/fallback",
 								"args": {
-									"mojmap_path": "./mojmap_cache/server-mappings.txt"
+									"mojmap_path": "./build/mojmap_cache/server-mappings.txt"
 								}
 							}
 						]
@@ -99,14 +107,32 @@ public class MojmapTest {
 
 		var enigma = Enigma.builder().setProfile(profile).build();
 		project = enigma.openJar(cachedServerJar.toPath(), new ClasspathClassProvider(), ProgressListener.createEmpty());
-
-		// todo should be proposed instead of manually inserted!
-		project.setMappings(enigma.getReadWriteService(cachedServerMappings.toPath()).get().read(cachedServerMappings.toPath()), ProgressListener.createEmpty());
 	}
 
 	@Test
 	void test() {
-		ClassEntry a = new ClassEntry("a");
-		assert project.getRemapper().getMapping(a).targetName().equals("com/mojang/math/Axis");
+		// assert that all types propose properly
+		// note that mojmaps do not contain params
+
+		ClassEntry a = new ClassEntry("a"); // Axis
+		assertMapping(a, "com/mojang/math/Axis", TokenType.JAR_PROPOSED);
+
+		ClassEntry b = new ClassEntry("b");
+		FieldEntry pi = new FieldEntry(b, "a", new TypeDescriptor("F"));
+		assertMapping(pi, "PI", TokenType.JAR_PROPOSED);
+
+		ClassEntry dnt = new ClassEntry("dnt");
+		MethodEntry getExplosionResistance = new MethodEntry(dnt, "e", new MethodDescriptor("()F"));
+		assertMapping(getExplosionResistance, "getExplosionResistance", TokenType.JAR_PROPOSED);
+	}
+
+	private void assertMapping(Entry<?> entry, String name, TokenType type) {
+		var mapping = project.getRemapper().getMapping(entry);
+		assertEquals(entry, name, mapping.targetName());
+		assertEquals(entry, type, mapping.tokenType());
+	}
+
+	private void assertEquals(Entry<?> entry, Object left, Object right) {
+		Assertions.assertEquals(left, right, "mismatch for " + entry);
 	}
 }

@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.service.EnigmaServiceContext;
 import org.quiltmc.enigma.api.service.NameProposalService;
@@ -23,7 +24,6 @@ import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma_plugin.Arguments;
-import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 
 import java.util.ArrayList;
@@ -61,11 +61,11 @@ public abstract class NameProposerService implements NameProposalService {
 	}
 
 	@Override
-	public Map<Entry<?>, EntryMapping> getProposedNames(JarIndex index) {
+	public Map<Entry<?>, EntryMapping> getProposedNames(Enigma enigma, JarIndex index) {
 		HashMap<Entry<?>, EntryMapping> proposedNames = new HashMap<>();
 
 		for (NameProposer proposer : this.nameProposers) {
-			proposer.insertProposedNames(index, proposedNames);
+			proposer.insertProposedNames(enigma, index, proposedNames);
 		}
 
 		return proposedNames;

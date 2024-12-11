@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.source.TokenType;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
@@ -79,15 +80,11 @@ public abstract class NameProposer {
 		}
 	}
 
-	public boolean fallback() {
-		return false;
-	}
-
 	public boolean hasJarProposal(EntryRemapper remapper, Entry<?> entry) {
 		return remapper.getJarProposedMappings().contains(entry);
 	}
 
-	public abstract void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings);
+	public abstract void insertProposedNames(Enigma enigma, JarIndex index, Map<Entry<?>, EntryMapping> mappings);
 
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
 	}

@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
@@ -30,15 +31,15 @@ import java.util.Map;
  * If the entry is not deobfuscated, propose the name that's already provided.
  * This is useful to avoid situations where we simply click "mark as deobf" to name something.
  */
-public class MojangNameProposer extends NameProposer {
+public class NonHashedNameProposer extends NameProposer {
 	public static final String ID = "map_non_hashed";
 
-	public MojangNameProposer() {
+	public NonHashedNameProposer() {
 		super(ID);
 	}
 
 	@Override
-	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+	public void insertProposedNames(Enigma enigma, JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
 		EntryIndex entryIndex = index.getIndex(EntryIndex.class);
 
 		for (FieldEntry field : entryIndex.getFields()) {

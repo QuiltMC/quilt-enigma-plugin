@@ -15,7 +15,7 @@ public class DefaultProposalService extends NameProposerService {
 		this.addIfEnabled(context, Arguments.DISABLE_EQUALS, EqualsNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_LOGGER, LoggerNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CODECS, CodecNameProposer::new);
-		this.addIfNotDisabled(context, Arguments.DISABLE_MAP_NON_HASHED, MojangNameProposer::new);
+		this.addIfNotDisabled(context, Arguments.DISABLE_MAP_NON_HASHED, NonHashedNameProposer::new);
 
 		if (indexer.getIndex(SimpleTypeSingleIndex.class).isEnabled()) {
 			this.add(indexer, SimpleTypeFieldNameProposer::new);

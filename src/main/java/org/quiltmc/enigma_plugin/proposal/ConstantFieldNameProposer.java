@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
@@ -35,7 +36,7 @@ public class ConstantFieldNameProposer extends NameProposer {
 	}
 
 	@Override
-	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+	public void insertProposedNames(Enigma enigma, JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
 		for (FieldEntry field : this.fieldIndex.getFields()) {
 			String name = this.fieldIndex.getName(field);
 			this.insertProposal(mappings, field, name);

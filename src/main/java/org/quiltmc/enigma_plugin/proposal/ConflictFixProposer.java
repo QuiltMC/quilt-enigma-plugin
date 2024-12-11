@@ -17,6 +17,7 @@
 package org.quiltmc.enigma_plugin.proposal;
 
 import org.jetbrains.annotations.Nullable;
+import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
@@ -105,6 +106,6 @@ public class ConflictFixProposer extends NameProposer {
 	}
 
 	@Override
-	public void insertProposedNames(JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+	public void insertProposedNames(Enigma enigma, JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
 	}
 }

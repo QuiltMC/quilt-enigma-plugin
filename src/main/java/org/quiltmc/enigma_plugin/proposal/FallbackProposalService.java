@@ -16,4 +16,9 @@ public class FallbackProposalService extends NameProposerService {
 	public String getId() {
 		return QuiltEnigmaPlugin.FALLBACK_NAME_PROPOSAL_SERVICE_ID;
 	}
+
+	@Override
+	public boolean isFallback() {
+		return true;
+	}
 }
