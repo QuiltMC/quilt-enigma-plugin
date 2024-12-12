@@ -10,12 +10,15 @@ import org.quiltmc.enigma.api.EnigmaProject;
 import org.quiltmc.enigma.api.ProgressListener;
 import org.quiltmc.enigma.api.class_provider.ClasspathClassProvider;
 import org.quiltmc.enigma.api.source.TokenType;
+import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
 import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.util.validation.PrintNotifier;
+import org.quiltmc.enigma.util.validation.ValidationContext;
 import org.quiltmc.launchermeta.version.v1.DownloadableFile;
 import org.quiltmc.launchermeta.version.v1.Version;
 import org.quiltmc.launchermeta.version_manifest.VersionEntry;
@@ -98,6 +101,9 @@ public class MojmapTest {
 								"args": {
 									"mojmap_path": "./build/mojmap_cache/server-mappings.txt"
 								}
+							},
+							{
+								"id": "quiltmc:name_proposal/unchecked"
 							}
 						]
 					}
@@ -110,7 +116,7 @@ public class MojmapTest {
 	}
 
 	@Test
-	void test() {
+	void testStaticProposal() {
 		// assert that all types propose properly
 		// note that mojmaps do not contain params
 
@@ -124,6 +130,17 @@ public class MojmapTest {
 		ClassEntry dnt = new ClassEntry("dnt");
 		MethodEntry getExplosionResistance = new MethodEntry(dnt, "e", new MethodDescriptor("()F"));
 		assertMapping(getExplosionResistance, "getExplosionResistance", TokenType.JAR_PROPOSED);
+	}
+
+	@Test
+	void testDynamicProposal() {
+		ClassEntry a = new ClassEntry("a");
+		assertMapping(a, "com/mojang/math/Axis", TokenType.JAR_PROPOSED);
+
+		ValidationContext vc = new ValidationContext(PrintNotifier.INSTANCE);
+		project.getRemapper().putMapping(vc, a, new EntryMapping("gaming/Gaming"));
+
+		assertMapping(a, "com/mojang/math/Gaming", TokenType.DEOBFUSCATED);
 	}
 
 	private void assertMapping(Entry<?> entry, String name, TokenType type) {
