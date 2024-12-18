@@ -60,6 +60,7 @@ dependencies {
 	implementation libs.quilt.json5
 	implementation libs.tinylog
 	implementation libs.annotations
+	implementation libs.gson
 
 	testImplementation libs.junit
 	testImplementation libs.hamcrest
