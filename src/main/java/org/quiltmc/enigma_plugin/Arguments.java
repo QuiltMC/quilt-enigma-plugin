@@ -37,6 +37,7 @@ public class Arguments {
 	public static final String CUSTOM_CODECS = "custom_codecs";
 	public static final String SIMPLE_TYPE_FIELD_NAMES_PATH = "simple_type_field_names_path";
 	public static final String MOJMAP_PATH = "mojmap_path";
+	public static final String PACKAGE_NAME_OVERRIDES_PATH = "package_name_overrides_path";
 
 	public static <T extends EnigmaService> boolean getBoolean(EnigmaServiceContext<T> context, String arg) {
 		return getBoolean(context, arg, false);

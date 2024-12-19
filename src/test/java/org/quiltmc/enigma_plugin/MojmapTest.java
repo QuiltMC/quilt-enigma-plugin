@@ -19,6 +19,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma.util.validation.PrintNotifier;
 import org.quiltmc.enigma.util.validation.ValidationContext;
+import org.quiltmc.enigma_plugin.proposal.MojmapNameProposer;
 import org.quiltmc.launchermeta.version.v1.DownloadableFile;
 import org.quiltmc.launchermeta.version.v1.Version;
 import org.quiltmc.launchermeta.version_manifest.VersionEntry;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -99,7 +101,8 @@ public class MojmapTest {
 							{
 								"id": "quiltmc:name_proposal/fallback",
 								"args": {
-									"mojmap_path": "./build/mojmap_cache/server-mappings.txt"
+									"mojmap_path": "./build/mojmap_cache/server-mappings.txt",
+									"package_name_overrides_path": "./src/test/resources/mojmap_test/package_name_overrides.json"
 								}
 							},
 							{
@@ -141,6 +144,19 @@ public class MojmapTest {
 		project.getRemapper().putMapping(vc, a, new EntryMapping("gaming/Gaming"));
 
 		assertMapping(a, "com/mojang/math/Gaming", TokenType.DEOBFUSCATED);
+	}
+
+	@Test
+	void testPackageNameOverrideGeneration() throws IOException {
+		// todo make a more minimal one -- use a custom mapping set
+		Path tempFile = Files.createTempFile("temp_package_overrides", "json");
+
+		MojmapNameProposer.writePackageJson(tempFile.toString(), MojmapNameProposer.mojmaps);
+
+		String expected = Files.readString(Path.of("./src/test/resources/mojmap_test/expected.json"));
+		String actual = Files.readString(tempFile);
+
+		Assertions.assertEquals(expected, actual);
 	}
 
 	private void assertMapping(Entry<?> entry, String name, TokenType type) {

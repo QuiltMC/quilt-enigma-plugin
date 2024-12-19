@@ -1,0 +1,1333 @@
+[
+  {
+    "obf": "net",
+    "deobf": "",
+    "children": [
+      {
+        "obf": "minecraft",
+        "deobf": "",
+        "children": [
+          {
+            "obf": "world",
+            "deobf": "",
+            "children": [
+              {
+                "obf": "entity",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "ai",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "goal",
+                        "deobf": "",
+                        "children": [
+                          {
+                            "obf": "target",
+                            "deobf": "",
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "obf": "gossip",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "memory",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "navigation",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "sensing",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "targeting",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "util",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "village",
+                        "deobf": "",
+                        "children": [
+                          {
+                            "obf": "poi",
+                            "deobf": "",
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "obf": "attributes",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "behavior",
+                        "deobf": "",
+                        "children": [
+                          {
+                            "obf": "declarative",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "warden",
+                            "deobf": "",
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "obf": "control",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "ambient",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "animal",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "allay",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "armadillo",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "axolotl",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "camel",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "frog",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "goat",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "horse",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "sniffer",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "boss",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "enderdragon",
+                        "deobf": "",
+                        "children": [
+                          {
+                            "obf": "phases",
+                            "deobf": "",
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "obf": "wither",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "decoration",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "item",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "monster",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "breeze",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "hoglin",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "piglin",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "warden",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "npc",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "player",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "projectile",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "windcharge",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "raid",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "schedule",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "vehicle",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "flag",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "food",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "inventory",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "tooltip",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "item",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "alchemy",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "armortrim",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "component",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "context",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "crafting",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "enchantment",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "effects",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "providers",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "trading",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "level",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "biome",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "block",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "entity",
+                        "deobf": "",
+                        "children": [
+                          {
+                            "obf": "trialspawner",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "vault",
+                            "deobf": "",
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "obf": "grower",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "piston",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "state",
+                        "deobf": "",
+                        "children": [
+                          {
+                            "obf": "pattern",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "predicate",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "properties",
+                            "deobf": "",
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "border",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "chunk",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "status",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "storage",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "dimension",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "end",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "entity",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "gameevent",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "vibrations",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "levelgen",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "blending",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "blockpredicates",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "carver",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "feature",
+                        "deobf": "",
+                        "children": [
+                          {
+                            "obf": "configurations",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "featuresize",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "foliageplacers",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "rootplacers",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "stateproviders",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "treedecorators",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "trunkplacers",
+                            "deobf": "",
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "obf": "flat",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "heightproviders",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "material",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "placement",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "presets",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "structure",
+                        "deobf": "",
+                        "children": [
+                          {
+                            "obf": "pieces",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "placement",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "pools",
+                            "deobf": "",
+                            "children": [
+                              {
+                                "obf": "alias",
+                                "deobf": "",
+                                "children": []
+                              }
+                            ]
+                          },
+                          {
+                            "obf": "structures",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "templatesystem",
+                            "deobf": "",
+                            "children": [
+                              {
+                                "obf": "rule",
+                                "deobf": "",
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "obf": "synth",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "lighting",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "material",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "pathfinder",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "portal",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "redstone",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "saveddata",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "maps",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "storage",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "loot",
+                        "deobf": "",
+                        "children": [
+                          {
+                            "obf": "entries",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "functions",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "parameters",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "predicates",
+                            "deobf": "",
+                            "children": []
+                          },
+                          {
+                            "obf": "providers",
+                            "deobf": "",
+                            "children": [
+                              {
+                                "obf": "nbt",
+                                "deobf": "",
+                                "children": []
+                              },
+                              {
+                                "obf": "number",
+                                "deobf": "",
+                                "children": []
+                              },
+                              {
+                                "obf": "score",
+                                "deobf": "",
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "timers",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "validation",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "phys",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "shapes",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "scores",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "criteria",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "ticks",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "damagesource",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "effect",
+                "deobf": "",
+                "children": []
+              }
+            ]
+          },
+          {
+            "obf": "util",
+            "deobf": "",
+            "children": [
+              {
+                "obf": "profiling",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "jfr",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "event",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "callback",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "parse",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "serialize",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "stats",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "metrics",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "profiling",
+                        "deobf": "",
+                        "children": []
+                      },
+                      {
+                        "obf": "storage",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "obf": "datafix",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "fixes",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "schemas",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "debugchart",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "eventlog",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "monitoring",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "jmx",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "parsing",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "packrat",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "commands",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "obf": "random",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "thread",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "valueproviders",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "worldupdate",
+                "deobf": "",
+                "children": []
+              }
+            ]
+          },
+          {
+            "obf": "server",
+            "deobf": "",
+            "children": [
+              {
+                "obf": "advancements",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "bossevents",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "chase",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "commands",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "data",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "dedicated",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "gui",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "level",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "progress",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "network",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "config",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "packs",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "linkfs",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "metadata",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "pack",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "repository",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "resources",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "players",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "rcon",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "thread",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "obf": "obfuscate",
+            "deobf": "",
+            "children": []
+          },
+          {
+            "obf": "advancements",
+            "deobf": "",
+            "children": [
+              {
+                "obf": "critereon",
+                "deobf": "",
+                "children": []
+              }
+            ]
+          },
+          {
+            "obf": "commands",
+            "deobf": "",
+            "children": [
+              {
+                "obf": "arguments",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "blocks",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "coordinates",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "item",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "selector",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "options",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "obf": "execution",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "tasks",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "functions",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "synchronization",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "brigadier",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "obf": "core",
+            "deobf": "",
+            "children": [
+              {
+                "obf": "cauldron",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "component",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "dispenser",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "particles",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "registries",
+                "deobf": "",
+                "children": []
+              }
+            ]
+          },
+          {
+            "obf": "data",
+            "deobf": "",
+            "children": [
+              {
+                "obf": "advancements",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "packs",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "info",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "loot",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "packs",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "metadata",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "models",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "blockstates",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "model",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "recipes",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "packs",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "registries",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "structures",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "tags",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "worldgen",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "biome",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "features",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "placement",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "obf": "gametest",
+            "deobf": "",
+            "children": [
+              {
+                "obf": "framework",
+                "deobf": "",
+                "children": []
+              }
+            ]
+          },
+          {
+            "obf": "locale",
+            "deobf": "",
+            "children": []
+          },
+          {
+            "obf": "nbt",
+            "deobf": "",
+            "children": [
+              {
+                "obf": "visitors",
+                "deobf": "",
+                "children": []
+              }
+            ]
+          },
+          {
+            "obf": "network",
+            "deobf": "",
+            "children": [
+              {
+                "obf": "chat",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "contents",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "numbers",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "codec",
+                "deobf": "",
+                "children": []
+              },
+              {
+                "obf": "protocol",
+                "deobf": "",
+                "children": [
+                  {
+                    "obf": "common",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "custom",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "configuration",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "cookie",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "game",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "handshake",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "login",
+                    "deobf": "",
+                    "children": [
+                      {
+                        "obf": "custom",
+                        "deobf": "",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "obf": "ping",
+                    "deobf": "",
+                    "children": []
+                  },
+                  {
+                    "obf": "status",
+                    "deobf": "",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "obf": "syncher",
+                "deobf": "",
+                "children": []
+              }
+            ]
+          },
+          {
+            "obf": "recipebook",
+            "deobf": "",
+            "children": []
+          },
+          {
+            "obf": "references",
+            "deobf": "",
+            "children": []
+          },
+          {
+            "obf": "resources",
+            "deobf": "",
+            "children": []
+          },
+          {
+            "obf": "sounds",
+            "deobf": "",
+            "children": []
+          },
+          {
+            "obf": "stats",
+            "deobf": "",
+            "children": []
+          },
+          {
+            "obf": "tags",
+            "deobf": "",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "obf": "com",
+    "deobf": "",
+    "children": [
+      {
+        "obf": "mojang",
+        "deobf": "",
+        "children": [
+          {
+            "obf": "math",
+            "deobf": "",
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+]

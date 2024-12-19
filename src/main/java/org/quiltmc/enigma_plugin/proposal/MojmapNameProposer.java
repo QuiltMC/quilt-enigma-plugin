@@ -1,6 +1,8 @@
 package org.quiltmc.enigma_plugin.proposal;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.ProgressListener;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
@@ -12,6 +14,11 @@ import org.quiltmc.enigma.api.translation.mapping.tree.EntryTreeNode;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.tinylog.Logger;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,19 +32,27 @@ public class MojmapNameProposer extends NameProposer {
 	public static final String ID = "mojmap";
 
 	private final String mojmapPath;
+	private final String packageNameOverridesPath;
 	// must be static for now. nasty hack to make sure we don't read mojmaps twice
 	// we can guarantee that this is nonnull for the other proposer because jar proposal blocks dynamic proposal
 	public static EntryTree<EntryMapping> mojmaps;
 
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-	public MojmapNameProposer(Optional<String> path) {
+	public MojmapNameProposer(Optional<String> mojmapPath, Optional<String> packageNameOverridesPath) {
 		super(ID);
 
-		if (path.isPresent()) {
-			this.mojmapPath = path.get();
+		if (mojmapPath.isPresent()) {
+			this.mojmapPath = mojmapPath.get();
 		} else {
 			Logger.error("no mojmap path provided, disabling " + this.getSourcePluginId());
 			this.mojmapPath = null;
+		}
+
+		if (packageNameOverridesPath.isPresent()) {
+			this.packageNameOverridesPath = packageNameOverridesPath.get();
+		} else {
+			Logger.warn("no package name overrides path provided!");
+			this.packageNameOverridesPath = null;
 		}
 	}
 
@@ -53,7 +68,6 @@ public class MojmapNameProposer extends NameProposer {
 		});
 
 		if (mojmaps != null) {
-			var json = createPackageJson();
 			mojmaps.getRootNodes().forEach((node) -> this.proposeNodeAndChildren(mappings, node));
 		}
 	}
@@ -66,8 +80,27 @@ public class MojmapNameProposer extends NameProposer {
 		node.getChildNodes().forEach((child) -> proposeNodeAndChildren(mappings, child));
 	}
 
+	@Nullable
+	public static List<PackageEntry> readPackageJson(Gson gson, String path) {
+		try {
+			if (path != null) {
+				Reader jsonReader = new FileReader(path);
+				return gson.fromJson(jsonReader, PackageEntryList.class);
+			}
+		} catch (FileNotFoundException e) {
+			Logger.warn("could not find old package definitions file");
+		}
+
+		return null;
+	}
+
 	@SuppressWarnings("OptionalGetWithoutIsPresent")
-	public static String createPackageJson() {
+	public static void writePackageJson(String packageNameOverridesPath, EntryTree<EntryMapping> mojmaps) {
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+		List<PackageEntry> parsedRootEntries = readPackageJson(gson, packageNameOverridesPath);
+		// todo merge with new tree
+
 		MappingsIndex index = new MappingsIndex(new PackageIndex());
 		index.indexMappings(mojmaps, ProgressListener.createEmpty());
 
@@ -113,10 +146,17 @@ public class MojmapNameProposer extends NameProposer {
 			}
 		}
 
-		return new GsonBuilder().setPrettyPrinting().create().toJson(rootPackages);
+		try {
+			Files.write(Path.of(packageNameOverridesPath), gson.toJson(rootPackages).getBytes());
+		} catch (IOException e) {
+			Logger.error(e, "could not write updated package name overrides");
+		}
 	}
 
-	private static class PackageEntry {
+	public static class PackageEntryList extends ArrayList<PackageEntry> {
+	}
+
+	public static class PackageEntry {
 		public String obf;
 		public String deobf;
 		public List<PackageEntry> children;
