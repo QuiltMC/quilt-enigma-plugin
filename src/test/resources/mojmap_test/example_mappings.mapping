@@ -1,0 +1,7 @@
+CLASS a a/A
+CLASS b a/b/B
+CLASS c b/a/A
+CLASS d c/a/A
+CLASS e b/b/B
+CLASS f b/b/c/C
+CLASS g a/b/c/A

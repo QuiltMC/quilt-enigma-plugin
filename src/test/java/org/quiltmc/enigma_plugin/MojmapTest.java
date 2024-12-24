@@ -11,6 +11,7 @@ import org.quiltmc.enigma.api.ProgressListener;
 import org.quiltmc.enigma.api.class_provider.ClasspathClassProvider;
 import org.quiltmc.enigma.api.source.TokenType;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.mapping.serde.MappingParseException;
 import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
 import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
@@ -146,14 +147,50 @@ public class MojmapTest {
 		assertMapping(a, "com/mojang/math/Gaming", TokenType.DEOBFUSCATED);
 	}
 
+	@SuppressWarnings("OptionalGetWithoutIsPresent")
 	@Test
-	void testPackageNameOverrideGeneration() throws IOException {
-		// todo make a more minimal one -- use a custom mapping set
+	void testOverrideGeneration() throws IOException, MappingParseException {
 		Path tempFile = Files.createTempFile("temp_package_overrides", "json");
+		Path mappingPath = Path.of("./src/test/resources/mojmap_test/example_mappings.mapping");
+		var mappings = project.getEnigma().readMappings(mappingPath).get();
 
-		MojmapNameProposer.writePackageJson(tempFile.toString(), MojmapNameProposer.mojmaps);
+		var entries = MojmapNameProposer.createPackageJson(mappings);
+		MojmapNameProposer.writePackageJson(tempFile, entries);
+
+		String expected = Files.readString(Path.of("./src/test/resources/mojmap_test/example_mappings_empty.json"));
+		String actual = Files.readString(tempFile);
+
+		Assertions.assertEquals(expected, actual);
+	}
+
+	@Test
+	void testPackageNameOverrideGenerationMojmap() throws IOException {
+		Path tempFile = Files.createTempFile("temp_package_overrides_moj", "json");
+
+		var entries = MojmapNameProposer.createPackageJson(MojmapNameProposer.mojmaps);
+		MojmapNameProposer.writePackageJson(tempFile, entries);
 
 		String expected = Files.readString(Path.of("./src/test/resources/mojmap_test/expected.json"));
+		String actual = Files.readString(tempFile);
+
+		Assertions.assertEquals(expected, actual);
+	}
+
+	@Test
+	void testOverrideUpdating() throws IOException, MappingParseException {
+		Path tempFile = Files.createTempFile("temp_package_overrides_update", "json");
+		Path mappingPath = Path.of("./src/test/resources/mojmap_test/example_mappings.mapping");
+
+		Path oldOverrides = Path.of("./src/test/resources/mojmap_test/update_test/example_mappings.json");
+		Path newOverrides = Path.of("./src/test/resources/mojmap_test/update_test/example_mappings_expected.json");
+
+		var mappings = project.getEnigma().readMappings(mappingPath).get();
+
+		var oldPackageJson = MojmapNameProposer.readPackageJson(oldOverrides.toString());
+		var updated = MojmapNameProposer.updatePackageJson(oldPackageJson, mappings);
+		MojmapNameProposer.writePackageJson(tempFile, updated);
+
+		String expected = Files.readString(newOverrides);
 		String actual = Files.readString(tempFile);
 
 		Assertions.assertEquals(expected, actual);

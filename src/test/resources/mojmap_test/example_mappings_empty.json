@@ -1,0 +1,40 @@
+[
+  {
+    "obf": "a",
+    "deobf": "",
+    "children": [
+      {
+        "obf": "b",
+        "deobf": "",
+        "children": []
+      }
+    ]
+  },
+  {
+    "obf": "b",
+    "deobf": "",
+    "children": [
+      {
+        "obf": "a",
+        "deobf": "",
+        "children": []
+      },
+      {
+        "obf": "b",
+        "deobf": "",
+        "children": []
+      }
+    ]
+  },
+  {
+    "obf": "c",
+    "deobf": "",
+    "children": [
+      {
+        "obf": "a",
+        "deobf": "",
+        "children": []
+      }
+    ]
+  }
+]

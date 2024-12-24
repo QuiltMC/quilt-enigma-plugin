@@ -1,0 +1,29 @@
+[
+  {
+    "obf": "a",
+    "deobf": "wawa",
+    "children": []
+  },
+  {
+    "obf": "b",
+    "deobf": "gaming",
+    "children": [
+      {
+        "obf": "a",
+        "deobf": "",
+        "children": []
+      }
+    ]
+  },
+  {
+    "obf": "c",
+    "deobf": "",
+    "children": [
+      {
+        "obf": "a",
+        "deobf": "listen to the 2016 album aura obelisk by octagrape it goes crazy",
+        "children": []
+      }
+    ]
+  }
+]

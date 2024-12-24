@@ -21,12 +21,12 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class MojmapNameProposer extends NameProposer {
 	public static final String ID = "mojmap";
@@ -85,7 +85,12 @@ public class MojmapNameProposer extends NameProposer {
 		try {
 			if (path != null) {
 				Reader jsonReader = new FileReader(path);
-				return gson.fromJson(jsonReader, PackageEntryList.class);
+				List<PackageEntry> entries = gson.fromJson(jsonReader, PackageEntryList.class);
+				for (PackageEntry entry : entries) {
+					setupInheritance(entry);
+				}
+
+				return entries;
 			}
 		} catch (FileNotFoundException e) {
 			Logger.warn("could not find old package definitions file");
@@ -94,15 +99,47 @@ public class MojmapNameProposer extends NameProposer {
 		return null;
 	}
 
-	@SuppressWarnings("OptionalGetWithoutIsPresent")
-	public static void writePackageJson(String packageNameOverridesPath, EntryTree<EntryMapping> mojmaps) {
+	private static void setupInheritance(PackageEntry entry) {
+		for (PackageEntry child : entry.children) {
+			child.parent = entry;
+			setupInheritance(child);
+		}
+	}
+
+	public static List<PackageEntry> readPackageJson(String path) {
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		return readPackageJson(gson, path);
+	}
 
-		List<PackageEntry> parsedRootEntries = readPackageJson(gson, packageNameOverridesPath);
-		// todo merge with new tree
+	public static List<PackageEntry> updatePackageJson(List<PackageEntry> oldJson, EntryTree<EntryMapping> mappings) {
+		List<PackageEntry> newJson = createPackageJson(mappings);
 
+		for (PackageEntry rootEntry : oldJson) {
+			rootEntry.forEach(oldEntry -> {
+				if (oldEntry.deobf != null) {
+					PackageEntry newEntry = null;
+					String oldEntryString = oldEntry.toPackageString();
+
+					for (PackageEntry root : newJson) {
+						newEntry = root.findEntry(oldEntryString);
+						if (newEntry != null) {
+							break;
+						}
+					}
+
+					if (newEntry != null) {
+						newEntry.deobf = oldEntry.deobf;
+					}
+				}
+			});
+		}
+
+		return newJson;
+	}
+
+	public static List<PackageEntry> createPackageJson(EntryTree<EntryMapping> mappings) {
 		MappingsIndex index = new MappingsIndex(new PackageIndex());
-		index.indexMappings(mojmaps, ProgressListener.createEmpty());
+		index.indexMappings(mappings, ProgressListener.createEmpty());
 
 		var packageNames = index.getIndex(PackageIndex.class).getPackageNames();
 		List<PackageEntry> rootPackages = new ArrayList<>();
@@ -146,8 +183,14 @@ public class MojmapNameProposer extends NameProposer {
 			}
 		}
 
+		return rootPackages;
+	}
+
+	public static void writePackageJson(Path path, List<PackageEntry> entries) {
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
 		try {
-			Files.write(Path.of(packageNameOverridesPath), gson.toJson(rootPackages).getBytes());
+			Files.write(path, gson.toJson(entries).getBytes());
 		} catch (IOException e) {
 			Logger.error(e, "could not write updated package name overrides");
 		}
@@ -168,6 +211,15 @@ public class MojmapNameProposer extends NameProposer {
 			this.children = new ArrayList<>();
 		}
 
+		public void forEach(Consumer<PackageEntry> consumer) {
+			consumer.accept(this);
+
+			for (PackageEntry child : this.children) {
+				consumer.accept(child);
+				child.forEach(consumer);
+			}
+		}
+
 		public PackageEntry findEntry(String obf) {
 			if (this.equals(obf)) {
 				return this;
@@ -183,29 +235,20 @@ public class MojmapNameProposer extends NameProposer {
 			return null;
 		}
 
-		private boolean equals(String obfPackage) {
-			String[] packages = obfPackage.split("/");
-			Collections.reverse(Arrays.asList(packages));
-
-			return this.checkRecursively(packages);
-		}
-
-		private boolean checkRecursively(String[] packageNames) {
-			PackageEntry checkedPackage = this;
-
-			for (String packageName : packageNames) {
-				if (checkedPackage == null) {
-					return true;
-				}
-
-				if (!checkedPackage.obf.equals(packageName)) {
-					return false;
-				}
-
-				checkedPackage = checkedPackage.parent;
+		public String toPackageString() {
+			List<String> packages = new ArrayList<>();
+			PackageEntry entry = this;
+			while (entry != null) {
+				packages.add(entry.obf);
+				entry = entry.parent;
 			}
 
-			return true;
+			Collections.reverse(packages);
+			return String.join("/", packages.toArray(new String[0]));
+		}
+
+		private boolean equals(String obfPackage) {
+			return this.toPackageString().equals(obfPackage);
 		}
 	}
 }
