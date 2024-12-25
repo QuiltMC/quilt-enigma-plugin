@@ -2,7 +2,6 @@ package org.quiltmc.enigma_plugin;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.EnigmaProfile;
@@ -42,14 +41,21 @@ import java.util.Optional;
 
 public class MojmapTest {
 	private static final Path cacheDir = Path.of("build/mojmap_cache");
-	private static final File cachedServerJar = cacheDir.resolve("server.jar").toFile();
-	private static final File cachedServerMappings = cacheDir.resolve("server-mappings.txt").toFile();
+	private static final Path cachedServerJar = cacheDir.resolve("server.jar");
+	private static final Path cachedServerMappings = cacheDir.resolve("server-mappings.txt");
+	private static final Path testResources = Path.of("./src/test/resources");
+	private static final Path mojmapTest = testResources.resolve("mojmap_test");
+	private static final Path emptyOverrides = mojmapTest.resolve("example_mappings_empty.json");
+	private static final Path overrideRenaming = mojmapTest.resolve("override_based_renaming");
+	private static final Path overrideRenamingOverrides = overrideRenaming.resolve("input_overrides.json");
+	private static final Path overrideRenamingJar = overrideRenaming.resolve("input.jar");
+	private static final Path overrideRenamingMappings = overrideRenaming.resolve("input.mapping");
 
 	private static EnigmaProject project;
 
 	@BeforeAll
 	static void downloadMojmaps() throws IOException {
-		if (!cachedServerJar.exists() || !cachedServerMappings.exists()) {
+		if (!cachedServerJar.toFile().exists() || !cachedServerMappings.toFile().exists()) {
 			System.out.println("Could not find server jar or mappings, downloading...");
 			String mcVersion = "1.21";
 
@@ -73,9 +79,9 @@ public class MojmapTest {
 			}
 
 			System.out.println("Downloading server jar...");
-			download(serverJar.get().getUrl(), cachedServerJar);
+			download(serverJar.get().getUrl(), cachedServerJar.toFile());
 			System.out.println("Downloading server mappings...");
-			download(serverMappings.get().getUrl(), cachedServerMappings);
+			download(serverMappings.get().getUrl(), cachedServerMappings.toFile());
 		}
 	}
 
@@ -93,17 +99,16 @@ public class MojmapTest {
 		}
 	}
 
-	@BeforeEach
-	void setupEnigma() throws IOException {
-		var profile = EnigmaProfile.parse(new StringReader("""
+	void setupEnigma(Path jarPath, Path mojmapPath, Path overridesPath) throws IOException {
+		String profileString = """
 			{
 					"services": {
 						"name_proposal": [
 							{
 								"id": "quiltmc:name_proposal/fallback",
 								"args": {
-									"mojmap_path": "./build/mojmap_cache/server-mappings.txt",
-									"package_name_overrides_path": "./src/test/resources/mojmap_test/package_name_overrides.json"
+									"mojmap_path": "{MOJMAP_PATH}",
+									"package_name_overrides_path": "{OVERRIDES_PATH}"
 								}
 							},
 							{
@@ -112,15 +117,21 @@ public class MojmapTest {
 						]
 					}
 			}
-			"""));
+			""";
 
+		profileString = profileString.replace("{MOJMAP_PATH}", mojmapPath.toString());
+		profileString = profileString.replace("{OVERRIDES_PATH}", overridesPath.toString());
+
+		var profile = EnigmaProfile.parse(new StringReader(profileString));
 
 		var enigma = Enigma.builder().setProfile(profile).build();
-		project = enigma.openJar(cachedServerJar.toPath(), new ClasspathClassProvider(), ProgressListener.createEmpty());
+		project = enigma.openJar(jarPath, new ClasspathClassProvider(), ProgressListener.createEmpty());
 	}
 
 	@Test
-	void testStaticProposal() {
+	void testStaticProposal() throws IOException {
+		setupEnigma(cachedServerJar, cachedServerMappings, emptyOverrides);
+
 		// assert that all types propose properly
 		// note that mojmaps do not contain params
 
@@ -137,7 +148,9 @@ public class MojmapTest {
 	}
 
 	@Test
-	void testDynamicProposal() {
+	void testDynamicProposal() throws IOException {
+		setupEnigma(cachedServerJar, cachedServerMappings, emptyOverrides);
+
 		ClassEntry a = new ClassEntry("a");
 		assertMapping(a, "com/mojang/math/Axis", TokenType.JAR_PROPOSED);
 
@@ -150,6 +163,8 @@ public class MojmapTest {
 	@SuppressWarnings("OptionalGetWithoutIsPresent")
 	@Test
 	void testOverrideGeneration() throws IOException, MappingParseException {
+		setupEnigma(cachedServerJar, cachedServerMappings, emptyOverrides);
+
 		Path tempFile = Files.createTempFile("temp_package_overrides", "json");
 		Path mappingPath = Path.of("./src/test/resources/mojmap_test/example_mappings.mapping");
 		var mappings = project.getEnigma().readMappings(mappingPath).get();
@@ -165,6 +180,8 @@ public class MojmapTest {
 
 	@Test
 	void testPackageNameOverrideGenerationMojmap() throws IOException {
+		setupEnigma(cachedServerJar, cachedServerMappings, emptyOverrides);
+
 		Path tempFile = Files.createTempFile("temp_package_overrides_moj", "json");
 
 		var entries = MojmapNameProposer.createPackageJson(MojmapNameProposer.mojmaps);
@@ -194,6 +211,34 @@ public class MojmapTest {
 		String actual = Files.readString(tempFile);
 
 		Assertions.assertEquals(expected, actual);
+	}
+
+	@Test
+	void testOverrideRenaming() throws IOException, MappingParseException {
+		setupEnigma(overrideRenamingJar, overrideRenamingMappings, overrideRenamingOverrides);
+		project.setMappings(project.getEnigma().readMappings(overrideRenamingMappings).get(), ProgressListener.createEmpty());
+
+		ClassEntry a = new ClassEntry("a");
+		ClassEntry b = new ClassEntry("b");
+		ClassEntry c = new ClassEntry("c");
+		ClassEntry d = new ClassEntry("d");
+		ClassEntry e = new ClassEntry("e");
+		ClassEntry f = new ClassEntry("f");
+		ClassEntry g = new ClassEntry("g");
+
+		assertMapping(a, "a/Class1PackageA", TokenType.DEOBFUSCATED);
+		assertMapping(b, "a/b_/Class2PackageAB", TokenType.DEOBFUSCATED);
+		assertMapping(c, "b_/a/Class3PackageBA", TokenType.DEOBFUSCATED);
+		assertMapping(d, "c_/a_/Class4PackageCA", TokenType.DEOBFUSCATED);
+		assertMapping(e, "b_/b/Class5PackageBB", TokenType.DEOBFUSCATED);
+		assertMapping(f, "b_/b/c_/Class6PackageBBC", TokenType.DEOBFUSCATED);
+		// todo test for not proposing when no overrides are present on the class
+		// todo no mojmap found for g?
+	}
+
+	@Test
+	void testDynamicOverrideRenaming() {
+		// todo
 	}
 
 	private void assertMapping(Entry<?> entry, String name, TokenType type) {

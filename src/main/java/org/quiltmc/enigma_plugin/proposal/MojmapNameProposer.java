@@ -5,12 +5,15 @@ import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.ProgressListener;
+import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.analysis.index.mapping.MappingsIndex;
 import org.quiltmc.enigma.api.analysis.index.mapping.PackageIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
+import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.mapping.tree.EntryTree;
 import org.quiltmc.enigma.api.translation.mapping.tree.EntryTreeNode;
+import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.tinylog.Logger;
 
@@ -27,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class MojmapNameProposer extends NameProposer {
 	public static final String ID = "mojmap";
@@ -36,6 +40,7 @@ public class MojmapNameProposer extends NameProposer {
 	// must be static for now. nasty hack to make sure we don't read mojmaps twice
 	// we can guarantee that this is nonnull for the other proposer because jar proposal blocks dynamic proposal
 	public static EntryTree<EntryMapping> mojmaps;
+	private PackageEntryList packageOverrides;
 
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 	public MojmapNameProposer(Optional<String> mojmapPath, Optional<String> packageNameOverridesPath) {
@@ -68,8 +73,62 @@ public class MojmapNameProposer extends NameProposer {
 		});
 
 		if (mojmaps != null) {
+			packageOverrides = readPackageJson(this.packageNameOverridesPath);
 			mojmaps.getRootNodes().forEach((node) -> this.proposeNodeAndChildren(mappings, node));
 		}
+	}
+
+	@Override
+	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
+		if (packageOverrides != null) {
+			if (obfEntry == null) {
+				// rename all classes as per overrides
+				var classes = remapper.getJarIndex().getIndex(EntryIndex.class).getClasses();
+				for (ClassEntry classEntry : classes) {
+					proposePackageName(classEntry, null, mappings);
+				}
+			} else if (obfEntry instanceof ClassEntry classEntry) {
+				// rename class
+				proposePackageName(classEntry, newMapping, mappings);
+			}
+		}
+	}
+
+	private void proposePackageName(ClassEntry entry, @Nullable EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
+		if (entry.isInnerClass()) {
+			//throw new RuntimeException("cannot propose package name for an inner class: " + entry);
+			return;
+		}
+
+		// todo don't run through mojmaps here -- use whatever's passed?
+		EntryMapping mojmap = mojmaps.get(entry);
+		if (mojmap == null || mojmap.targetName() == null) {
+			Logger.error("no mojmap for outer class: " + entry);
+			return;
+		}
+
+		// todo string manip is stupid here
+		String mojTarget = mojmap.targetName();
+		String target;
+		String obfPackage = mojTarget.substring(0, mojTarget.lastIndexOf('/'));
+
+		if (newMapping != null && newMapping.targetName() != null) {
+			target = mojTarget.substring(0, mojTarget.lastIndexOf('/')) + newMapping.targetName().substring(newMapping.targetName().lastIndexOf('/') + 1);
+		} else {
+			target = mojTarget;
+		}
+
+		Optional<PackageEntry> optionalPackageEntry = packageOverrides.findEntry(obfPackage);
+		optionalPackageEntry.ifPresent(packageEntry -> {
+			String deobfPackageString = packageEntry.toDeobfPackageString();
+			String obfPackageString = packageEntry.toObfPackageString();
+
+			if (!deobfPackageString.equals(obfPackageString)) {
+				String newTarget = target.replace(obfPackage + "/", deobfPackageString + "/");
+				// todo why is this stack overflowing
+				mappings.put(entry, new EntryMapping(newTarget));
+			}
+		});
 	}
 
 	private void proposeNodeAndChildren(Map<Entry<?>, EntryMapping> mappings, EntryTreeNode<EntryMapping> node) {
@@ -81,12 +140,13 @@ public class MojmapNameProposer extends NameProposer {
 	}
 
 	@Nullable
-	public static List<PackageEntry> readPackageJson(Gson gson, String path) {
+	public static PackageEntryList readPackageJson(Gson gson, String path) {
 		try {
 			if (path != null) {
 				Reader jsonReader = new FileReader(path);
-				List<PackageEntry> entries = gson.fromJson(jsonReader, PackageEntryList.class);
+				PackageEntryList entries = gson.fromJson(jsonReader, PackageEntryList.class);
 				for (PackageEntry entry : entries) {
+					// todo validate entry for invalid name
 					setupInheritance(entry);
 				}
 
@@ -106,19 +166,19 @@ public class MojmapNameProposer extends NameProposer {
 		}
 	}
 
-	public static List<PackageEntry> readPackageJson(String path) {
+	public static PackageEntryList readPackageJson(String path) {
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		return readPackageJson(gson, path);
 	}
 
-	public static List<PackageEntry> updatePackageJson(List<PackageEntry> oldJson, EntryTree<EntryMapping> mappings) {
-		List<PackageEntry> newJson = createPackageJson(mappings);
+	public static PackageEntryList updatePackageJson(List<PackageEntry> oldJson, EntryTree<EntryMapping> mappings) {
+		PackageEntryList newJson = createPackageJson(mappings);
 
 		for (PackageEntry rootEntry : oldJson) {
 			rootEntry.forEach(oldEntry -> {
 				if (oldEntry.deobf != null) {
 					PackageEntry newEntry = null;
-					String oldEntryString = oldEntry.toPackageString();
+					String oldEntryString = oldEntry.toObfPackageString();
 
 					for (PackageEntry root : newJson) {
 						newEntry = root.findEntry(oldEntryString);
@@ -137,12 +197,12 @@ public class MojmapNameProposer extends NameProposer {
 		return newJson;
 	}
 
-	public static List<PackageEntry> createPackageJson(EntryTree<EntryMapping> mappings) {
+	public static PackageEntryList createPackageJson(EntryTree<EntryMapping> mappings) {
 		MappingsIndex index = new MappingsIndex(new PackageIndex());
 		index.indexMappings(mappings, ProgressListener.createEmpty());
 
 		var packageNames = index.getIndex(PackageIndex.class).getPackageNames();
-		List<PackageEntry> rootPackages = new ArrayList<>();
+		PackageEntryList rootPackages = new PackageEntryList();
 
 		Map<Integer, List<String>> packageNamesByDepth = new HashMap<>();
 
@@ -158,7 +218,7 @@ public class MojmapNameProposer extends NameProposer {
 			packageNamesByDepth.computeIfAbsent(slashes, k -> new ArrayList<>()).add(packageName);
 		}
 
-		for (int i = 0; i < packageNamesByDepth.keySet().stream().mapToInt(num -> num).max().getAsInt(); i++) {
+		for (int i = 0; i <= packageNamesByDepth.keySet().stream().mapToInt(num -> num).max().getAsInt(); i++) {
 			List<String> names = packageNamesByDepth.get(i);
 
 			if (i == 0) {
@@ -197,6 +257,16 @@ public class MojmapNameProposer extends NameProposer {
 	}
 
 	public static class PackageEntryList extends ArrayList<PackageEntry> {
+		public Optional<PackageEntry> findEntry(String obf) {
+			for (PackageEntry entry : this) {
+				var found = entry.findEntry(obf);
+				if (found != null) {
+					return Optional.of(found);
+				}
+			}
+
+			return Optional.empty();
+		}
 	}
 
 	public static class PackageEntry {
@@ -235,11 +305,19 @@ public class MojmapNameProposer extends NameProposer {
 			return null;
 		}
 
-		public String toPackageString() {
+		public String toObfPackageString() {
+			return buildPackageString(entry -> entry.obf);
+		}
+
+		public String toDeobfPackageString() {
+			return buildPackageString(entry -> entry.deobf != null && !entry.deobf.isEmpty() ? entry.deobf : entry.obf);
+		}
+
+		private String buildPackageString(Function<PackageEntry, String> nameGetter) {
 			List<String> packages = new ArrayList<>();
 			PackageEntry entry = this;
 			while (entry != null) {
-				packages.add(entry.obf);
+				packages.add(nameGetter.apply(entry));
 				entry = entry.parent;
 			}
 
@@ -248,7 +326,7 @@ public class MojmapNameProposer extends NameProposer {
 		}
 
 		private boolean equals(String obfPackage) {
-			return this.toPackageString().equals(obfPackage);
+			return this.toObfPackageString().equals(obfPackage);
 		}
 	}
 }

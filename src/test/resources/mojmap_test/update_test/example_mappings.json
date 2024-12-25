@@ -12,6 +12,17 @@
         "obf": "a",
         "deobf": "",
         "children": []
+      },
+      {
+        "obf": "b",
+        "deobf": "",
+        "children": [
+          {
+            "obf": "c",
+            "deobf": "c_",
+            "children": []
+          }
+        ]
       }
     ]
   },

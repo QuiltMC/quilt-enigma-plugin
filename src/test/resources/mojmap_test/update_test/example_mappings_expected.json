@@ -6,7 +6,13 @@
       {
         "obf": "b",
         "deobf": "",
-        "children": []
+        "children": [
+          {
+            "obf": "c",
+            "deobf": "",
+            "children": []
+          }
+        ]
       }
     ]
   },
@@ -22,7 +28,13 @@
       {
         "obf": "b",
         "deobf": "",
-        "children": []
+        "children": [
+          {
+            "obf": "c",
+            "deobf": "c_",
+            "children": []
+          }
+        ]
       }
     ]
   },

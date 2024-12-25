@@ -1,0 +1,6 @@
+CLASS a a/Class1PackageA
+CLASS b a/b/Class2PackageAB
+CLASS c b/a/Class3PackageBA
+CLASS d c/a/Class4PackageCA
+CLASS e b/b/Class5PackageBB
+CLASS f b/b/c/Class6PackageBBC

@@ -551,7 +551,13 @@
                               {
                                 "obf": "rule",
                                 "deobf": "",
-                                "children": []
+                                "children": [
+                                  {
+                                    "obf": "blockentity",
+                                    "deobf": "",
+                                    "children": []
+                                  }
+                                ]
                               }
                             ]
                           }

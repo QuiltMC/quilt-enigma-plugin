@@ -1,0 +1,46 @@
+[
+    {
+        "obf": "a",
+        "deobf": "",
+        "children": [
+            {
+                "obf": "b",
+                "deobf": "b_",
+                "children": []
+            }
+        ]
+    },
+    {
+        "obf": "b",
+        "deobf": "b_",
+        "children": [
+            {
+                "obf": "a",
+                "deobf": "",
+                "children": []
+            },
+            {
+                "obf": "b",
+                "deobf": "b",
+                "children": [
+                    {
+                        "obf": "c",
+                        "deobf": "c_",
+                        "children": []
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "obf": "c",
+        "deobf": "c_",
+        "children": [
+            {
+                "obf": "a",
+                "deobf": "a_",
+                "children": []
+            }
+        ]
+    }
+]
