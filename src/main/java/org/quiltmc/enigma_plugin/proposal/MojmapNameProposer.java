@@ -96,11 +96,9 @@ public class MojmapNameProposer extends NameProposer {
 
 	private void proposePackageName(ClassEntry entry, @Nullable EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
 		if (entry.isInnerClass()) {
-			//throw new RuntimeException("cannot propose package name for an inner class: " + entry);
 			return;
 		}
 
-		// todo don't run through mojmaps here -- use whatever's passed?
 		EntryMapping mojmap = mojmaps.get(entry);
 		if (mojmap == null || mojmap.targetName() == null) {
 			Logger.error("no mojmap for outer class: " + entry);
@@ -125,7 +123,6 @@ public class MojmapNameProposer extends NameProposer {
 
 			if (!deobfPackageString.equals(obfPackageString)) {
 				String newTarget = target.replace(obfPackage + "/", deobfPackageString + "/");
-				// todo why is this stack overflowing
 				mappings.put(entry, new EntryMapping(newTarget));
 			}
 		});
@@ -146,8 +143,7 @@ public class MojmapNameProposer extends NameProposer {
 				Reader jsonReader = new FileReader(path);
 				PackageEntryList entries = gson.fromJson(jsonReader, PackageEntryList.class);
 				for (PackageEntry entry : entries) {
-					// todo validate entry for invalid name
-					setupInheritance(entry);
+					setupInheritanceAndValidate(entry);
 				}
 
 				return entries;
@@ -159,10 +155,29 @@ public class MojmapNameProposer extends NameProposer {
 		return null;
 	}
 
-	private static void setupInheritance(PackageEntry entry) {
+	private static void setupInheritanceAndValidate(PackageEntry entry) {
+		if (entry.deobf != null) {
+			String firstChar = String.valueOf(entry.deobf.charAt(0));
+			if (firstChar.matches("[0-9]")) {
+				throw new InvalidOverrideException(entry, "package name cannot begin with an integer");
+			}
+
+			if (entry.deobf.contains("/")) {
+				throw new InvalidOverrideException(entry, "package name cannot contain a slash");
+			} else if (entry.deobf.contains("-")) {
+				throw new InvalidOverrideException(entry, "package name cannot contain a dash");
+			} else if (entry.deobf.contains(" ")) {
+				throw new InvalidOverrideException(entry, "package name cannot contain a space");
+			} else if (!entry.deobf.toLowerCase().equals(entry.deobf)) {
+				throw new InvalidOverrideException(entry, "package name must be lowercase");
+			} else if (!entry.deobf.matches("[a-z0-9_]+")) {
+				throw new InvalidOverrideException(entry, "entry must match regex '[a-z0-9_]+'");
+			}
+		}
+
 		for (PackageEntry child : entry.children) {
 			child.parent = entry;
-			setupInheritance(child);
+			setupInheritanceAndValidate(child);
 		}
 	}
 
@@ -327,6 +342,12 @@ public class MojmapNameProposer extends NameProposer {
 
 		private boolean equals(String obfPackage) {
 			return this.toObfPackageString().equals(obfPackage);
+		}
+	}
+
+	public static class InvalidOverrideException extends RuntimeException {
+		public InvalidOverrideException(PackageEntry entry, String message) {
+			super("Invalid package override for " + entry.obf + " (" + entry.deobf + "): " + message);
 		}
 	}
 }

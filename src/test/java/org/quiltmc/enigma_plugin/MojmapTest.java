@@ -36,6 +36,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 // todo evaluate whether this obsoletes any proposers (non-hashed proposer is def on the chopping block)
 // todo make sure of priority
 
@@ -46,10 +49,20 @@ public class MojmapTest {
 	private static final Path testResources = Path.of("./src/test/resources");
 	private static final Path mojmapTest = testResources.resolve("mojmap_test");
 	private static final Path emptyOverrides = mojmapTest.resolve("example_mappings_empty.json");
+
 	private static final Path overrideRenaming = mojmapTest.resolve("override_based_renaming");
 	private static final Path overrideRenamingOverrides = overrideRenaming.resolve("input_overrides.json");
 	private static final Path overrideRenamingJar = overrideRenaming.resolve("input.jar");
 	private static final Path overrideRenamingMappings = overrideRenaming.resolve("input.mapping");
+
+	private static final Path invalidOverrides = mojmapTest.resolve("invalid_overrides");
+	private static final Path beginWithInt = invalidOverrides.resolve("begin_with_int.json");
+	private static final Path hyphens = invalidOverrides.resolve("hyphens.json");
+	private static final Path multipleInvalidOverrides = invalidOverrides.resolve("multiple_invalid_overrides.json");
+	private static final Path spaces = invalidOverrides.resolve("spaces.json");
+	private static final Path slashes = invalidOverrides.resolve("slashes.json");
+	private static final Path uppercases = invalidOverrides.resolve("uppercases.json");
+	private static final Path validOverrides = invalidOverrides.resolve("valid_overrides.json");
 
 	private static EnigmaProject project;
 
@@ -224,7 +237,6 @@ public class MojmapTest {
 		ClassEntry d = new ClassEntry("d");
 		ClassEntry e = new ClassEntry("e");
 		ClassEntry f = new ClassEntry("f");
-		ClassEntry g = new ClassEntry("g");
 
 		assertMapping(a, "a/Class1PackageA", TokenType.DEOBFUSCATED);
 		assertMapping(b, "a/b_/Class2PackageAB", TokenType.DEOBFUSCATED);
@@ -232,13 +244,39 @@ public class MojmapTest {
 		assertMapping(d, "c_/a_/Class4PackageCA", TokenType.DEOBFUSCATED);
 		assertMapping(e, "b_/b/Class5PackageBB", TokenType.DEOBFUSCATED);
 		assertMapping(f, "b_/b/c_/Class6PackageBBC", TokenType.DEOBFUSCATED);
-		// todo test for not proposing when no overrides are present on the class
-		// todo no mojmap found for g?
 	}
 
 	@Test
-	void testDynamicOverrideRenaming() {
-		// todo
+	void testDynamicOverrideRenaming() throws IOException, MappingParseException {
+		setupEnigma(overrideRenamingJar, overrideRenamingMappings, overrideRenamingOverrides);
+		project.setMappings(project.getEnigma().readMappings(overrideRenamingMappings).get(), ProgressListener.createEmpty());
+
+		ClassEntry a = new ClassEntry("a");
+		ClassEntry b = new ClassEntry("b");
+		ClassEntry c = new ClassEntry("c");
+
+		// assert normal proposed mappings
+		assertMapping(a, "a/Class1PackageA", TokenType.DEOBFUSCATED);
+		assertMapping(b, "a/b_/Class2PackageAB", TokenType.DEOBFUSCATED);
+		assertMapping(c, "b_/a/Class3PackageBA", TokenType.DEOBFUSCATED);
+
+		project.getRemapper().putMapping(new ValidationContext(PrintNotifier.INSTANCE), a, new EntryMapping("awesome/slay"));
+
+		assertMapping(a, "a/slay", TokenType.DEOBFUSCATED);
+
+		// todo more
+	}
+
+	@Test
+	void testInvalidOverrides() {
+		assertThrows(MojmapNameProposer.InvalidOverrideException.class, () -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, beginWithInt));
+		assertThrows(MojmapNameProposer.InvalidOverrideException.class, () -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, hyphens));
+		assertThrows(MojmapNameProposer.InvalidOverrideException.class, () -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, multipleInvalidOverrides));
+		assertThrows(MojmapNameProposer.InvalidOverrideException.class, () -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, slashes));
+		assertThrows(MojmapNameProposer.InvalidOverrideException.class, () -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, spaces));
+		assertThrows(MojmapNameProposer.InvalidOverrideException.class, () -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, uppercases));
+
+		assertDoesNotThrow(() -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, validOverrides));
 	}
 
 	private void assertMapping(Entry<?> entry, String name, TokenType type) {

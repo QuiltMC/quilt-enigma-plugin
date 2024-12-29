@@ -1,0 +1,35 @@
+[
+    {
+        "obf": "a",
+        "deobf": "a_valid",
+        "children": [
+            {
+                "obf": "b",
+                "deobf": "b_valid",
+                "children": []
+            }
+        ]
+    },
+    {
+        "obf": "b",
+        "deobf": "b_valid",
+        "children": [
+            {
+                "obf": "a",
+                "deobf": "_123valid",
+                "children": []
+            },
+            {
+                "obf": "b",
+                "deobf": "valid123",
+                "children": [
+                    {
+                        "obf": "c",
+                        "deobf": "c_valid",
+                        "children": []
+                    }
+                ]
+            }
+        ]
+    }
+]
