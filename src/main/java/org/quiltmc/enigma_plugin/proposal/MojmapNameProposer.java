@@ -111,7 +111,8 @@ public class MojmapNameProposer extends NameProposer {
 		String obfPackage = mojTarget.substring(0, mojTarget.lastIndexOf('/'));
 
 		if (newMapping != null && newMapping.targetName() != null) {
-			target = mojTarget.substring(0, mojTarget.lastIndexOf('/')) + newMapping.targetName().substring(newMapping.targetName().lastIndexOf('/') + 1);
+			target = mojTarget.substring(0, mojTarget.lastIndexOf('/'))
+				+ newMapping.targetName().substring(newMapping.targetName().lastIndexOf('/'));
 		} else {
 			target = mojTarget;
 		}
@@ -156,7 +157,7 @@ public class MojmapNameProposer extends NameProposer {
 	}
 
 	private static void setupInheritanceAndValidate(PackageEntry entry) {
-		if (entry.deobf != null) {
+		if (entry.deobf != null && !entry.deobf.isEmpty()) {
 			String firstChar = String.valueOf(entry.deobf.charAt(0));
 			if (firstChar.matches("[0-9]")) {
 				throw new InvalidOverrideException(entry, "package name cannot begin with an integer");

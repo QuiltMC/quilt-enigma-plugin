@@ -264,7 +264,13 @@ public class MojmapTest {
 
 		assertMapping(a, "a/slay", TokenType.DEOBFUSCATED);
 
-		// todo more
+		project.getRemapper().putMapping(new ValidationContext(PrintNotifier.INSTANCE), a, new EntryMapping("awesome/gaming/coquette"));
+
+		assertMapping(a, "a/coquette", TokenType.DEOBFUSCATED);
+
+		project.getRemapper().putMapping(new ValidationContext(PrintNotifier.INSTANCE), b, new EntryMapping("awesome/slay"));
+
+		assertMapping(b, "a/b_/slay", TokenType.DEOBFUSCATED);
 	}
 
 	@Test
