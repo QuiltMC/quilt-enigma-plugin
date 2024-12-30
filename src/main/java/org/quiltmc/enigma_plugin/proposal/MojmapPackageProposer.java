@@ -25,15 +25,13 @@ public class MojmapPackageProposer extends NameProposer {
 
 	@Override
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
-		// todo definitions file
-
 		if (obfEntry == null) {
 			// initial proposal for all classes
 			for (ClassEntry classEntry : remapper.getJarIndex().getIndex(EntryIndex.class).getClasses()) {
-				this.tryProposeForEntry(remapper, mappings, classEntry);
+				//this.tryProposeForEntry(remapper, mappings, classEntry);
 			}
 		} else {
-			this.tryProposeForEntry(remapper, mappings, obfEntry);
+			//this.tryProposeForEntry(remapper, mappings, obfEntry);
 		}
 	}
 

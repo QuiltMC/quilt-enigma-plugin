@@ -85,16 +85,16 @@ public class MojmapNameProposer extends NameProposer {
 				// rename all classes as per overrides
 				var classes = remapper.getJarIndex().getIndex(EntryIndex.class).getClasses();
 				for (ClassEntry classEntry : classes) {
-					proposePackageName(classEntry, null, mappings);
+					proposePackageName(classEntry, null, null, mappings);
 				}
 			} else if (obfEntry instanceof ClassEntry classEntry) {
 				// rename class
-				proposePackageName(classEntry, newMapping, mappings);
+				proposePackageName(classEntry, oldMapping, newMapping, mappings);
 			}
 		}
 	}
 
-	private void proposePackageName(ClassEntry entry, @Nullable EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
+	private void proposePackageName(ClassEntry entry, @Nullable EntryMapping oldMapping, @Nullable EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
 		if (entry.isInnerClass()) {
 			return;
 		}
@@ -122,7 +122,9 @@ public class MojmapNameProposer extends NameProposer {
 			String deobfPackageString = packageEntry.toDeobfPackageString();
 			String obfPackageString = packageEntry.toObfPackageString();
 
-			if (!deobfPackageString.equals(obfPackageString)) {
+			boolean updatedName = newMapping != null && oldMapping != null && !newMapping.targetName().equals(oldMapping.targetName());
+
+			if (!deobfPackageString.equals(obfPackageString) || updatedName) {
 				String newTarget = target.replace(obfPackage + "/", deobfPackageString + "/");
 				mappings.put(entry, new EntryMapping(newTarget));
 			}
