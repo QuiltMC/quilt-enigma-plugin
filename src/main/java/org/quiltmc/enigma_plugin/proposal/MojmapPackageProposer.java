@@ -1,21 +1,46 @@
 package org.quiltmc.enigma_plugin.proposal;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.Enigma;
+import org.quiltmc.enigma.api.ProgressListener;
 import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.analysis.index.mapping.MappingsIndex;
+import org.quiltmc.enigma.api.analysis.index.mapping.PackageIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
+import org.quiltmc.enigma.api.translation.mapping.tree.EntryTree;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.tinylog.Logger;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import static org.quiltmc.enigma_plugin.proposal.MojmapNameProposer.mojmaps;
 
 public class MojmapPackageProposer extends NameProposer {
 	public static final String ID = "mojmap_packages";
+	private final Optional<String> packageNameOverridesPath;
+	private PackageEntryList packageOverrides;
 
-	public MojmapPackageProposer() {
+	public MojmapPackageProposer(Optional<String> packageNameOverridesPath) {
 		super(ID);
+		this.packageNameOverridesPath = packageNameOverridesPath;
 	}
 
 	@Override
@@ -25,38 +50,281 @@ public class MojmapPackageProposer extends NameProposer {
 
 	@Override
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
-		if (obfEntry == null) {
-			// initial proposal for all classes
-			for (ClassEntry classEntry : remapper.getJarIndex().getIndex(EntryIndex.class).getClasses()) {
-				//this.tryProposeForEntry(remapper, mappings, classEntry);
+		if (mojmaps != null) {
+			if (packageOverrides == null) {
+				if (packageNameOverridesPath.isPresent()) {
+					this.packageOverrides = readPackageJson(this.packageNameOverridesPath.get());
+				} else {
+					Logger.warn("no package name overrides path provided!");
+					this.packageOverrides = new PackageEntryList();
+				}
 			}
-		} else {
-			//this.tryProposeForEntry(remapper, mappings, obfEntry);
+
+			if (obfEntry == null) {
+				// rename all classes as per overrides
+				var classes = remapper.getJarIndex().getIndex(EntryIndex.class).getClasses();
+				for (ClassEntry classEntry : classes) {
+					proposePackageName(classEntry, null, null, mappings);
+				}
+			} else if (obfEntry instanceof ClassEntry classEntry) {
+				// rename class
+				proposePackageName(classEntry, oldMapping, newMapping, mappings);
+			}
 		}
 	}
 
-	private void tryProposeForEntry(EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings, Entry<?> entry) {
-		var mojmaps = MojmapNameProposer.mojmaps;
+	private void proposePackageName(ClassEntry entry, @Nullable EntryMapping oldMapping, @Nullable EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
+		if (entry.isInnerClass()) {
+			return;
+		}
 
-		if (entry instanceof ClassEntry classEntry && !classEntry.isInnerClass() && mojmaps != null) {
-			String newName = getMojmappedName(remapper, classEntry);
-			mappings.put(classEntry, new EntryMapping(newName));
+		EntryMapping mojmap = mojmaps.get(entry);
+		if (mojmap == null || mojmap.targetName() == null) {
+			Logger.error("no mojmap for outer class: " + entry);
+			return;
+		}
+
+		String mojTarget = mojmap.targetName();
+		String target;
+		String obfPackage = mojTarget.substring(0, mojTarget.lastIndexOf('/'));
+
+		if (newMapping != null && newMapping.targetName() != null) {
+			target = mojTarget.substring(0, mojTarget.lastIndexOf('/'))
+				+ newMapping.targetName().substring(newMapping.targetName().lastIndexOf('/'));
+		} else {
+			target = mojTarget;
+		}
+
+		Optional<PackageEntry> optionalPackageEntry = packageOverrides.findEntry(obfPackage);
+		optionalPackageEntry.ifPresentOrElse(packageEntry -> {
+			String deobfPackageString = packageEntry.toDeobfPackageString();
+			String obfPackageString = packageEntry.toObfPackageString();
+
+			boolean updatedName = newMapping != null && oldMapping != null && !newMapping.targetName().equals(oldMapping.targetName());
+
+			if (!deobfPackageString.equals(obfPackageString) || updatedName) {
+				String newTarget = target.replace(obfPackage + "/", deobfPackageString + "/");
+				mappings.put(entry, new EntryMapping(newTarget));
+			}
+		}, () -> {
+			boolean updatedName = newMapping != null && oldMapping != null && !newMapping.targetName().equals(oldMapping.targetName());
+			if (updatedName) {
+				mappings.put(entry, new EntryMapping(target));
+			}
+		});
+	}
+
+	public static PackageEntryList readPackageJson(Gson gson, @Nullable String path) {
+		try {
+			if (path != null) {
+				Reader jsonReader = new FileReader(path);
+				PackageEntryList entries = gson.fromJson(jsonReader, PackageEntryList.class);
+				for (PackageEntry entry : entries) {
+					setupInheritanceAndValidate(entry);
+				}
+
+				return entries;
+			}
+		} catch (FileNotFoundException e) {
+			Logger.warn("could not find old package definitions file");
+		}
+
+		return new PackageEntryList();
+	}
+
+	private static void setupInheritanceAndValidate(PackageEntry entry) {
+		if (entry.deobf != null && !entry.deobf.isEmpty()) {
+			String firstChar = String.valueOf(entry.deobf.charAt(0));
+			if (firstChar.matches("[0-9]")) {
+				throw new InvalidOverrideException(entry, "package name cannot begin with an integer");
+			}
+
+			if (entry.deobf.contains("/")) {
+				throw new InvalidOverrideException(entry, "package name cannot contain a slash");
+			} else if (entry.deobf.contains("-")) {
+				throw new InvalidOverrideException(entry, "package name cannot contain a dash");
+			} else if (entry.deobf.contains(" ")) {
+				throw new InvalidOverrideException(entry, "package name cannot contain a space");
+			} else if (!entry.deobf.toLowerCase().equals(entry.deobf)) {
+				throw new InvalidOverrideException(entry, "package name must be lowercase");
+			} else if (!entry.deobf.matches("[a-z0-9_]+")) {
+				throw new InvalidOverrideException(entry, "entry must match regex '[a-z0-9_]+'");
+			}
+		}
+
+		for (PackageEntry child : entry.children) {
+			child.parent = entry;
+			setupInheritanceAndValidate(child);
 		}
 	}
 
-	private String getMojmappedName(EntryRemapper remapper, ClassEntry classEntry) {
-		var mojmaps = MojmapNameProposer.mojmaps;
+	public static PackageEntryList readPackageJson(String path) {
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		return readPackageJson(gson, path);
+	}
 
-		var mapping = mojmaps.get(classEntry);
-		if (mapping != null && mapping.targetName() != null) {
-			String mojmapName = mapping.targetName();
-			String oldPackage = mojmapName.substring(0, mojmapName.lastIndexOf('/'));
-			String className = remapper.deobfuscate(classEntry).getSimpleName();
+	public static PackageEntryList updatePackageJson(List<PackageEntry> oldJson, EntryTree<EntryMapping> mappings) {
+		PackageEntryList newJson = createPackageJson(mappings);
 
-			return oldPackage + "/" + className;
-		} else {
-			Logger.error("failed to propose name: could not find mojmap for " + classEntry.getFullName());
+		for (PackageEntry rootEntry : oldJson) {
+			rootEntry.forEach(oldEntry -> {
+				if (oldEntry.deobf != null) {
+					PackageEntry newEntry = null;
+					String oldEntryString = oldEntry.toObfPackageString();
+
+					for (PackageEntry root : newJson) {
+						newEntry = root.findEntry(oldEntryString);
+						if (newEntry != null) {
+							break;
+						}
+					}
+
+					if (newEntry != null) {
+						newEntry.deobf = oldEntry.deobf;
+					}
+				}
+			});
+		}
+
+		return newJson;
+	}
+
+	public static PackageEntryList createPackageJson(EntryTree<EntryMapping> mappings) {
+		MappingsIndex index = new MappingsIndex(new PackageIndex());
+		index.indexMappings(mappings, ProgressListener.createEmpty());
+
+		var packageNames = index.getIndex(PackageIndex.class).getPackageNames();
+		PackageEntryList rootPackages = new PackageEntryList();
+
+		Map<Integer, List<String>> packageNamesByDepth = new HashMap<>();
+
+		for (String packageName : new ArrayList<>(packageNames)) {
+			int slashes;
+
+			if (!packageName.contains("/")) {
+				slashes = 0;
+			} else {
+				slashes = packageName.split("/").length - 1;
+			}
+
+			packageNamesByDepth.computeIfAbsent(slashes, k -> new ArrayList<>()).add(packageName);
+		}
+
+		for (int i = 0; i <= packageNamesByDepth.keySet().stream().mapToInt(num -> num).max().getAsInt(); i++) {
+			List<String> names = packageNamesByDepth.get(i);
+
+			if (i == 0) {
+				names.forEach(name -> rootPackages.add(new PackageEntry(name, "")));
+			} else {
+				for (String name : names) {
+					String rootName = name.split("/")[0];
+
+					PackageEntry rootPackage = rootPackages.stream().filter(entry -> entry.obf.equals(rootName)).findFirst().orElse(null);
+					if (rootPackage != null) {
+						String packageUp = name.substring(0, name.lastIndexOf('/'));
+
+						PackageEntry parent = rootPackage.findEntry(packageUp);
+						if (parent != null) {
+							String finalPackage = name.substring(name.lastIndexOf('/') + 1);
+							PackageEntry child = new PackageEntry(finalPackage, "");
+							child.parent = parent;
+							parent.children.add(child);
+						}
+					}
+				}
+			}
+		}
+
+		return rootPackages;
+	}
+
+	public static void writePackageJson(Path path, List<PackageEntry> entries) {
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+		try {
+			Files.write(path, gson.toJson(entries).getBytes());
+		} catch (IOException e) {
+			Logger.error(e, "could not write updated package name overrides");
+		}
+	}
+
+	public static class PackageEntryList extends ArrayList<PackageEntry> {
+		public Optional<PackageEntry> findEntry(String obf) {
+			for (PackageEntry entry : this) {
+				var found = entry.findEntry(obf);
+				if (found != null) {
+					return Optional.of(found);
+				}
+			}
+
+			return Optional.empty();
+		}
+	}
+
+	public static class PackageEntry {
+		public String obf;
+		public String deobf;
+		public List<PackageEntry> children;
+		private transient PackageEntry parent;
+
+		public PackageEntry(String obf, String deobf) {
+			this.obf = obf;
+			this.deobf = deobf;
+			this.children = new ArrayList<>();
+		}
+
+		public void forEach(Consumer<PackageEntry> consumer) {
+			consumer.accept(this);
+
+			for (PackageEntry child : this.children) {
+				consumer.accept(child);
+				child.forEach(consumer);
+			}
+		}
+
+		public PackageEntry findEntry(String obf) {
+			if (this.equals(obf)) {
+				return this;
+			}
+
+			for (PackageEntry entry : this.children) {
+				var found = entry.findEntry(obf);
+				if (found != null) {
+					return found;
+				}
+			}
+
 			return null;
+		}
+
+		public String toObfPackageString() {
+			return buildPackageString(entry -> entry.obf);
+		}
+
+		public String toDeobfPackageString() {
+			return buildPackageString(entry -> entry.deobf != null && !entry.deobf.isEmpty() ? entry.deobf : entry.obf);
+		}
+
+		private String buildPackageString(Function<PackageEntry, String> nameGetter) {
+			List<String> packages = new ArrayList<>();
+			PackageEntry entry = this;
+			while (entry != null) {
+				packages.add(nameGetter.apply(entry));
+				entry = entry.parent;
+			}
+
+			Collections.reverse(packages);
+			return String.join("/", packages.toArray(new String[0]));
+		}
+
+		private boolean equals(String obfPackage) {
+			return this.toObfPackageString().equals(obfPackage);
+		}
+	}
+
+	public static class InvalidOverrideException extends RuntimeException {
+		public InvalidOverrideException(PackageEntry entry, String message) {
+			super("Invalid package override for " + entry.obf + " (" + entry.deobf + "): " + message);
 		}
 	}
 }

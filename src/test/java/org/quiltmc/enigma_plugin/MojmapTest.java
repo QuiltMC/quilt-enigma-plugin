@@ -20,6 +20,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma.util.validation.PrintNotifier;
 import org.quiltmc.enigma.util.validation.ValidationContext;
 import org.quiltmc.enigma_plugin.proposal.MojmapNameProposer;
+import org.quiltmc.enigma_plugin.proposal.MojmapPackageProposer;
 import org.quiltmc.launchermeta.version.v1.DownloadableFile;
 import org.quiltmc.launchermeta.version.v1.Version;
 import org.quiltmc.launchermeta.version_manifest.VersionEntry;
@@ -115,20 +116,22 @@ public class MojmapTest {
 	void setupEnigma(Path jarPath, Path mojmapPath, Path overridesPath) throws IOException {
 		String profileString = """
 			{
-					"services": {
-						"name_proposal": [
-							{
-								"id": "quiltmc:name_proposal/fallback",
-								"args": {
-									"mojmap_path": "{MOJMAP_PATH}",
-									"package_name_overrides_path": "{OVERRIDES_PATH}"
-								}
-							},
-							{
-								"id": "quiltmc:name_proposal/unchecked"
+				"services": {
+					"name_proposal": [
+						{
+							"id": "quiltmc:name_proposal/fallback",
+							"args": {
+								"mojmap_path": "{MOJMAP_PATH}"
 							}
-						]
-					}
+						},
+						{
+							"id": "quiltmc:name_proposal/unchecked",
+							"args": {
+								"package_name_overrides_path": "{OVERRIDES_PATH}"
+							}
+						}
+					]
+				}
 			}
 			""";
 
@@ -182,8 +185,8 @@ public class MojmapTest {
 		Path mappingPath = Path.of("./src/test/resources/mojmap_test/example_mappings.mapping");
 		var mappings = project.getEnigma().readMappings(mappingPath).get();
 
-		var entries = MojmapNameProposer.createPackageJson(mappings);
-		MojmapNameProposer.writePackageJson(tempFile, entries);
+		var entries = MojmapPackageProposer.createPackageJson(mappings);
+		MojmapPackageProposer.writePackageJson(tempFile, entries);
 
 		String expected = Files.readString(Path.of("./src/test/resources/mojmap_test/example_mappings_empty.json"));
 		String actual = Files.readString(tempFile);
@@ -197,8 +200,8 @@ public class MojmapTest {
 
 		Path tempFile = Files.createTempFile("temp_package_overrides_moj", "json");
 
-		var entries = MojmapNameProposer.createPackageJson(MojmapNameProposer.mojmaps);
-		MojmapNameProposer.writePackageJson(tempFile, entries);
+		var entries = MojmapPackageProposer.createPackageJson(MojmapNameProposer.mojmaps);
+		MojmapPackageProposer.writePackageJson(tempFile, entries);
 
 		String expected = Files.readString(Path.of("./src/test/resources/mojmap_test/expected.json"));
 		String actual = Files.readString(tempFile);
@@ -216,9 +219,9 @@ public class MojmapTest {
 
 		var mappings = project.getEnigma().readMappings(mappingPath).get();
 
-		var oldPackageJson = MojmapNameProposer.readPackageJson(oldOverrides.toString());
-		var updated = MojmapNameProposer.updatePackageJson(oldPackageJson, mappings);
-		MojmapNameProposer.writePackageJson(tempFile, updated);
+		var oldPackageJson = MojmapPackageProposer.readPackageJson(oldOverrides.toString());
+		var updated = MojmapPackageProposer.updatePackageJson(oldPackageJson, mappings);
+		MojmapPackageProposer.writePackageJson(tempFile, updated);
 
 		String expected = Files.readString(newOverrides);
 		String actual = Files.readString(tempFile);
@@ -275,14 +278,20 @@ public class MojmapTest {
 
 	@Test
 	void testInvalidOverrides() {
-		assertThrows(MojmapNameProposer.InvalidOverrideException.class, () -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, beginWithInt));
-		assertThrows(MojmapNameProposer.InvalidOverrideException.class, () -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, hyphens));
-		assertThrows(MojmapNameProposer.InvalidOverrideException.class, () -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, multipleInvalidOverrides));
-		assertThrows(MojmapNameProposer.InvalidOverrideException.class, () -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, slashes));
-		assertThrows(MojmapNameProposer.InvalidOverrideException.class, () -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, spaces));
-		assertThrows(MojmapNameProposer.InvalidOverrideException.class, () -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, uppercases));
+		assertThrows(MojmapPackageProposer.InvalidOverrideException.class, () -> setupForOverrideValidation(beginWithInt));
+		assertThrows(MojmapPackageProposer.InvalidOverrideException.class, () -> setupForOverrideValidation(hyphens));
+		assertThrows(MojmapPackageProposer.InvalidOverrideException.class, () -> setupForOverrideValidation(multipleInvalidOverrides));
+		assertThrows(MojmapPackageProposer.InvalidOverrideException.class, () -> setupForOverrideValidation(slashes));
+		assertThrows(MojmapPackageProposer.InvalidOverrideException.class, () -> setupForOverrideValidation(spaces));
+		assertThrows(MojmapPackageProposer.InvalidOverrideException.class, () -> setupForOverrideValidation(uppercases));
 
 		assertDoesNotThrow(() -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, validOverrides));
+	}
+
+	void setupForOverrideValidation(Path overridesPath) throws MappingParseException, IOException {
+		setupEnigma(MojmapTest.overrideRenamingJar, MojmapTest.overrideRenamingMappings, overridesPath);
+		// manually trigger dynamic proposal so validation is run
+		project.setMappings(project.getEnigma().readMappings(MojmapTest.overrideRenamingMappings).get(), ProgressListener.createEmpty());
 	}
 
 	private void assertMapping(Entry<?> entry, String name, TokenType type) {
