@@ -30,13 +30,11 @@ public class MojmapNameProposer extends NameProposer {
 	public void insertProposedNames(Enigma enigma, JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
 		if (mojmapPath.isPresent()) {
 			Path path = Path.of(mojmapPath.get());
-			enigma.getReadWriteService(path).ifPresent((service) -> {
-				try {
-					mojmaps = service.read(path);
-				} catch (Exception e) {
-					Logger.error(e, "could not read mojmaps!");
-				}
-			});
+			try {
+				mojmaps = enigma.readMappings(path).orElse(null);
+			} catch (Exception e) {
+				Logger.error(e, "could not read mojmaps!");
+			}
 		} else {
 			Logger.error("no mojmap path provided, disabling " + this.getSourcePluginId());
 		}
