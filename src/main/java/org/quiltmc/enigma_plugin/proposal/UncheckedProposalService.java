@@ -20,7 +20,7 @@ public class UncheckedProposalService  extends NameProposerService {
 	}
 
 	@Override
-	public void validateProposedMapping(Entry<?> entry, EntryMapping mapping) {
+	public void validateProposedMapping(Entry<?> entry, EntryMapping mapping, boolean dynamic) {
 		// no-op
 	}
 }
