@@ -51,10 +51,10 @@ import static org.quiltmc.enigma_plugin.proposal.MojmapNameProposer.mojmaps;
 
 public class MojmapPackageProposer extends NameProposer {
 	public static final String ID = "mojmap_packages";
-	private final Optional<String> packageNameOverridesPath;
+	private final String packageNameOverridesPath;
 	private PackageEntryList packageOverrides;
 
-	public MojmapPackageProposer(Optional<String> packageNameOverridesPath) {
+	public MojmapPackageProposer(@Nullable String packageNameOverridesPath) {
 		super(ID);
 		this.packageNameOverridesPath = packageNameOverridesPath;
 	}
@@ -67,9 +67,9 @@ public class MojmapPackageProposer extends NameProposer {
 	@Override
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
 		if (mojmaps != null) {
-			if (packageOverrides == null) {
-				if (packageNameOverridesPath.isPresent()) {
-					this.packageOverrides = readPackageJson(this.packageNameOverridesPath.get());
+			if (this.packageOverrides == null) {
+				if (this.packageNameOverridesPath != null) {
+					this.packageOverrides = readPackageJson(this.packageNameOverridesPath);
 				} else {
 					Logger.warn("no package name overrides path provided!");
 					this.packageOverrides = new PackageEntryList();
@@ -80,11 +80,11 @@ public class MojmapPackageProposer extends NameProposer {
 				// rename all classes as per overrides
 				var classes = remapper.getJarIndex().getIndex(EntryIndex.class).getClasses();
 				for (ClassEntry classEntry : classes) {
-					proposePackageName(classEntry, null, null, mappings);
+					this.proposePackageName(classEntry, null, null, mappings);
 				}
 			} else if (obfEntry instanceof ClassEntry classEntry) {
 				// rename class
-				proposePackageName(classEntry, oldMapping, newMapping, mappings);
+				this.proposePackageName(classEntry, oldMapping, newMapping, mappings);
 			}
 		}
 	}
@@ -111,7 +111,7 @@ public class MojmapPackageProposer extends NameProposer {
 			target = mojTarget;
 		}
 
-		Optional<PackageEntry> optionalPackageEntry = packageOverrides.findEntry(obfPackage);
+		Optional<PackageEntry> optionalPackageEntry = this.packageOverrides.findEntry(obfPackage);
 		optionalPackageEntry.ifPresentOrElse(packageEntry -> {
 			String deobfPackageString = packageEntry.toDeobfPackageString();
 			String obfPackageString = packageEntry.toObfPackageString();
@@ -205,6 +205,7 @@ public class MojmapPackageProposer extends NameProposer {
 		return newJson;
 	}
 
+	@SuppressWarnings("OptionalGetWithoutIsPresentCheck")
 	public static PackageEntryList createPackageJson(EntryTree<EntryMapping> mappings) {
 		MappingsIndex index = new MappingsIndex(new PackageIndex());
 		index.indexMappings(mappings, ProgressListener.createEmpty());
@@ -226,7 +227,9 @@ public class MojmapPackageProposer extends NameProposer {
 			packageNamesByDepth.computeIfAbsent(slashes, k -> new ArrayList<>()).add(packageName);
 		}
 
-		for (int i = 0; i <= packageNamesByDepth.keySet().stream().mapToInt(num -> num).max().getAsInt(); i++) {
+		int maxPackageDepth = packageNamesByDepth.keySet().stream().mapToInt(num -> num).max().orElse(0);
+
+		for (int i = 0; i <= maxPackageDepth; i++) {
 			List<String> names = packageNamesByDepth.get(i);
 
 			if (i == 0) {
@@ -314,11 +317,11 @@ public class MojmapPackageProposer extends NameProposer {
 		}
 
 		public String toObfPackageString() {
-			return buildPackageString(entry -> entry.obf);
+			return this.buildPackageString(entry -> entry.obf);
 		}
 
 		public String toDeobfPackageString() {
-			return buildPackageString(entry -> entry.deobf != null && !entry.deobf.isEmpty() ? entry.deobf : entry.obf);
+			return this.buildPackageString(entry -> entry.deobf != null && !entry.deobf.isEmpty() ? entry.deobf : entry.obf);
 		}
 
 		private String buildPackageString(Function<PackageEntry, String> nameGetter) {

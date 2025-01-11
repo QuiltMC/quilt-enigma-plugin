@@ -24,10 +24,10 @@ import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 
-public class UncheckedProposalService  extends NameProposerService {
+public class UncheckedProposalService extends NameProposerService {
 	public UncheckedProposalService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
 		super();
-		this.addIfEnabled(context, Arguments.DISABLE_MOJMAP, () -> new MojmapPackageProposer(context.getSingleArgument(Arguments.PACKAGE_NAME_OVERRIDES_PATH)));
+		this.addIfEnabled(context, Arguments.DISABLE_MOJMAP, () -> new MojmapPackageProposer(context.getSingleArgument(Arguments.PACKAGE_NAME_OVERRIDES_PATH).orElse(null)));
 	}
 
 	@Override

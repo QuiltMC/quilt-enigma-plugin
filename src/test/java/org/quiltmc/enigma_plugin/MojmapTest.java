@@ -129,27 +129,26 @@ public class MojmapTest {
 		}
 	}
 
-	void setupEnigma(Path jarPath, Path mojmapPath, Path overridesPath) throws IOException {
+	static void setupEnigma(Path jarPath, Path mojmapPath, Path overridesPath) throws IOException {
 		String profileString = """
-			{
-				"services": {
-					"name_proposal": [
-						{
-							"id": "quiltmc:name_proposal/fallback",
-							"args": {
-								"mojmap_path": "{MOJMAP_PATH}"
+				{
+					"services": {
+						"name_proposal": [
+							{
+								"id": "quiltmc:name_proposal/fallback",
+								"args": {
+									"mojmap_path": "{MOJMAP_PATH}"
+								}
+							},
+							{
+								"id": "quiltmc:name_proposal/unchecked",
+								"args": {
+									"package_name_overrides_path": "{OVERRIDES_PATH}"
+								}
 							}
-						},
-						{
-							"id": "quiltmc:name_proposal/unchecked",
-							"args": {
-								"package_name_overrides_path": "{OVERRIDES_PATH}"
-							}
-						}
-					]
-				}
-			}
-			""";
+						]
+					}
+				}""";
 
 		profileString = profileString.replace("{MOJMAP_PATH}", mojmapPath.toString());
 		profileString = profileString.replace("{OVERRIDES_PATH}", overridesPath.toString());
@@ -304,19 +303,19 @@ public class MojmapTest {
 		assertDoesNotThrow(() -> setupEnigma(overrideRenamingJar, overrideRenamingMappings, validOverrides));
 	}
 
-	void setupForOverrideValidation(Path overridesPath) throws MappingParseException, IOException {
+	static void setupForOverrideValidation(Path overridesPath) throws MappingParseException, IOException {
 		setupEnigma(MojmapTest.overrideRenamingJar, MojmapTest.overrideRenamingMappings, overridesPath);
 		// manually trigger dynamic proposal so validation is run
 		project.setMappings(project.getEnigma().readMappings(MojmapTest.overrideRenamingMappings).get(), ProgressListener.createEmpty());
 	}
 
-	private void assertMapping(Entry<?> entry, String name, TokenType type) {
+	private static void assertMapping(Entry<?> entry, String name, TokenType type) {
 		var mapping = project.getRemapper().getMapping(entry);
 		assertEquals(entry, name, mapping.targetName());
 		assertEquals(entry, type, mapping.tokenType());
 	}
 
-	private void assertEquals(Entry<?> entry, Object left, Object right) {
+	private static void assertEquals(Entry<?> entry, Object left, Object right) {
 		Assertions.assertEquals(left, right, "mismatch for " + entry);
 	}
 }

@@ -25,7 +25,7 @@ import org.quiltmc.enigma_plugin.index.JarIndexer;
 public class FallbackProposalService extends NameProposerService {
 	public FallbackProposalService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
 		super();
-		this.addIfEnabled(context, Arguments.DISABLE_MOJMAP, () -> new MojmapNameProposer(context.getSingleArgument(Arguments.MOJMAP_PATH)));
+		this.addIfEnabled(context, Arguments.DISABLE_MOJMAP, () -> new MojmapNameProposer(context.getSingleArgument(Arguments.MOJMAP_PATH).orElse(null)));
 	}
 
 	@Override
