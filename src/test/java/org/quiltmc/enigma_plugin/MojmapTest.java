@@ -231,7 +231,7 @@ public class MojmapTest {
 
 		Path tempFile = Files.createTempFile("temp_package_overrides_moj", "json");
 
-		var entries = MojmapPackageProposer.createPackageJson(MojmapNameProposer.mojmaps);
+		var entries = MojmapPackageProposer.createPackageJson(MojmapNameProposer.getMojmaps());
 		MojmapPackageProposer.writePackageJson(tempFile, entries);
 
 		String expected = Files.readString(Path.of("./src/test/resources/mojmap_test/expected.json"));

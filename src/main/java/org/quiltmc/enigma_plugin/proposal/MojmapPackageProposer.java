@@ -47,7 +47,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.quiltmc.enigma_plugin.proposal.MojmapNameProposer.mojmaps;
+import static org.quiltmc.enigma_plugin.proposal.MojmapNameProposer.getMojmaps;
 
 /**
  * Proposes Mojang's packages onto all top-level classes.
@@ -112,6 +112,7 @@ public class MojmapPackageProposer extends NameProposer {
 
 	@Override
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
+		final EntryTree<EntryMapping> mojmaps = getMojmaps();
 		if (mojmaps != null) {
 			if (this.packageOverrides == null) {
 				if (this.packageNameOverridesPath != null) {
@@ -126,16 +127,16 @@ public class MojmapPackageProposer extends NameProposer {
 				// rename all classes as per overrides
 				var classes = remapper.getJarIndex().getIndex(EntryIndex.class).getClasses();
 				for (ClassEntry classEntry : classes) {
-					this.proposePackageName(classEntry, null, null, mappings);
+					this.proposePackageName(classEntry, null, null, mappings, mojmaps);
 				}
 			} else if (obfEntry instanceof ClassEntry classEntry) {
 				// rename class
-				this.proposePackageName(classEntry, oldMapping, newMapping, mappings);
+				this.proposePackageName(classEntry, oldMapping, newMapping, mappings, mojmaps);
 			}
 		}
 	}
 
-	private void proposePackageName(ClassEntry entry, @Nullable EntryMapping oldMapping, @Nullable EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
+	private void proposePackageName(ClassEntry entry, @Nullable EntryMapping oldMapping, @Nullable EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings, EntryTree<EntryMapping> mojmaps) {
 		if (entry.isInnerClass()) {
 			return;
 		}

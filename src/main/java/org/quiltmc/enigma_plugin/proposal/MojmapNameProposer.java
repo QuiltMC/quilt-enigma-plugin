@@ -38,7 +38,12 @@ public class MojmapNameProposer extends NameProposer {
 	private final String mojmapPath;
 	// must be static for now. nasty hack to make sure we don't read mojmaps twice
 	// we can guarantee that this is nonnull for the other proposer because jar proposal blocks dynamic proposal
-	public static EntryTree<EntryMapping> mojmaps;
+	private static EntryTree<EntryMapping> mojmaps;
+
+	@Nullable
+	public static EntryTree<EntryMapping> getMojmaps() {
+		return mojmaps;
+	}
 
 	public MojmapNameProposer(@Nullable String mojmapPath) {
 		super(ID);
