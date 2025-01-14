@@ -28,6 +28,10 @@ import org.tinylog.Logger;
 import java.nio.file.Path;
 import java.util.Map;
 
+/**
+ * An extremely simple proposer that provides the mojmap names of all entries.
+ * This proposer is meant to be run first so that the names are overridden by all other proposers.
+ */
 public class MojmapNameProposer extends NameProposer {
 	public static final String ID = "mojmap";
 

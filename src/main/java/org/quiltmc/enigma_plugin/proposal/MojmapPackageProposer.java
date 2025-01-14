@@ -49,6 +49,52 @@ import java.util.function.Function;
 
 import static org.quiltmc.enigma_plugin.proposal.MojmapNameProposer.mojmaps;
 
+/**
+ * Proposes Mojang's packages onto all top-level classes.
+ * These package names can be changed via overrides, which are a simple set of package names keyed by Mojang's versions.
+ * <p>
+ *     This works via stripping out the class name and replacing the package dynamically after each rename.
+ *     For example, if a class is renamed {@code package/Class} and the mojmap name for the class is {@code net/minecraft/MojangClass},
+ *     the manually input class name will be attached to the Mojang package, resulting in {@code net/minecraft/Class}.
+ * </p>
+ * <p>
+ *     The override format is JSON, with a structure mimicking a package tree and entirely composed of one object type:
+ *     <pre><code>
+ *         [
+ *             {
+ *                 "obf": "com",
+ *                 "deobf": "",
+ *                 "children": [
+ *                     {
+ *                         "obf": "mojang",
+ *                         "deobf": "quiltmc",
+ *                         "children": []
+ *                     }
+ *                 ]
+ *             },
+ *             {
+ *                 "obf": "net",
+ *                 "deobf": "",
+ *                 "children": []
+ *             }
+ *         ]
+ *     </code></pre>
+ *
+ *     The elements of each package object are as follows:
+ *     <ul>
+ *         <li>
+ *             {@code obf}: the unqualified Mojang name of the package
+ *         </li>
+ *         <li>
+ *             {@code deobf}: the unqualified, overridden name of the package
+ *         </li>
+ *         <li>
+ *             {@code children}: a list of child packages of this package.
+ *             The root of each override file is identical to one of these objects.
+ *         </li>
+ *     </ul>
+ * </p>
+ */
 public class MojmapPackageProposer extends NameProposer {
 	public static final String ID = "mojmap_packages";
 	private final String packageNameOverridesPath;
