@@ -52,6 +52,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -81,7 +82,22 @@ public class MojmapTest {
 	private static final Path uppercases = invalidOverrides.resolve("uppercases.json");
 	private static final Path validOverrides = invalidOverrides.resolve("valid_overrides.json");
 
+	private static final Pattern UNWANTED_LINE_ENDING = Pattern.compile("\\r\\n?");
+
 	private static EnigmaProject project;
+
+	private static String deWindowsPath(String path) {
+		final String osName = System.getProperty("os.name");
+		if (osName != null && osName.toLowerCase().contains("win")) {
+			return path.replace('\\', '/');
+		} else {
+			return path;
+		}
+	}
+
+	private static String toNewLineEndings(String string) {
+		return UNWANTED_LINE_ENDING.matcher(string).replaceAll("\n");
+	}
 
 	@BeforeAll
 	static void downloadMojmaps() throws IOException {
@@ -150,8 +166,8 @@ public class MojmapTest {
 					}
 				}""";
 
-		profileString = profileString.replace("{MOJMAP_PATH}", mojmapPath.toString());
-		profileString = profileString.replace("{OVERRIDES_PATH}", overridesPath.toString());
+		profileString = profileString.replace("{MOJMAP_PATH}", deWindowsPath(mojmapPath.toString()));
+		profileString = profileString.replace("{OVERRIDES_PATH}", deWindowsPath(overridesPath.toString()));
 
 		var profile = EnigmaProfile.parse(new StringReader(profileString));
 
@@ -206,7 +222,7 @@ public class MojmapTest {
 		String expected = Files.readString(Path.of("./src/test/resources/mojmap_test/example_mappings_empty.json"));
 		String actual = Files.readString(tempFile);
 
-		Assertions.assertEquals(expected, actual);
+		Assertions.assertEquals(toNewLineEndings(expected), toNewLineEndings(actual));
 	}
 
 	@Test
@@ -221,7 +237,7 @@ public class MojmapTest {
 		String expected = Files.readString(Path.of("./src/test/resources/mojmap_test/expected.json"));
 		String actual = Files.readString(tempFile);
 
-		Assertions.assertEquals(expected, actual);
+		Assertions.assertEquals(toNewLineEndings(expected), toNewLineEndings(actual));
 	}
 
 	@Test
@@ -241,7 +257,7 @@ public class MojmapTest {
 		String expected = Files.readString(newOverrides);
 		String actual = Files.readString(tempFile);
 
-		Assertions.assertEquals(expected, actual);
+		Assertions.assertEquals(toNewLineEndings(expected), toNewLineEndings(actual));
 	}
 
 	@Test
