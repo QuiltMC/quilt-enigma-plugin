@@ -52,6 +52,8 @@ import static org.quiltmc.enigma_plugin.proposal.MojmapNameProposer.mojmaps;
 /**
  * Proposes Mojang's packages onto all top-level classes.
  * These package names can be changed via overrides, which are a simple set of package names keyed by Mojang's versions.
+ * This proposer must override the user-inputted mappings in order to work, and thus will generate mappings that take priority over manually input ones.
+ *
  * <p>
  *     This works via stripping out the class name and replacing the package dynamically after each rename.
  *     For example, if a class is renamed {@code package/Class} and the mojmap name for the class is {@code net/minecraft/MojangClass},
