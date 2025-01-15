@@ -52,7 +52,7 @@ public abstract class NameProposerService implements NameProposalService {
 
 	protected void addIfNotDisabled(EnigmaServiceContext<NameProposalService> context, JarIndexer indexer, String name, Function<JarIndexer, NameProposer> factory) {
 		if (!Arguments.getBoolean(context, name, true)) {
-			this.nameProposers.add(factory.apply(indexer));
+			this.add(indexer, factory);
 		}
 	}
 
