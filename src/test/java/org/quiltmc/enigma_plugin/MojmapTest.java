@@ -38,6 +38,7 @@ import org.quiltmc.enigma_plugin.proposal.MappingMergePackageProposer;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -47,24 +48,20 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 // todo make sure of priority
 
 public class MojmapTest {
-	private static final Path testResources = Path.of("./src/test/resources");
-	private static final Path mojmapTest = testResources.resolve("mojmap_test");
-	private static final Path exampleJar = mojmapTest.resolve("input.jar");
-	private static final Path exampleMappings = mojmapTest.resolve("example_mappings.mapping");
-	private static final Path emptyOverrides = mojmapTest.resolve("example_mappings_empty.json");
+	private static final Path exampleJar = getResource("/mojmap_test/input.jar");
+	private static final Path exampleMappings = getResource("/mojmap_test/example_mappings.mapping");
+	private static final Path emptyOverrides = getResource("/mojmap_test/example_mappings_empty.json");
 
-	private static final Path overrideRenaming = mojmapTest.resolve("override_based_renaming");
-	private static final Path overrideRenamingOverrides = overrideRenaming.resolve("input_overrides.json");
-	private static final Path overrideRenamingMappings = overrideRenaming.resolve("input.mapping");
+	private static final Path overrideRenamingOverrides = getResource("/mojmap_test/override_based_renaming/input_overrides.json");
+	private static final Path overrideRenamingMappings = getResource("/mojmap_test/override_based_renaming/input.mapping");
 
-	private static final Path invalidOverrides = mojmapTest.resolve("invalid_overrides");
-	private static final Path beginWithInt = invalidOverrides.resolve("begin_with_int.json");
-	private static final Path hyphens = invalidOverrides.resolve("hyphens.json");
-	private static final Path multipleInvalidOverrides = invalidOverrides.resolve("multiple_invalid_overrides.json");
-	private static final Path spaces = invalidOverrides.resolve("spaces.json");
-	private static final Path slashes = invalidOverrides.resolve("slashes.json");
-	private static final Path uppercases = invalidOverrides.resolve("uppercases.json");
-	private static final Path validOverrides = invalidOverrides.resolve("valid_overrides.json");
+	private static final Path beginWithInt = getResource("/mojmap_test/invalid_overrides/begin_with_int.json");
+	private static final Path hyphens = getResource("/mojmap_test/invalid_overrides/hyphens.json");
+	private static final Path multipleInvalidOverrides = getResource("/mojmap_test/invalid_overrides/multiple_invalid_overrides.json");
+	private static final Path spaces = getResource("/mojmap_test/invalid_overrides/spaces.json");
+	private static final Path slashes = getResource("/mojmap_test/invalid_overrides/slashes.json");
+	private static final Path uppercases = getResource("/mojmap_test/invalid_overrides/uppercases.json");
+	private static final Path validOverrides = getResource("/mojmap_test/invalid_overrides/valid_overrides.json");
 
 	private static EnigmaProject project;
 
@@ -241,5 +238,13 @@ public class MojmapTest {
 
 	private static void assertEquals(Entry<?> entry, Object left, Object right) {
 		Assertions.assertEquals(left, right, "mismatch for " + entry);
+	}
+
+	public static Path getResource(String name) {
+		try {
+			return Path.of(MojmapTest.class.getResource(name).toURI());
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }
