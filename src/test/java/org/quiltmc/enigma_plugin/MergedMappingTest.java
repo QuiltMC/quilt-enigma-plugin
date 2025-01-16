@@ -45,23 +45,24 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-// todo make sure of priority
+public class MergedMappingTest {
+	private static final Path exampleJar = getResource("/merged_mapping_test/input.jar");
+	private static final Path exampleMappings = getResource("/merged_mapping_test/example_mappings.mapping");
+	private static final Path emptyOverrides = getResource("/merged_mapping_test/example_mappings_empty.json");
 
-public class MojmapTest {
-	private static final Path exampleJar = getResource("/mojmap_test/input.jar");
-	private static final Path exampleMappings = getResource("/mojmap_test/example_mappings.mapping");
-	private static final Path emptyOverrides = getResource("/mojmap_test/example_mappings_empty.json");
+	private static final Path overrideRenamingOverrides = getResource("/merged_mapping_test/override_based_renaming/input_overrides.json");
+	private static final Path overrideRenamingMappings = getResource("/merged_mapping_test/override_based_renaming/input.mapping");
 
-	private static final Path overrideRenamingOverrides = getResource("/mojmap_test/override_based_renaming/input_overrides.json");
-	private static final Path overrideRenamingMappings = getResource("/mojmap_test/override_based_renaming/input.mapping");
+	private static final Path updateTestMappings = getResource("/merged_mapping_test/update_test/example_mappings.json");
+	private static final Path updateTestExpected = getResource("/merged_mapping_test/update_test/example_mappings_expected.json");
 
-	private static final Path beginWithInt = getResource("/mojmap_test/invalid_overrides/begin_with_int.json");
-	private static final Path hyphens = getResource("/mojmap_test/invalid_overrides/hyphens.json");
-	private static final Path multipleInvalidOverrides = getResource("/mojmap_test/invalid_overrides/multiple_invalid_overrides.json");
-	private static final Path spaces = getResource("/mojmap_test/invalid_overrides/spaces.json");
-	private static final Path slashes = getResource("/mojmap_test/invalid_overrides/slashes.json");
-	private static final Path uppercases = getResource("/mojmap_test/invalid_overrides/uppercases.json");
-	private static final Path validOverrides = getResource("/mojmap_test/invalid_overrides/valid_overrides.json");
+	private static final Path beginWithInt = getResource("/merged_mapping_test/invalid_overrides/begin_with_int.json");
+	private static final Path hyphens = getResource("/merged_mapping_test/invalid_overrides/hyphens.json");
+	private static final Path multipleInvalidOverrides = getResource("/merged_mapping_test/invalid_overrides/multiple_invalid_overrides.json");
+	private static final Path spaces = getResource("/merged_mapping_test/invalid_overrides/spaces.json");
+	private static final Path slashes = getResource("/merged_mapping_test/invalid_overrides/slashes.json");
+	private static final Path uppercases = getResource("/merged_mapping_test/invalid_overrides/uppercases.json");
+	private static final Path validOverrides = getResource("/merged_mapping_test/invalid_overrides/valid_overrides.json");
 
 	private static EnigmaProject project;
 
@@ -92,7 +93,7 @@ public class MojmapTest {
 		var profile = EnigmaProfile.parse(new StringReader(profileString));
 
 		var enigma = Enigma.builder().setProfile(profile).build();
-		project = enigma.openJar(MojmapTest.exampleJar, new ClasspathClassProvider(), ProgressListener.createEmpty());
+		project = enigma.openJar(MergedMappingTest.exampleJar, new ClasspathClassProvider(), ProgressListener.createEmpty());
 	}
 
 	@Test
@@ -133,13 +134,12 @@ public class MojmapTest {
 		setupEnigma(exampleMappings, emptyOverrides);
 
 		Path tempFile = Files.createTempFile("temp_package_overrides", "json");
-		Path mappingPath = Path.of("./src/test/resources/mojmap_test/example_mappings.mapping");
-		var mappings = project.getEnigma().readMappings(mappingPath).get();
+		var mappings = project.getEnigma().readMappings(exampleMappings).get();
 
 		var entries = MappingMergePackageProposer.createPackageJson(mappings);
 		MappingMergePackageProposer.writePackageJson(tempFile, entries);
 
-		String expected = Files.readString(Path.of("./src/test/resources/mojmap_test/example_mappings_empty.json"));
+		String expected = Files.readString(emptyOverrides);
 		String actual = Files.readString(tempFile);
 
 		Assertions.assertEquals(expected, actual);
@@ -148,18 +148,14 @@ public class MojmapTest {
 	@Test
 	void testOverrideUpdating() throws IOException, MappingParseException {
 		Path tempFile = Files.createTempFile("temp_package_overrides_update", "json");
-		Path mappingPath = Path.of("./src/test/resources/mojmap_test/example_mappings.mapping");
 
-		Path oldOverrides = Path.of("./src/test/resources/mojmap_test/update_test/example_mappings.json");
-		Path newOverrides = Path.of("./src/test/resources/mojmap_test/update_test/example_mappings_expected.json");
+		var mappings = project.getEnigma().readMappings(exampleMappings).get();
 
-		var mappings = project.getEnigma().readMappings(mappingPath).get();
-
-		var oldPackageJson = MappingMergePackageProposer.readPackageJson(oldOverrides.toString());
+		var oldPackageJson = MappingMergePackageProposer.readPackageJson(updateTestMappings.toString());
 		var updated = MappingMergePackageProposer.updatePackageJson(oldPackageJson, mappings);
 		MappingMergePackageProposer.writePackageJson(tempFile, updated);
 
-		String expected = Files.readString(newOverrides);
+		String expected = Files.readString(updateTestExpected);
 		String actual = Files.readString(tempFile);
 
 		Assertions.assertEquals(expected, actual);
@@ -225,9 +221,9 @@ public class MojmapTest {
 	}
 
 	static void setupForOverrideValidation(Path overridesPath) throws MappingParseException, IOException {
-		setupEnigma(MojmapTest.overrideRenamingMappings, overridesPath);
+		setupEnigma(MergedMappingTest.overrideRenamingMappings, overridesPath);
 		// manually trigger dynamic proposal so validation is run
-		project.setMappings(project.getEnigma().readMappings(MojmapTest.overrideRenamingMappings).get(), ProgressListener.createEmpty());
+		project.setMappings(project.getEnigma().readMappings(MergedMappingTest.overrideRenamingMappings).get(), ProgressListener.createEmpty());
 	}
 
 	private static void assertMapping(Entry<?> entry, String name, TokenType type) {
@@ -242,7 +238,7 @@ public class MojmapTest {
 
 	public static Path getResource(String name) {
 		try {
-			return Path.of(MojmapTest.class.getResource(name).toURI());
+			return Path.of(MergedMappingTest.class.getResource(name).toURI());
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
