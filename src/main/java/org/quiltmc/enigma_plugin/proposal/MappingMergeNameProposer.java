@@ -38,7 +38,12 @@ public class MappingMergeNameProposer extends NameProposer {
 	private final String mappingPath;
 	// must be static for now. nasty hack to make sure we don't read mappings twice when also using the package proposer
 	// we can guarantee that this is nonnull for the other proposer because jar proposal blocks dynamic proposal
-	public static EntryTree<EntryMapping> mergedMappings;
+	private static EntryTree<EntryMapping> mergedMappings;
+
+	@Nullable
+	public static EntryTree<EntryMapping> getMergedMappings() {
+		return mergedMappings;
+	}
 
 	public MappingMergeNameProposer(@Nullable String mappingPath) {
 		super(ID);

@@ -47,8 +47,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.quiltmc.enigma_plugin.proposal.MappingMergeNameProposer.mergedMappings;
-
 /**
  * Proposes the packages from the mappings stored in {@link MappingMergeNameProposer} onto all top-level classes.
  * These package names can be changed via overrides, which are a simple set of package names keyed by the versions from the mappings in {@link MappingMergeNameProposer}.
@@ -114,6 +112,8 @@ public class MappingMergePackageProposer extends NameProposer {
 
 	@Override
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
+		final EntryTree<EntryMapping> mergedMappings = MappingMergeNameProposer.getMergedMappings();
+
 		if (mergedMappings != null) {
 			if (this.packageOverrides == null) {
 				if (this.packageNameOverridesPath != null) {
@@ -128,16 +128,16 @@ public class MappingMergePackageProposer extends NameProposer {
 				// rename all classes as per overrides
 				var classes = remapper.getJarIndex().getIndex(EntryIndex.class).getClasses();
 				for (ClassEntry classEntry : classes) {
-					this.proposePackageName(classEntry, null, null, mappings);
+					this.proposePackageName(classEntry, null, null, mappings, mergedMappings);
 				}
 			} else if (obfEntry instanceof ClassEntry classEntry) {
 				// rename class
-				this.proposePackageName(classEntry, oldMapping, newMapping, mappings);
+				this.proposePackageName(classEntry, oldMapping, newMapping, mappings, mergedMappings);
 			}
 		}
 	}
 
-	private void proposePackageName(ClassEntry entry, @Nullable EntryMapping oldMapping, @Nullable EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
+	private void proposePackageName(ClassEntry entry, @Nullable EntryMapping oldMapping, @Nullable EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings, EntryTree<EntryMapping> mergedMappings) {
 		if (entry.isInnerClass()) {
 			return;
 		}
