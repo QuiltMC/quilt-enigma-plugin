@@ -29,37 +29,37 @@ import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * An extremely simple proposer that provides the mojmap names of all entries.
+ * An extremely simple proposer that provides the names of all entries from the provided mappings.
  * This proposer is meant to be run first so that the names are overridden by all other proposers.
  */
-public class MojmapNameProposer extends NameProposer {
-	public static final String ID = "mojmap";
+public class MappingMergeNameProposer extends NameProposer {
+	public static final String ID = "mapping_merge";
 
-	private final String mojmapPath;
-	// must be static for now. nasty hack to make sure we don't read mojmaps twice
+	private final String mappingPath;
+	// must be static for now. nasty hack to make sure we don't read mappings twice when also using the package proposer
 	// we can guarantee that this is nonnull for the other proposer because jar proposal blocks dynamic proposal
-	public static EntryTree<EntryMapping> mojmaps;
+	public static EntryTree<EntryMapping> mergedMappings;
 
-	public MojmapNameProposer(@Nullable String mojmapPath) {
+	public MappingMergeNameProposer(@Nullable String mappingPath) {
 		super(ID);
-		this.mojmapPath = mojmapPath;
+		this.mappingPath = mappingPath;
 	}
 
 	@Override
 	public void insertProposedNames(Enigma enigma, JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
-		if (this.mojmapPath != null) {
-			Path path = Path.of(this.mojmapPath);
+		if (this.mappingPath != null) {
+			Path path = Path.of(this.mappingPath);
 			try {
-				mojmaps = enigma.readMappings(path).orElse(null);
+				mergedMappings = enigma.readMappings(path).orElse(null);
 			} catch (Exception e) {
-				Logger.error(e, "could not read mojmaps!");
+				Logger.error(e, "could not read mappings to merge (path: " + path + ")!");
 			}
 		} else {
-			Logger.error("no mojmap path provided, disabling " + this.getSourcePluginId());
+			Logger.error("no mapping path provided for merge, disabling " + this.getSourcePluginId());
 		}
 
-		if (mojmaps != null) {
-			mojmaps.getRootNodes().forEach((node) -> this.proposeNodeAndChildren(mappings, node));
+		if (mergedMappings != null) {
+			mergedMappings.getRootNodes().forEach((node) -> this.proposeNodeAndChildren(mappings, node));
 		}
 	}
 

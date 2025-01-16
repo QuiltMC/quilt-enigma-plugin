@@ -27,7 +27,7 @@ import org.quiltmc.enigma_plugin.index.JarIndexer;
 public class UncheckedProposalService extends NameProposerService {
 	public UncheckedProposalService(JarIndexer indexer, EnigmaServiceContext<NameProposalService> context) {
 		super();
-		this.addIfEnabled(context, Arguments.DISABLE_MOJMAP, () -> new MojmapPackageProposer(context.getSingleArgument(Arguments.PACKAGE_NAME_OVERRIDES_PATH).orElse(null)));
+		this.addIfEnabled(context, Arguments.DISABLE_MAPPING_MERGE, () -> new MappingMergePackageProposer(context.getSingleArgument(Arguments.PACKAGE_NAME_OVERRIDES_PATH).orElse(null)));
 	}
 
 	@Override

@@ -47,17 +47,17 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.quiltmc.enigma_plugin.proposal.MojmapNameProposer.mojmaps;
+import static org.quiltmc.enigma_plugin.proposal.MappingMergeNameProposer.mergedMappings;
 
 /**
- * Proposes Mojang's packages onto all top-level classes.
- * These package names can be changed via overrides, which are a simple set of package names keyed by Mojang's versions.
+ * Proposes the packages from the mappings stored in {@link MappingMergeNameProposer} onto all top-level classes.
+ * These package names can be changed via overrides, which are a simple set of package names keyed by the versions from the mappings in {@link MappingMergeNameProposer}.
  * This proposer must override the user-inputted mappings in order to work, and thus will generate mappings that take priority over manually input ones.
  *
  * <p>
  *     This works via stripping out the class name and replacing the package dynamically after each rename.
- *     For example, if a class is renamed {@code package/Class} and the mojmap name for the class is {@code net/minecraft/MojangClass},
- *     the manually input class name will be attached to the Mojang package, resulting in {@code net/minecraft/Class}.
+ *     For example, if a class is renamed {@code package/Class} and the name for the class in the mappings to merge is {@code net/minecraft/MojangClass},
+ *     the manually input class name will changed according to the mappings, resulting in {@code net/minecraft/Class}.
  * </p>
  * <p>
  *     The override format is JSON, with a structure mimicking a package tree and entirely composed of one object type:
@@ -85,7 +85,7 @@ import static org.quiltmc.enigma_plugin.proposal.MojmapNameProposer.mojmaps;
  *     The elements of each package object are as follows:
  *     <ul>
  *         <li>
- *             {@code obf}: the unqualified Mojang name of the package
+ *             {@code obf}: the unqualified name of the package in the provided mappings
  *         </li>
  *         <li>
  *             {@code deobf}: the unqualified, overridden name of the package
@@ -97,12 +97,12 @@ import static org.quiltmc.enigma_plugin.proposal.MojmapNameProposer.mojmaps;
  *     </ul>
  * </p>
  */
-public class MojmapPackageProposer extends NameProposer {
-	public static final String ID = "mojmap_packages";
+public class MappingMergePackageProposer extends NameProposer {
+	public static final String ID = "merge_packages";
 	private final String packageNameOverridesPath;
 	private PackageEntryList packageOverrides;
 
-	public MojmapPackageProposer(@Nullable String packageNameOverridesPath) {
+	public MappingMergePackageProposer(@Nullable String packageNameOverridesPath) {
 		super(ID);
 		this.packageNameOverridesPath = packageNameOverridesPath;
 	}
@@ -114,7 +114,7 @@ public class MojmapPackageProposer extends NameProposer {
 
 	@Override
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
-		if (mojmaps != null) {
+		if (mergedMappings != null) {
 			if (this.packageOverrides == null) {
 				if (this.packageNameOverridesPath != null) {
 					this.packageOverrides = readPackageJson(this.packageNameOverridesPath);
@@ -142,21 +142,21 @@ public class MojmapPackageProposer extends NameProposer {
 			return;
 		}
 
-		EntryMapping mojmap = mojmaps.get(entry);
-		if (mojmap == null || mojmap.targetName() == null) {
-			Logger.error("no mojmap for outer class: " + entry);
+		EntryMapping mappingToMerge = mergedMappings.get(entry);
+		if (mappingToMerge == null || mappingToMerge.targetName() == null) {
+			Logger.error("no available mapping to merge for outer class: " + entry);
 			return;
 		}
 
-		String mojTarget = mojmap.targetName();
+		String mergeTarget = mappingToMerge.targetName();
 		String target;
-		String obfPackage = mojTarget.substring(0, mojTarget.lastIndexOf('/'));
+		String obfPackage = mergeTarget.substring(0, mergeTarget.lastIndexOf('/'));
 
 		if (newMapping != null && newMapping.targetName() != null) {
-			target = mojTarget.substring(0, mojTarget.lastIndexOf('/'))
+			target = mergeTarget.substring(0, mergeTarget.lastIndexOf('/'))
 				+ newMapping.targetName().substring(newMapping.targetName().lastIndexOf('/'));
 		} else {
-			target = mojTarget;
+			target = mergeTarget;
 		}
 
 		Optional<PackageEntry> optionalPackageEntry = this.packageOverrides.findEntry(obfPackage);
