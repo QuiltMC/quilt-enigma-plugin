@@ -41,6 +41,7 @@ import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -63,6 +64,21 @@ public class MergedMappingTest {
 	private static final Path slashes = getResource("/merged_mapping_test/invalid_overrides/slashes.json");
 	private static final Path uppercases = getResource("/merged_mapping_test/invalid_overrides/uppercases.json");
 	private static final Path validOverrides = getResource("/merged_mapping_test/invalid_overrides/valid_overrides.json");
+
+	private static final Pattern UNWANTED_LINE_ENDING = Pattern.compile("\\r\\n?");
+
+	private static String deWindowsPath(String path) {
+		final String osName = System.getProperty("os.name");
+		if (osName != null && osName.toLowerCase().contains("win")) {
+			return path.replace('\\', '/');
+		} else {
+			return path;
+		}
+	}
+
+	private static String toNewLineEndings(String string) {
+		return UNWANTED_LINE_ENDING.matcher(string).replaceAll("\n");
+	}
 
 	private static EnigmaProject project;
 
@@ -87,8 +103,8 @@ public class MergedMappingTest {
 					}
 				}""";
 
-		profileString = profileString.replace("{MOJMAP_PATH}", mojmapPath.toString());
-		profileString = profileString.replace("{OVERRIDES_PATH}", overridesPath.toString());
+		profileString = profileString.replace("{MOJMAP_PATH}", deWindowsPath(mojmapPath.toString()));
+		profileString = profileString.replace("{OVERRIDES_PATH}", deWindowsPath(overridesPath.toString()));
 
 		var profile = EnigmaProfile.parse(new StringReader(profileString));
 
@@ -139,8 +155,8 @@ public class MergedMappingTest {
 		var entries = MappingMergePackageProposer.createPackageJson(mappings);
 		MappingMergePackageProposer.writePackageJson(tempFile, entries);
 
-		String expected = Files.readString(emptyOverrides);
-		String actual = Files.readString(tempFile);
+		String expected = toNewLineEndings(Files.readString(emptyOverrides));
+		String actual = toNewLineEndings(Files.readString(tempFile));
 
 		Assertions.assertEquals(expected, actual);
 	}
@@ -155,8 +171,8 @@ public class MergedMappingTest {
 		var updated = MappingMergePackageProposer.updatePackageJson(oldPackageJson, mappings);
 		MappingMergePackageProposer.writePackageJson(tempFile, updated);
 
-		String expected = Files.readString(updateTestExpected);
-		String actual = Files.readString(tempFile);
+		String expected = toNewLineEndings(Files.readString(updateTestExpected));
+		String actual = toNewLineEndings(Files.readString(tempFile));
 
 		Assertions.assertEquals(expected, actual);
 	}
