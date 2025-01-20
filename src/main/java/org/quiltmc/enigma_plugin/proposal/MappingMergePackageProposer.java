@@ -55,10 +55,10 @@ import java.util.function.Function;
  * <p>
  *     This works via stripping out the class name and replacing the package dynamically after each rename.
  *     For example, if a class is renamed {@code package/Class} and the name for the class in the mappings to merge is {@code net/minecraft/MojangClass},
- *     the manually input class name will changed according to the mappings, resulting in {@code net/minecraft/Class}.
+ *     the manually input class name will be changed according to the mappings, resulting in {@code net/minecraft/Class}.
  * </p>
  * <p>
- *     The override format is JSON, with a structure mimicking a package tree and entirely composed of one object type:
+ *     The override format is written in JSON, with a structure mimicking a package tree and entirely composed of one object type:
  *     <pre><code>
  *         [
  *             {
@@ -86,7 +86,7 @@ import java.util.function.Function;
  *             {@code obf}: the unqualified name of the package in the provided mappings
  *         </li>
  *         <li>
- *             {@code deobf}: the unqualified, overridden name of the package
+ *             {@code deobf}: the unqualified, overridden name of the package, or an empty string to keep the original one
  *         </li>
  *         <li>
  *             {@code children}: a list of child packages of this package.
