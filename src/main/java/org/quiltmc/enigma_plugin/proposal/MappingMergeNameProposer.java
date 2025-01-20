@@ -29,7 +29,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * An extremely simple proposer that provides the names of all entries from the provided mappings.
+ * An extremely simple proposer that provides the names of all entries from the given mappings.
  * This proposer is meant to be run first so that the names are overridden by all other proposers.
  */
 public class MappingMergeNameProposer extends NameProposer {
