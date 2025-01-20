@@ -9,7 +9,6 @@ gson = "2.10.1"
 
 junit = "5.9.3"
 hamcrest = "2.2"
-launchermeta_parser = "1.0.0"
 
 dfu = "4.1.27"
 
@@ -29,7 +28,6 @@ gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit_engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
-launchermeta_parser = { module = "org.quiltmc:launchermeta-parser", version.ref = "launchermeta_parser" }
 
 dfu = { module = "com.mojang:datafixerupper", version.ref = "dfu" }
 
