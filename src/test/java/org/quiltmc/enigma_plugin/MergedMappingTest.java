@@ -119,7 +119,7 @@ public class MergedMappingTest {
 		// assert that all types propose properly
 		// note that mojmaps do not contain params
 
-		ClassEntry a = new ClassEntry("a"); // Axis
+		ClassEntry a = new ClassEntry("a");
 		assertMapping(a, "a/A", TokenType.JAR_PROPOSED);
 
 		ClassEntry c = new ClassEntry("c");
