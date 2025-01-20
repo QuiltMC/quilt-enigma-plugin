@@ -58,7 +58,8 @@ import java.util.function.Function;
  *     the manually input class name will be changed according to the mappings, resulting in {@code net/minecraft/Class}.
  * </p>
  * <p>
- *     The override format is written in JSON, with a structure mimicking a package tree and entirely composed of one object type:
+ *     The override format is written in JSON, with a structure mimicking a package tree and entirely composed of one object type.
+ *     The root of this file is a list of top-level package objects.
  *     <pre><code>
  *         [
  *             {
@@ -90,7 +91,6 @@ import java.util.function.Function;
  *         </li>
  *         <li>
  *             {@code children}: a list of child packages of this package.
- *             The root of each override file is identical to one of these objects.
  *         </li>
  *     </ul>
  * </p>
