@@ -1,0 +1,12 @@
+CLASS a a/A
+CLASS b a/b/B
+	METHOD a meow (Ld;)V
+		ARG 0 purr
+CLASS c b/a/A
+	FIELD a hatsuneMiku Lc$a;
+CLASS d c/a/A
+CLASS e b/b/B
+CLASS f b/b/c/C
+CLASS g a/b/c/A
+	METHOD a gaming (Ljava/lang/String;)V
+		ARG 0 awesome

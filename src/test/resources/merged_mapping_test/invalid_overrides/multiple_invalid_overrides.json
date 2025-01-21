@@ -1,0 +1,35 @@
+[
+    {
+        "obf": "a",
+        "deobf": "a a",
+        "children": [
+            {
+                "obf": "b",
+                "deobf": "b/b",
+                "children": []
+            }
+        ]
+    },
+    {
+        "obf": "b",
+        "deobf": "b_b",
+        "children": [
+            {
+                "obf": "a",
+                "deobf": "123a",
+                "children": []
+            },
+            {
+                "obf": "b",
+                "deobf": "b123",
+                "children": [
+                    {
+                        "obf": "c",
+                        "deobf": "c-c",
+                        "children": []
+                    }
+                ]
+            }
+        ]
+    }
+]

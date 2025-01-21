@@ -23,19 +23,25 @@ import org.quiltmc.enigma.api.service.NameProposalService;
 import org.quiltmc.enigma.api.service.ObfuscationTestService;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.quiltmc.enigma_plugin.obfuscation.NameObfuscationTestService;
-import org.quiltmc.enigma_plugin.proposal.NameProposerService;
+import org.quiltmc.enigma_plugin.proposal.DefaultProposalService;
+import org.quiltmc.enigma_plugin.proposal.FallbackProposalService;
+import org.quiltmc.enigma_plugin.proposal.UncheckedProposalService;
 
 public class QuiltEnigmaPlugin implements EnigmaPlugin {
 	public static final String SERVICE_ID_PREFIX = "quiltmc:";
 	public static final String INDEX_SERVICE_ID = SERVICE_ID_PREFIX + "jar_index";
 	public static final String NAME_PROPOSAL_SERVICE_ID = SERVICE_ID_PREFIX + "name_proposal";
+	public static final String FALLBACK_NAME_PROPOSAL_SERVICE_ID = NAME_PROPOSAL_SERVICE_ID + "/fallback";
+	public static final String UNCHECKED_NAME_PROPOSAL_SERVICE_ID = NAME_PROPOSAL_SERVICE_ID + "/unchecked";
 	public static final String OBFUSCATION_SERVICE_ID = SERVICE_ID_PREFIX + "obfuscation_test";
 
 	@Override
 	public void init(EnigmaPluginContext ctx) {
 		var indexer = new JarIndexer();
 		ctx.registerService(JarIndexerService.TYPE, indexer::withContext);
-		ctx.registerService(NameProposalService.TYPE, ctx1 -> new NameProposerService(indexer, ctx1));
+		ctx.registerService(NameProposalService.TYPE, ctx1 -> new DefaultProposalService(indexer, ctx1));
+		ctx.registerService(NameProposalService.TYPE, ctx1 -> new FallbackProposalService(indexer, ctx1));
+		ctx.registerService(NameProposalService.TYPE, ctx1 -> new UncheckedProposalService(indexer, ctx1));
 		ctx.registerService(ObfuscationTestService.TYPE, NameObfuscationTestService::new);
 	}
 }

@@ -1,0 +1,40 @@
+[
+  {
+    "obf": "a",
+    "deobf": "wawa",
+    "children": []
+  },
+  {
+    "obf": "b",
+    "deobf": "gaming",
+    "children": [
+      {
+        "obf": "a",
+        "deobf": "",
+        "children": []
+      },
+      {
+        "obf": "b",
+        "deobf": "",
+        "children": [
+          {
+            "obf": "c",
+            "deobf": "c_",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "obf": "c",
+    "deobf": "",
+    "children": [
+      {
+        "obf": "a",
+        "deobf": "listen_to_the_2016_album_aura_obelisk_by_octagrape_it_goes_crazy",
+        "children": []
+      }
+    ]
+  }
+]
