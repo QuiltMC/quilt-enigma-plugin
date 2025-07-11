@@ -1,3 +1,5 @@
 {
-    part_names: "com/a/a/a"
+    part_names: "com/a/a/a",
+    base_model: "com/a/a/a/b",
+    entity_model: "com/a/a/a/a"
 }

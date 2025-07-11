@@ -19,6 +19,7 @@ package org.quiltmc.enigma_plugin.index.entity_rendering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,21 +106,18 @@ public class EntityModelPartNamesIndex extends Index {
 
 	@Override
 	public void onIndexingEnded() {
-		// Removes multiple instances of the same part name
-		this.fieldToValues.entrySet().stream()
-			.collect(Collectors.<Map.Entry<FieldEntry, String>, String, Map.Entry<List<FieldEntry>, Integer>>toMap(
+		// Remove multiple instances of the same part name
+		this.fieldToValues
+			.entrySet()
+			.stream()
+			.collect(Collectors.groupingBy(
 				Map.Entry::getValue,
-				e -> Map.entry(List.of(e.getKey()), 1),
-				(e1, e2) -> {
-					List<FieldEntry> fields = new ArrayList<>(e1.getKey());
-					fields.addAll(e2.getKey());
-					return Map.entry(fields, e1.getValue() + e2.getValue());
-				}
+				Collectors.mapping(Map.Entry::getKey, Collectors.toList())
 			))
 			.values()
 			.stream()
-			.filter(entry -> entry.getValue() > 1)
-			.forEach(entry -> entry.getKey().forEach(this.fieldToValues::remove));
+			.filter(entry -> entry.size() > 1)
+			.forEach(entry -> entry.forEach(this.fieldToValues::remove));
 	}
 
 	@Override

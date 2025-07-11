@@ -24,6 +24,7 @@ import org.quiltmc.enigma.api.service.EnigmaServiceContext;
 import org.quiltmc.enigma.api.service.JarIndexerService;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
 import org.quiltmc.enigma_plugin.index.constant_fields.ConstantFieldIndex;
+import org.quiltmc.enigma_plugin.index.entity_rendering.EntityModelIndex;
 import org.quiltmc.enigma_plugin.index.entity_rendering.EntityModelPartNamesIndex;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
@@ -46,6 +47,7 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 		this.addIndex(new DelegateParametersIndex());
 		this.addIndex(new LoggerIndex());
 		this.addIndex(new EntityModelPartNamesIndex());
+		this.addIndex(new EntityModelIndex());
 	}
 
 	private <T extends Index> void addIndex(T index) {
@@ -82,7 +84,11 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 			ClassNode node = classProvider.get(className);
 			if (node != null) {
 				for (var index : enabledIndexes) {
-					index.visitClassNode(classProvider, node);
+					try {
+						index.visitClassNode(classProvider, node);
+					} catch (Exception e) {
+						throw new RuntimeException("Error indexing class: " + node.name, e);
+					}
 				}
 			}
 		}
