@@ -60,7 +60,7 @@ public class SimpleTypeSingleIndex extends Index {
 	private final Map<LocalVariableEntry, List<String>> parameterFallbacks = new HashMap<>();
 	private final Map<FieldEntry, String> fields = new HashMap<>();
 	private final Map<ClassNode, Map<String, FieldBuildingEntry>> fieldCache = new HashMap<>();
-	private final Set<String> unverifiedTypes;
+	private final Set<String> unverifiedTypes = new HashSet<>();
 
 	private SimpleTypeFieldNamesRegistry registry;
 	private InheritanceIndex inheritance;
@@ -68,8 +68,6 @@ public class SimpleTypeSingleIndex extends Index {
 
 	public SimpleTypeSingleIndex() {
 		super(null);
-
-		this.unverifiedTypes = new HashSet<>();
 	}
 
 	@Override
