@@ -151,12 +151,12 @@ public class SimpleTypeSingleIndex extends Index {
 		if (this.typeVerification != TypeVerification.NONE) {
 			if (!this.unverifiedTypes.isEmpty()) {
 				boolean single = this.unverifiedTypes.size() == 1;
-				StringBuilder message = new StringBuilder("The following simple type field name");
-				message.append(single ? " was" : "s were");
-				message.append(" not encountered:");
+				StringBuilder message = new StringBuilder("The following simple type field name type");
+				message.append(single ? " is" : "s are");
+				message.append(" missing:");
 
 				if (single) {
-					message.append(' ').append(this.unverifiedTypes.stream().findAny().orElseThrow());
+					message.append(' ').append(this.unverifiedTypes.iterator().next());
 				} else {
 					this.unverifiedTypes.forEach(type -> message.append("\n\t").append(type));
 				}

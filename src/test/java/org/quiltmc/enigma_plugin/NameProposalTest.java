@@ -61,7 +61,7 @@ public class NameProposalTest {
 		remapper.insertDynamicallyProposedMappings(null, null, null);
 
 		// simple_type_field_names_type_verification warning
-		Assertions.assertTrue(testErr.toString().contains("[WARN]: The following simple type field name was not encountered: not/present"));
+		Assertions.assertTrue(testErr.toString().contains("[WARN]: The following simple type field name type is missing: not/present"));
 
 		System.setErr(originalErr);
 	}
