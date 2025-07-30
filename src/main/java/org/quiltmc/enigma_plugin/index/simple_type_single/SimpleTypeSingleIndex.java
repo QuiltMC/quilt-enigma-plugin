@@ -76,9 +76,6 @@ public class SimpleTypeSingleIndex extends Index {
 	public void withContext(EnigmaServiceContext<JarIndexerService> context) {
 		super.withContext(context);
 
-		this.loadRegistry(context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
-				.map(context::getPath).orElse(null));
-
 		this.typeVerification = context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_TYPE_VERIFICATION)
 			.map(value -> {
 				try {
@@ -98,6 +95,9 @@ public class SimpleTypeSingleIndex extends Index {
 				}
 			})
 			.orElse(TypeVerification.DEFAULT);
+
+		this.loadRegistry(context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
+				.map(context::getPath).orElse(null));
 	}
 
 	@Override
@@ -115,7 +115,9 @@ public class SimpleTypeSingleIndex extends Index {
 		this.registry.read();
 
 		this.unverifiedTypes.clear();
-		this.registry.streamTypes().forEach(this.unverifiedTypes::add);
+		if (this.typeVerification != TypeVerification.NONE) {
+			this.registry.streamTypes().forEach(this.unverifiedTypes::add);
+		}
 	}
 
 	@Override
