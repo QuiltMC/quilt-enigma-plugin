@@ -43,13 +43,13 @@ import org.tinylog.Logger;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Index of fields/local variables that are of a rather simple type (as-in easy to guess the variable name) and which
@@ -60,10 +60,11 @@ public class SimpleTypeSingleIndex extends Index {
 	private final Map<LocalVariableEntry, List<String>> parameterFallbacks = new HashMap<>();
 	private final Map<FieldEntry, String> fields = new HashMap<>();
 	private final Map<ClassNode, Map<String, FieldBuildingEntry>> fieldCache = new HashMap<>();
-	private SimpleTypeFieldNamesRegistry registry;
 	private final Set<String> unverifiedTypes;
 
+	private SimpleTypeFieldNamesRegistry registry;
 	private InheritanceIndex inheritance;
+	private TypeVerification typeVerification = TypeVerification.DEFAULT;
 
 	public SimpleTypeSingleIndex() {
 		super(null);
@@ -77,6 +78,26 @@ public class SimpleTypeSingleIndex extends Index {
 
 		this.loadRegistry(context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
 				.map(context::getPath).orElse(null));
+
+		this.typeVerification = context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_TYPE_VERIFICATION)
+			.map(value -> {
+				try {
+					return TypeVerification.valueOf(value);
+				} catch (IllegalArgumentException e) {
+					throw new IllegalStateException(
+						"Invalid %s value: \"%s\"; must be one of %s".formatted(
+							Arguments.SIMPLE_TYPE_FIELD_NAMES_TYPE_VERIFICATION,
+							value,
+							Arrays.stream(TypeVerification.values())
+								.map(Enum::name)
+								.map(name -> '"' + name + '"')
+								.collect(Collectors.joining(", "))
+						),
+						e
+					);
+				}
+			})
+			.orElse(TypeVerification.DEFAULT);
 	}
 
 	@Override
@@ -127,19 +148,25 @@ public class SimpleTypeSingleIndex extends Index {
 	}
 
 	public void verifyTypes() {
-		if (!this.unverifiedTypes.isEmpty()) {
-			boolean single = this.unverifiedTypes.size() == 1;
-			StringBuilder message = new StringBuilder("The following simple type field name");
-			message.append(single ?  " was" : "s were");
-			message.append(" not encountered:");
+		if (this.typeVerification != TypeVerification.NONE) {
+			if (!this.unverifiedTypes.isEmpty()) {
+				boolean single = this.unverifiedTypes.size() == 1;
+				StringBuilder message = new StringBuilder("The following simple type field name");
+				message.append(single ? " was" : "s were");
+				message.append(" not encountered:");
 
-			if (single) {
-				message.append(' ').append(this.unverifiedTypes.stream().findAny().orElseThrow());
-			} else {
-				this.unverifiedTypes.forEach(type -> message.append("\n\t").append(type));
+				if (single) {
+					message.append(' ').append(this.unverifiedTypes.stream().findAny().orElseThrow());
+				} else {
+					this.unverifiedTypes.forEach(type -> message.append("\n\t").append(type));
+				}
+
+				if (this.typeVerification == TypeVerification.WARN) {
+					Logger.warn(message);
+				} else {
+					throw new IllegalStateException(message.toString());
+				}
 			}
-
-			Logger.warn(message);
 		}
 	}
 
@@ -392,5 +419,11 @@ public class SimpleTypeSingleIndex extends Index {
 		public boolean isNull() {
 			return this.node == null;
 		}
+	}
+
+	private enum TypeVerification {
+		NONE, WARN, THROW;
+
+		static final TypeVerification DEFAULT = WARN;
 	}
 }
