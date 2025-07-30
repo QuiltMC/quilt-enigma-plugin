@@ -38,6 +38,8 @@ public class SimpleTypeFieldNameProposer extends NameProposer {
 
 	@Override
 	public void insertProposedNames(Enigma enigma, JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
+		this.index.verifyTypes();
+
 		for (FieldEntry field : this.index.getFields()) {
 			String name = this.index.getField(field);
 
