@@ -1,0 +1,5 @@
+{
+    $schema: "../../main/resources/simple_subtype_field_names_schema.json",
+
+    "com/a/b/b": "Entity"
+}

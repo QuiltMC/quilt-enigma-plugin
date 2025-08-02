@@ -204,7 +204,7 @@ public class NameProposalTest {
 
 	@Test
 	public void testSimpleTypeSingleNames() {
-		var classEntry = new ClassEntry("com/a/e");
+		var classEntry = new ClassEntry("com/a/f");
 		var fieldsClassEntry = new ClassEntry(classEntry, "a");
 
 		var owner = new ClassEntry(fieldsClassEntry, "a");
@@ -212,80 +212,80 @@ public class NameProposalTest {
 		assertNotProposed(field(owner, "b", "Lcom/a/b/g;"));
 
 		owner = new ClassEntry(fieldsClassEntry, "b");
-		assertProposal("POS", field(owner, "a", "Lcom/a/b/b;"));
-		assertProposal("position", field(owner, "b", "Lcom/a/b/c;"));
-		assertProposal("randomPosition", field(owner, "c", "Lcom/a/b/d;"));
-		assertProposal("STATIC_STATE_A", field(owner, "d", "Lcom/a/b/e;"));
-		assertProposal("STATIC_STATE_B", field(owner, "e", "Lcom/a/b/f;"));
-		assertProposal("VALUE_A", field(owner, "f", "Lcom/a/b/g;"));
-		assertProposal("VALUE_B", field(owner, "g", "Lcom/a/b/h;"));
-		assertProposal("valueC", field(owner, "h", "Lcom/a/b/i;"));
+		assertProposal("POS", field(owner, "a", "Lcom/a/c/b;"));
+		assertProposal("position", field(owner, "b", "Lcom/a/c/c;"));
+		assertProposal("randomPosition", field(owner, "c", "Lcom/a/c/d;"));
+		assertProposal("STATIC_STATE_A", field(owner, "d", "Lcom/a/c/e;"));
+		assertProposal("STATIC_STATE_B", field(owner, "e", "Lcom/a/c/f;"));
+		assertProposal("VALUE_A", field(owner, "f", "Lcom/a/c/g;"));
+		assertProposal("VALUE_B", field(owner, "g", "Lcom/a/c/h;"));
+		assertProposal("valueC", field(owner, "h", "Lcom/a/c/i;"));
 
 		owner = new ClassEntry(fieldsClassEntry, "c");
-		assertProposal("valueD", field(owner, "a", "Lcom/a/b/k;"));
-		assertNotProposed(field(owner, "b", "Lcom/a/b/m;"));
+		assertProposal("valueD", field(owner, "a", "Lcom/a/c/k;"));
+		assertNotProposed(field(owner, "b", "Lcom/a/c/m;"));
 
 		owner = new ClassEntry(fieldsClassEntry, "d");
-		assertProposal("CONFIG", field(owner, "a", "Lcom/a/b/a;"));
-		assertProposal("STATIC_STATE", field(owner, "b", "Lcom/a/b/e;"));
-		assertProposal("value", field(owner, "c", "Lcom/a/b/i;"));
+		assertProposal("CONFIG", field(owner, "a", "Lcom/a/c/a;"));
+		assertProposal("STATIC_STATE", field(owner, "b", "Lcom/a/c/e;"));
+		assertProposal("value", field(owner, "c", "Lcom/a/c/i;"));
 
 		owner = new ClassEntry(classEntry, "b");
-		var parent = method(owner, "a", "(Lcom/a/b/a;)V");
+		var parent = method(owner, "a", "(Lcom/a/c/a;)V");
 		assertProposal("config", localVar(parent, 0));
 
-		parent = method(owner, "a", "(Lcom/a/b/b;)V");
+		parent = method(owner, "a", "(Lcom/a/c/b;)V");
 		assertProposal("pos", localVar(parent, 1));
 
-		parent = method(owner, "a", "(Lcom/a/b/b;Lcom/a/b/c;)V");
-		assertProposal("pos", localVar(parent, 1));
-		assertProposal("position", localVar(parent, 2));
-
-		parent = method(owner, "a", "(Lcom/a/b/b;Lcom/a/b/d;)V");
+		parent = method(owner, "a", "(Lcom/a/c/b;Lcom/a/c/c;)V");
 		assertProposal("pos", localVar(parent, 1));
 		assertProposal("position", localVar(parent, 2));
 
-		parent = method(owner, "a", "(Lcom/a/b/b;Lcom/a/b/c;Lcom/a/b/d;)V");
+		parent = method(owner, "a", "(Lcom/a/c/b;Lcom/a/c/d;)V");
+		assertProposal("pos", localVar(parent, 1));
+		assertProposal("position", localVar(parent, 2));
+
+		parent = method(owner, "a", "(Lcom/a/c/b;Lcom/a/c/c;Lcom/a/c/d;)V");
 		assertProposal("pos", localVar(parent, 1));
 		assertProposal("position", localVar(parent, 2));
 		assertProposal("randomPosition", localVar(parent, 3));
 
-		parent = method(owner, "a", "(Lcom/a/b/e;)V");
+		parent = method(owner, "a", "(Lcom/a/c/e;)V");
 		assertProposal("state", localVar(parent, 1));
 
-		parent = method(owner, "a", "(Lcom/a/b/e;Lcom/a/b/f;)V");
+		parent = method(owner, "a", "(Lcom/a/c/e;Lcom/a/c/f;)V");
 		assertProposal("stateA", localVar(parent, 0));
 		assertProposal("stateB", localVar(parent, 1));
 
-		parent = method(owner, "a", "(Lcom/a/b/g;Lcom/a/b/h;Lcom/a/b/i;)V");
+		parent = method(owner, "a", "(Lcom/a/c/g;Lcom/a/c/h;Lcom/a/c/i;)V");
 		assertProposal("valueA", localVar(parent, 0));
 		assertProposal("valueB", localVar(parent, 1));
 		assertProposal("valueC", localVar(parent, 2));
 
-		parent = method(owner, "a", "(Lcom/a/b/g;Lcom/a/b/g;)V");
+		parent = method(owner, "a", "(Lcom/a/c/g;Lcom/a/c/g;)V");
 		assertNotProposed(localVar(parent, 0));
 		assertNotProposed(localVar(parent, 1));
 
 		// Check that both the parent and child class have names
-		parent = method(owner, "a", "(Lcom/a/b/j;)V");
+		parent = method(owner, "a", "(Lcom/a/c/j;)V");
 		assertProposal("valueD", localVar(parent, 0));
 
-		parent = method(owner, "a", "(Lcom/a/b/k;)V");
+		parent = method(owner, "a", "(Lcom/a/c/k;)V");
 		assertProposal("valueD", localVar(parent, 0));
 
 		// Check that just the parent class has a name
-		parent = method(owner, "a", "(Lcom/a/b/l;)V");
+		parent = method(owner, "a", "(Lcom/a/c/l;)V");
 		assertProposal("valueE", localVar(parent, 0));
 
-		parent = method(owner, "a", "(Lcom/a/b/m;)V");
+		parent = method(owner, "a", "(Lcom/a/c/m;)V");
 		assertNotProposed(localVar(parent, 0));
 
 		// Check that indexing order doesn't affect inheritance tree
-		owner = new ClassEntry("com/a/b/j");
-		parent = method(owner, "a", "(Lcom/a/b/j;)V");
+		owner = new ClassEntry("com/a/c/j");
+		parent = method(owner, "a", "(Lcom/a/c/j;)V");
 		assertProposal("valueD", localVar(parent, 0));
 
-		parent = method(owner, "a", "(Lcom/a/b/k;)V");
+		parent = method(owner, "a", "(Lcom/a/c/k;)V");
 		assertProposal("valueD", localVar(parent, 0));
 	}
 
@@ -293,7 +293,7 @@ public class NameProposalTest {
 	public void testSimpleTypeNameConflictFix() {
 		// tests the conflict fixer via introducing a conflict manually
 
-		var owner = new ClassEntry("com/a/c/a");
+		var owner = new ClassEntry("com/a/d/a");
 		var constructor = method(owner, "<init>", "(ILjava/lang/CharSequence;)V");
 
 		// param 2 is initially 'id'
@@ -311,7 +311,7 @@ public class NameProposalTest {
 
 	@Test
 	public void testSimpleTypeNameConflictFixNoFallback() {
-		var owner = new ClassEntry("com/a/c/a");
+		var owner = new ClassEntry("com/a/d/a");
 		var constructor = method(owner, "<init>", "(ILjava/lang/StringBuilder;)V");
 
 		// param 2 is initially 'id'
@@ -327,6 +327,46 @@ public class NameProposalTest {
 
 		assertDynamicProposal("stringBuilder", localVar(constructor, 1));
 		assertNotProposed(localVar(constructor, 2));
+	}
+
+	@Test
+	public void testSimpleSubtypes() {
+		var testClass = new ClassEntry("com/a/e");
+
+		var entityName = "com/a/b/b";
+		var entityDesc = toDescriptor(entityName);
+		insertAndDynamicallyPropose(new ClassEntry(entityName), new EntryMapping("Entity"));
+		// ENTITY
+		assertNotProposed(field(testClass, "a", entityDesc));
+		// entity
+		assertNotProposed(field(testClass, "e", entityDesc));
+		// eatStatic
+		assertNotProposed(localVar(method(testClass, "a", "(" + entityDesc + ")V"), 0));
+		// eat
+		assertNotProposed(localVar(method(testClass, "b", "(" + entityDesc + ")V"), 1));
+
+		var entityNonSuffixedName = "com/a/b/c";
+		var entityNonSuffixedDesc = toDescriptor(entityNonSuffixedName);
+		var objectObjDesc = toDescriptor("java/lang/Object");
+		insertAndDynamicallyPropose(new ClassEntry(entityNonSuffixedName), new EntryMapping("EntityNonSuffixed"));
+		// NON_SUFFIXED
+		assertNotProposed(field(testClass, "d", entityNonSuffixedDesc));
+		// nonSuffixed
+		assertNotProposed(field(testClass, "h", entityNonSuffixedDesc));
+		// eatNonSuffixedStatic
+		assertNotProposed(localVar(method(testClass, "a", "(" + entityNonSuffixedDesc + objectObjDesc + ")" + objectObjDesc), 0));
+		// eatNonSuffixed
+		assertNotProposed(localVar(method(testClass, "b", "(" + entityNonSuffixedDesc + objectObjDesc + ")" + objectObjDesc), 1));
+
+		var livingEntityName = "com/a/b/d";
+		var livingEntityDesc = toDescriptor(livingEntityName);
+		insertAndDynamicallyPropose(new ClassEntry(livingEntityName), new EntryMapping("LivingEntity"));
+		assertDynamicProposal("LIVING", field(testClass, "b", livingEntityDesc));
+		assertDynamicProposal("living", field(testClass, "f", livingEntityDesc));
+		// eatLivingStatic
+		assertDynamicProposal("living", localVar(method(testClass, "a", "(" + livingEntityDesc + ")Z"), 0));
+		// eatLiving
+		assertDynamicProposal("living", localVar(method(testClass, "b", "(" + livingEntityDesc + ")Z"), 1));
 	}
 
 	@Test
@@ -399,5 +439,14 @@ public class NameProposalTest {
 
 	private static LocalVariableEntry localVar(MethodEntry parent, int index) {
 		return new LocalVariableEntry(parent, index);
+	}
+
+	private static String toDescriptor(String className) {
+		return "L" + className + ";";
+	}
+
+	private static void insertAndDynamicallyPropose(Entry<?> entry, EntryMapping mapping) {
+		remapper.getMappings().insert(entry, mapping);
+		remapper.insertDynamicallyProposedMappings(entry, EntryMapping.OBFUSCATED, mapping);
 	}
 }
