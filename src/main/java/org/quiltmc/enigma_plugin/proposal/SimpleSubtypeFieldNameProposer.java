@@ -52,8 +52,8 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 					String truncatedName = toLowerCaseTruncatedOrNull(typeName, fieldInfo.subtypeEntry().suffix());
 					if (truncatedName != null) {
 						this.insertDynamicProposal(
-							mappings, field,
-							fieldInfo.isConstant() ? toScreamingSnakeCase(truncatedName) : truncatedName
+								mappings, field,
+								fieldInfo.isConstant() ? toScreamingSnakeCase(truncatedName) : truncatedName
 						);
 					}
 				}

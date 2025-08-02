@@ -139,9 +139,9 @@ public class SimpleSubtypeSingleIndex extends Index {
 
 			// Don't propose names for types appearing more than once
 			var bannedTypes = types.entrySet().stream()
-				.filter(entry -> entry.getValue() > 1)
-				.map(Map.Entry::getKey)
-				.collect(Collectors.toSet());
+					.filter(entry -> entry.getValue() > 1)
+					.map(Map.Entry::getKey)
+					.collect(Collectors.toSet());
 
 			this.parameters.putAll(this.collectMatchingParameters(method, bannedTypes, parameters, methodEntry));
 		}
@@ -195,9 +195,9 @@ public class SimpleSubtypeSingleIndex extends Index {
 	}
 
 	private Map<LocalVariableEntry, ParamInfo> collectMatchingParameters(
-		MethodNode method, Set<Type> bannedTypes,
-		List<Descriptors.ParameterEntry> parameters,
-		MethodEntry methodEntry
+			MethodNode method, Set<Type> bannedTypes,
+			List<Descriptors.ParameterEntry> parameters,
+			MethodEntry methodEntry
 	) {
 		var matchingParameters = new HashMap<LocalVariableEntry, ParamInfo>();
 

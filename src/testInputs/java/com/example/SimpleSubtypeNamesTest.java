@@ -12,9 +12,17 @@ public class SimpleSubtypeNamesTest {
 	static final EntityNonSuffixed NON_SUFFIXED = new EntityNonSuffixed();
 
 	static void eatStatic(Entity entity) { }
-	static boolean eatLivingStatic(LivingEntity living) { return true; }
-	static int eatBirdStatic(int count, BirdEntity bird) { return count; }
-	static Object eatNonSuffixedStatic(EntityNonSuffixed nonSuffixed, Object arg) { return arg; }
+	static boolean eatLivingStatic(LivingEntity living) {
+		return true;
+	}
+
+	static int eatBirdStatic(int count, BirdEntity bird) {
+		return count;
+	}
+
+	static Object eatNonSuffixedStatic(EntityNonSuffixed nonSuffixed, Object arg) {
+		return arg;
+	}
 
 	Entity entity = new Entity();
 	LivingEntity living = new LivingEntity();
@@ -22,7 +30,15 @@ public class SimpleSubtypeNamesTest {
 	EntityNonSuffixed nonSuffixed = new EntityNonSuffixed();
 
 	void eat(Entity entity) { }
-	boolean eatLiving(LivingEntity living) { return true; }
-	int eatBird(int count, BirdEntity bird) { return count; }
-	Object eatNonSuffixed(EntityNonSuffixed nonSuffixed, Object arg) { return arg; }
+	boolean eatLiving(LivingEntity living) {
+		return true;
+	}
+
+	int eatBird(int count, BirdEntity bird) {
+		return count;
+	}
+
+	Object eatNonSuffixed(EntityNonSuffixed nonSuffixed, Object arg) {
+		return arg;
+	}
 }
