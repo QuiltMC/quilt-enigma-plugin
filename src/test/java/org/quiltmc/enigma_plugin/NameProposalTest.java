@@ -333,51 +333,98 @@ public class NameProposalTest {
 	public void testSimpleSubtypes() {
 		var testClass = new ClassEntry("com/a/e");
 
-		var entityName = "com/a/b/b";
+		var entityName = "com/a/b/b/b";
 		var entityDesc = toDescriptor(entityName);
-		insertAndDynamicallyPropose(new ClassEntry(entityName), new EntryMapping("Entity"));
 		// simple type names, not dynamic subtype names
 		assertProposal("ENTITY", field(testClass, "a", entityDesc));
-		assertProposal("entity", field(testClass, "e", entityDesc));
+		assertProposal("entity", field(testClass, "j", entityDesc));
 		// eatStatic
 		assertProposal("entity", localVar(method(testClass, "a", "(" + entityDesc + ")V"), 0));
 		// eat
 		assertProposal("entity", localVar(method(testClass, "b", "(" + entityDesc + ")V"), 1));
 
-		var entityNonSuffixedName = "com/a/b/c";
+		var entityNonSuffixedName = "com/a/b/b/c";
 		var entityNonSuffixedDesc = toDescriptor(entityNonSuffixedName);
 		var objectObjDesc = toDescriptor("java/lang/Object");
 		insertAndDynamicallyPropose(new ClassEntry(entityNonSuffixedName), new EntryMapping("EntityNonSuffixed"));
 		// NON_SUFFIXED
 		assertNotProposed(field(testClass, "d", entityNonSuffixedDesc));
 		// nonSuffixed
-		assertNotProposed(field(testClass, "h", entityNonSuffixedDesc));
+		assertNotProposed(field(testClass, "m", entityNonSuffixedDesc));
 		// eatNonSuffixedStatic
 		assertNotProposed(localVar(method(testClass, "a", "(" + entityNonSuffixedDesc + objectObjDesc + ")" + objectObjDesc), 0));
 		// eatNonSuffixed
 		assertNotProposed(localVar(method(testClass, "b", "(" + entityNonSuffixedDesc + objectObjDesc + ")" + objectObjDesc), 1));
 
-		var livingEntityName = "com/a/b/d";
+		var livingEntityName = "com/a/b/b/d";
 		var livingEntityDesc = toDescriptor(livingEntityName);
 		insertAndDynamicallyPropose(new ClassEntry(livingEntityName), new EntryMapping("LivingEntity"));
 		// LIVING_ENTITY
 		assertNotProposed(field(testClass, "b", livingEntityDesc));
 		// livingEntity
-		assertNotProposed(field(testClass, "f", livingEntityDesc));
+		assertNotProposed(field(testClass, "k", livingEntityDesc));
 		// eatLivingStatic
 		assertNotProposed(localVar(method(testClass, "a", "(" + livingEntityDesc + ")Z"), 0));
 		// eatLiving
 		assertNotProposed(localVar(method(testClass, "b", "(" + livingEntityDesc + ")Z"), 1));
 
-		var birdEntityName = "com/a/b/a";
+		var birdEntityName = "com/a/b/b/a";
 		var birdEntityDesc = toDescriptor(birdEntityName);
 		insertAndDynamicallyPropose(new ClassEntry(birdEntityName), new EntryMapping("BirdEntity"));
 		assertDynamicProposal("BIRD", field(testClass, "c", birdEntityDesc));
-		assertDynamicProposal("bird", field(testClass, "g", birdEntityDesc));
+		assertDynamicProposal("bird", field(testClass, "l", birdEntityDesc));
 		// eatBirdStatic
 		assertDynamicProposal("bird", localVar(method(testClass, "a", "(I" + birdEntityDesc + ")I"), 1));
 		// eatBird
 		assertDynamicProposal("bird", localVar(method(testClass, "b", "(I" + birdEntityDesc + ")I"), 2));
+
+		var blockEntityRendererName = "com/a/b/a/a";
+		var blockEntityRendererDesc = toDescriptor(blockEntityRendererName);
+		// simple type names, not dynamic subtype names
+		assertProposal("BLOCK_ENTITY_RENDERER", field(testClass, "e", blockEntityRendererDesc));
+		assertProposal("blockEntityRenderer", field(testClass, "n", blockEntityRendererDesc));
+		// renderStatic
+		assertProposal("blockEntityRenderer", localVar(method(testClass, "a", "(" + blockEntityRendererDesc + ")V"), 0));
+		// render
+		assertProposal("blockEntityRenderer", localVar(method(testClass, "b", "(" + blockEntityRendererDesc + ")V"), 1));
+
+		var displayBlockEntityRendererName = "com/a/b/a/b";
+		var displayBlockEntityRendererDesc = toDescriptor(displayBlockEntityRendererName);
+		insertAndDynamicallyPropose(new ClassEntry(displayBlockEntityRendererName), new EntryMapping("DisplayBlockEntityRenderer"));
+		assertDynamicProposal("DISPLAY_RENDERER", field(testClass, "f", displayBlockEntityRendererDesc));
+		assertDynamicProposal("displayRenderer", field(testClass, "o", displayBlockEntityRendererDesc));
+		// renderStatic
+		assertDynamicProposal("displayRenderer", localVar(method(testClass, "a", "(" + displayBlockEntityRendererDesc + ")V"), 0));
+		// render
+		assertDynamicProposal("displayRenderer", localVar(method(testClass, "b", "(" + displayBlockEntityRendererDesc + ")V"), 1));
+
+		var paintingBlockEntityRendererName = "com/a/b/a/d";
+		var paintingBlockEntityRendererDesc = toDescriptor(paintingBlockEntityRendererName);
+		insertAndDynamicallyPropose(new ClassEntry(paintingBlockEntityRendererName), new EntryMapping("PaintingBlockEntityRenderer"));
+		assertDynamicProposal("PAINTING_RENDERER", field(testClass, "g", paintingBlockEntityRendererDesc));
+		assertDynamicProposal("paintingRenderer", field(testClass, "p", paintingBlockEntityRendererDesc));
+		// renderStatic
+		assertDynamicProposal("paintingRenderer", localVar(method(testClass, "a", "(" + paintingBlockEntityRendererDesc + ")V"), 0));
+		// render
+		assertDynamicProposal("paintingRenderer", localVar(method(testClass, "b", "(" + paintingBlockEntityRendererDesc + ")V"), 1));
+
+		var duplicateBlockEntityRendererName = "com/a/b/a/c";
+		var duplicateBlockEntityRendererDesc = toDescriptor(duplicateBlockEntityRendererName);
+		insertAndDynamicallyPropose(new ClassEntry(duplicateBlockEntityRendererName), new EntryMapping("DuplicateBlockEntityRenderer"));
+		// DUPLICATE_1
+		assertNotProposed(field(testClass, "h", duplicateBlockEntityRendererDesc));
+		// DUPLICATE_2
+		assertNotProposed(field(testClass, "i", duplicateBlockEntityRendererDesc));
+		// duplicate1
+		assertNotProposed(field(testClass, "q", duplicateBlockEntityRendererDesc));
+		// duplicate2
+		assertNotProposed(field(testClass, "r", duplicateBlockEntityRendererDesc));
+		var renderStaticDuplicateMethod = method(testClass, "a", "(" + paintingBlockEntityRendererDesc + duplicateBlockEntityRendererDesc + ")V");
+		assertNotProposed(localVar(renderStaticDuplicateMethod, 0));
+		assertNotProposed(localVar(renderStaticDuplicateMethod, 1));
+		var renderDuplicateMethod = method(testClass, "b", "(" + paintingBlockEntityRendererDesc + duplicateBlockEntityRendererDesc + ")V");
+		assertNotProposed(localVar(renderDuplicateMethod, 1));
+		assertNotProposed(localVar(renderDuplicateMethod, 2));
 	}
 
 	@Test
