@@ -164,9 +164,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 				ClassNode outerClass = classProvider.get(classNode.outerClass);
 
 				if (outerClass != null) {
-					final FieldBuilders outerBuilders = this.collectMatchingFields(classProvider, outerClass, new ClassEntry(outerClass.name));
-					builders.fieldsByType.putAll(outerBuilders.fieldsByType);
-					builders.constantFieldsByType.putAll(outerBuilders.fieldsByType);
+					builders.merge(this.collectMatchingFields(classProvider, outerClass, new ClassEntry(outerClass.name)));
 				}
 			}
 
@@ -178,7 +176,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 			var entry = this.getEntry(classProvider, type);
 			if (entry != null) {
 				boolean isConstant = AsmUtil.matchAccess(field, ACC_STATIC, ACC_FINAL);
-				Map<String, FieldBuilderEntry> destination = isConstant ? builders.constantFieldsByType : builders.fieldsByType;
+				Map<String, FieldBuilderEntry> destination = isConstant ? builders.constantsByType : builders.fieldsByType;
 				if (destination.containsKey(type)) {
 					destination.put(type, FieldBuilderEntry.DUPLICATE);
 				} else {
@@ -305,14 +303,19 @@ public class SimpleSubtypeSingleIndex extends Index {
 		}
 	}
 
-	private record FieldBuilders(Map<String, FieldBuilderEntry> fieldsByType, Map<String, FieldBuilderEntry> constantFieldsByType) {
+	private record FieldBuilders(Map<String, FieldBuilderEntry> fieldsByType, Map<String, FieldBuilderEntry> constantsByType) {
 		static FieldBuilders of() {
 			return new FieldBuilders(new HashMap<>(), new HashMap<>());
 		}
 
+		void merge(FieldBuilders other) {
+			this.fieldsByType.putAll(other.fieldsByType);
+			this.constantsByType.putAll(other.constantsByType);
+		}
+
 		Map<FieldEntry, FieldInfo> build() {
 			return Stream
-				.concat(this.fieldsByType.values().stream(), this.constantFieldsByType.values().stream())
+				.concat(this.fieldsByType.values().stream(), this.constantsByType.values().stream())
 				.filter(FieldBuilderEntry::isNotDuplicate)
 				.collect(Collectors.toMap(
 					FieldBuilderEntry::toEntry,
