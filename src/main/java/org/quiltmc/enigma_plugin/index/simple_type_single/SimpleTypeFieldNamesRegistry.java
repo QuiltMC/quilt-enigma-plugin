@@ -17,6 +17,7 @@
 package org.quiltmc.enigma_plugin.index.simple_type_single;
 
 import org.jetbrains.annotations.Nullable;
+import org.quiltmc.enigma.util.Either;
 import org.quiltmc.enigma_plugin.util.CasingUtil;
 import org.quiltmc.parsers.json.JsonReader;
 import org.quiltmc.parsers.json.JsonToken;
@@ -34,7 +35,19 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.quiltmc.enigma_plugin.util.StringUtil.isValidJavaIdentifier;
+
 public class SimpleTypeFieldNamesRegistry {
+	private static final String INVALID_LOCAL_NAME_FOR_TYPE_TEMPLATE = "Invalid local name \"%s\" for type \"%s\"";
+
+	private static void skipToObjectEnd(JsonReader reader) throws IOException {
+		while (reader.hasNext()) {
+			reader.skipValue();
+		}
+
+		reader.endObject();
+	}
+
 	private final Path path;
 	/**
 	 * Using a {@link LinkedHashMap} to ensure we keep the read order.
@@ -67,13 +80,19 @@ public class SimpleTypeFieldNamesRegistry {
 				switch (reader.peek()) {
 					case STRING -> {
 						String localName = reader.nextString();
+
+						if (!isValidJavaIdentifier(localName)) {
+							Logger.error(INVALID_LOCAL_NAME_FOR_TYPE_TEMPLATE.formatted(localName, type));
+							break;
+						}
+
 						this.entries.put(type, new Entry(type, localName, CasingUtil.toScreamingSnakeCase(localName)));
 					}
 					case BEGIN_OBJECT -> {
 						String localName = null;
 						String staticName = null;
 						boolean exclusive = false;
-						Inherit inherit = Inherit.DEFAULT;
+						Either<? extends Inherit, String> inherit = Either.left(Inherit.DEFAULT);
 						List<Name> fallback = Collections.emptyList();
 
 						reader.beginObject();
@@ -104,9 +123,24 @@ public class SimpleTypeFieldNamesRegistry {
 							break;
 						}
 
-						if (staticName == null) staticName = CasingUtil.toScreamingSnakeCase(localName);
+						if (!isValidJavaIdentifier(localName)) {
+							Logger.error(INVALID_LOCAL_NAME_FOR_TYPE_TEMPLATE.formatted(localName, type));
+							break;
+						}
 
-						this.entries.put(type, new Entry(type, new Name(localName, staticName), exclusive, inherit, fallback));
+						if (staticName == null) {
+							staticName = CasingUtil.toScreamingSnakeCase(localName);
+						} else if (!isValidJavaIdentifier(staticName)) {
+							Logger.error("Invalid static name \"%s\" for type \"%s\"".formatted(staticName, type));
+							break;
+						}
+
+						if (inherit.isRight()) {
+							Logger.error("Invalid inherit value: " + inherit.rightOrThrow());
+							break;
+						}
+
+						this.entries.put(type, new Entry(type, new Name(localName, staticName), exclusive, inherit.leftOrThrow(), fallback));
 					}
 					default -> reader.skipValue();
 				}
@@ -186,46 +220,49 @@ public class SimpleTypeFieldNamesRegistry {
 
 		String MISSING_REQUIREMENT_MESSAGE_TEMPLATE = "%s requires a %s";
 
-		static Inherit read(JsonReader reader) throws IOException {
+		static Either<? extends Inherit, String> read(JsonReader reader) throws IOException {
 			switch (reader.peek()) {
 				case BOOLEAN -> {
-					return reader.nextBoolean() ? Direct.INSTANCE : None.INSTANCE;
+					return Either.left(reader.nextBoolean() ? Direct.INSTANCE : None.INSTANCE);
 				}
 				case BEGIN_OBJECT -> {
 					reader.beginObject();
 
-					if (!reader.hasNext() || !reader.nextName().equals(TYPE_KEY)) {
-						throw new IllegalArgumentException("\"%s\" must be the first property of an \"%s\" object".formatted(TYPE_KEY, KEY));
-					}
+					if (reader.hasNext() && reader.nextName().equals(TYPE_KEY)) {
+						String typeName = reader.nextString();
+						final Type type;
+						try {
+							type = Type.valueOf(typeName);
+						} catch (IllegalArgumentException e) {
+							skipToObjectEnd(reader);
 
-					String typeName = reader.nextString();
-					final Type type;
-					try {
-						type = Type.valueOf(typeName);
-					} catch (IllegalArgumentException e) {
-						throw new IllegalArgumentException(
-							"Invalid \"%s\" object \"%s\"; must be one of: %s".formatted(
-								KEY, TYPE_KEY,
-								Arrays.stream(Type.values())
-									.map(Object::toString)
-									.map(name -> "\"" + name + "\"")
-									.collect(Collectors.joining(", "))
-							),
-							e
-						);
-					}
+							return Either.right(
+								"Invalid \"%s\" object \"%s\"; must be one of: %s".formatted(
+									KEY, TYPE_KEY,
+									Arrays.stream(Type.values())
+										.map(Object::toString)
+										.map(name -> "\"" + name + "\"")
+										.collect(Collectors.joining(", "))
+								)
+							);
+						}
 
-					Inherit inherit = type.read(reader);
+						Either<? extends Inherit, String> inherit = type.read(reader);
 
-					while (reader.hasNext()) {
+						skipToObjectEnd(reader);
+
+						return inherit;
+					} else {
 						reader.skipValue();
+						skipToObjectEnd(reader);
+
+						return Either.right("\"%s\" must be the first property of an \"%s\" object".formatted(TYPE_KEY, KEY));
 					}
-
-					reader.endObject();
-
-					return inherit;
 				}
-				default -> throw new IllegalArgumentException("Invalid \"%s\" value; must be BOOLEAN or OBJECT".formatted(KEY));
+				default -> {
+					reader.skipValue();
+					return Either.right("must be BOOLEAN or OBJECT");
+				}
 			}
 		}
 
@@ -235,10 +272,10 @@ public class SimpleTypeFieldNamesRegistry {
 			TRUNCATED_SUBTYPE_NAME,
 			TRANSFORMED_SUBTYPE_NAME;
 
-			Inherit read(JsonReader reader) throws IOException {
+			Either<? extends Inherit, String> read(JsonReader reader) throws IOException {
 				return switch (this) {
-					case NONE -> None.INSTANCE;
-					case DIRECT -> Direct.INSTANCE;
+					case NONE -> Either.left(None.INSTANCE);
+					case DIRECT -> Either.left(Direct.INSTANCE);
 					case TRUNCATED_SUBTYPE_NAME -> TruncatedSubtypeName.readValue(reader);
 					case TRANSFORMED_SUBTYPE_NAME -> TransformedSubtypeName.readValue(reader);
 				};
@@ -260,22 +297,22 @@ public class SimpleTypeFieldNamesRegistry {
 		record TruncatedSubtypeName(String suffix) implements Inherit {
 			private static final String SUFFIX_KEY = "suffix";
 
-			private static TruncatedSubtypeName readValue(JsonReader reader) throws IOException {
+			private static Either<TruncatedSubtypeName, String> readValue(JsonReader reader) throws IOException {
 				while (reader.hasNext()) {
 					String key = reader.nextName();
 					if (key.equals(SUFFIX_KEY)) {
 						final String suffix = reader.nextString();
 						if (suffix.isEmpty() || !suffix.chars().allMatch(Character::isJavaIdentifierPart)) {
-							throw new IllegalArgumentException("invalid suffix: " + suffix);
+							return Either.right("invalid suffix: " + suffix);
 						}
 
-						return new TruncatedSubtypeName(suffix);
+						return Either.left(new TruncatedSubtypeName(suffix));
 					} else {
 						reader.skipValue();
 					}
 				}
 
-				throw new IllegalArgumentException(MISSING_REQUIREMENT_MESSAGE_TEMPLATE.formatted(
+				return Either.right(MISSING_REQUIREMENT_MESSAGE_TEMPLATE.formatted(
 					Type.TRUNCATED_SUBTYPE_NAME.toString(), SUFFIX_KEY
 				));
 			}
@@ -285,7 +322,7 @@ public class SimpleTypeFieldNamesRegistry {
 			private static final String PATTERN_KEY = "pattern";
 			private static final String REPLACEMENT_KEY = "replacement";
 
-			private static TransformedSubtypeName readValue(JsonReader reader) throws IOException {
+			private static Either<TransformedSubtypeName, String> readValue(JsonReader reader) throws IOException {
 				Pattern pattern = null;
 				String replacement = null;
 				while (reader.hasNext()) {
@@ -298,18 +335,18 @@ public class SimpleTypeFieldNamesRegistry {
 				}
 
 				if (pattern == null) {
-					throw new IllegalArgumentException(MISSING_REQUIREMENT_MESSAGE_TEMPLATE.formatted(
+					return Either.right(MISSING_REQUIREMENT_MESSAGE_TEMPLATE.formatted(
 						Type.TRANSFORMED_SUBTYPE_NAME, PATTERN_KEY
 					));
 				}
 
 				if (replacement == null) {
-					throw new IllegalArgumentException(MISSING_REQUIREMENT_MESSAGE_TEMPLATE.formatted(
+					return Either.right(MISSING_REQUIREMENT_MESSAGE_TEMPLATE.formatted(
 						Type.TRANSFORMED_SUBTYPE_NAME, REPLACEMENT_KEY
 					));
 				}
 
-				return new TransformedSubtypeName(pattern, replacement);
+				return Either.left(new TransformedSubtypeName(pattern, replacement));
 			}
 		}
 	}

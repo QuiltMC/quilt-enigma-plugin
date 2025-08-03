@@ -43,30 +43,37 @@
                     "oneOf": [
                         {
                             "type": "boolean",
-                            "description": "Whether subclasses should inherit this simple type name."
+                            "description": "Whether subtypes should inherit this simple type name."
                         },
                         {
                             "type": "object",
-                            "description": "How to handle subclass naming.",
+                            "description": "How to handle subtype naming.",
                             "properties": {
                                 "type": {
                                     "type": "string",
-                                    "description": "The type of subclass name handling to perform. Must be the first property.",
-                                    "enum": [ "NONE", "DIRECT", "TRUNCATED_SUBTYPE_NAME", "TRANSFORMED_SUBTYPE_NAME" ]
+                                    "description": "The kind of subtype name handling to perform. Must be the first property.",
+                                    "anyOf": [
+                                        { "const": "NONE", "description": "Do not name subtypes." },
+                                        { "const": "DIRECT", "description": "Subtypes inherit this simple type name." },
+                                        { "const": "TRUNCATED_SUBTYPE_NAME", "description": "Use a suffix to identify and truncate the names of subtypes." },
+                                        { "const": "TRANSFORMED_SUBTYPE_NAME", "description": "Use a regex pattern and a replacement string to identify and transform the names of subtypes." }
+                                    ]
                                 },
                                 "suffix": {
                                     "type": "string",
-                                    "description": "Only for TRUNCATED_SUBTYPE_NAME; used to recognize and truncate subclasses.",
-                                    "minLength": 1
+                                    "description": "Used by TRUNCATED_SUBTYPE_NAME to recognize and truncate subtypes.",
+                                    "minLength": 1,
+                                    "pattern": "[_$a-zA-Z0-9]+"
                                 },
                                 "pattern": {
                                     "type": "string",
-                                    "description": "Only for TRANSFORMED_SUBTYPE_NAME; regex used to match subclasses.",
+                                    "description": "Regex used by TRANSFORMED_SUBTYPE_NAME to match subtypes.",
                                     "minLength": 1
                                 },
                                 "replacement": {
                                     "type": "string",
-                                    "description": "Only for TRANSFORMED_SUBTYPE_NAME; replacement string used generate a name when \"pattern\" matches a subclass. May reference capturing groups defined in \"pattern\"."
+                                    "description": "Replacement string used by TRANSFORMED_SUBTYPE_NAME to generate a name when \"pattern\" matches a subtype. May reference capturing groups defined in \"pattern\".",
+                                    "minLength": 1
                                 }
                             },
                             "required": [ "type" ],
