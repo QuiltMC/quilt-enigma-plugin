@@ -359,6 +359,7 @@ public class NameProposalTest {
 		var livingEntityName = "com/a/b/b/d";
 		var livingEntityDesc = toDescriptor(livingEntityName);
 		insertAndDynamicallyPropose(new ClassEntry(livingEntityName), new EntryMapping("LivingEntity"));
+		// don't propose names for non-concrete classes
 		// LIVING_ENTITY
 		assertNotProposed(field(testClass, "b", livingEntityDesc));
 		// livingEntity
