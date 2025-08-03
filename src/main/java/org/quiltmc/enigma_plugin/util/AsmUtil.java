@@ -16,7 +16,6 @@
 
 package org.quiltmc.enigma_plugin.util;
 
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -268,14 +267,5 @@ public class AsmUtil implements Opcodes {
 		}
 
 		return null;
-	}
-
-	@Nullable
-	public static String getObjectTypeOrNull(String descriptor) {
-		if (descriptor.length() <= 3 || descriptor.charAt(0) != 'L') {
-			return null;
-		} else {
-			return descriptor.substring(1, descriptor.length() - 1);
-		}
 	}
 }

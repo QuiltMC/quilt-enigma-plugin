@@ -213,12 +213,12 @@ public class NameProposalTest {
 
 		owner = new ClassEntry(fieldsClassEntry, "b");
 		assertProposal("POS", field(owner, "a", "Lcom/a/c/b;"));
-		assertProposal("position", field(owner, "b", "Lcom/a/c/c;"));
-		assertProposal("randomPosition", field(owner, "c", "Lcom/a/c/d;"));
+		assertProposal("POSITION", field(owner, "b", "Lcom/a/c/c;"));
+		assertProposal("RANDOM_POSITION", field(owner, "c", "Lcom/a/c/d;"));
 		assertProposal("STATIC_STATE_A", field(owner, "d", "Lcom/a/c/e;"));
 		assertProposal("STATIC_STATE_B", field(owner, "e", "Lcom/a/c/f;"));
-		assertProposal("VALUE_A", field(owner, "f", "Lcom/a/c/g;"));
-		assertProposal("VALUE_B", field(owner, "g", "Lcom/a/c/h;"));
+		assertProposal("valueA", field(owner, "f", "Lcom/a/c/g;"));
+		assertProposal("valueB", field(owner, "g", "Lcom/a/c/h;"));
 		assertProposal("valueC", field(owner, "h", "Lcom/a/c/i;"));
 
 		owner = new ClassEntry(fieldsClassEntry, "c");
@@ -336,14 +336,13 @@ public class NameProposalTest {
 		var entityName = "com/a/b/b";
 		var entityDesc = toDescriptor(entityName);
 		insertAndDynamicallyPropose(new ClassEntry(entityName), new EntryMapping("Entity"));
-		// ENTITY
-		assertNotProposed(field(testClass, "a", entityDesc));
-		// entity
-		assertNotProposed(field(testClass, "e", entityDesc));
+		// simple type names, not dynamic subtype names
+		assertProposal("ENTITY", field(testClass, "a", entityDesc));
+		assertProposal("entity", field(testClass, "e", entityDesc));
 		// eatStatic
-		assertNotProposed(localVar(method(testClass, "a", "(" + entityDesc + ")V"), 0));
+		assertProposal("entity", localVar(method(testClass, "a", "(" + entityDesc + ")V"), 0));
 		// eat
-		assertNotProposed(localVar(method(testClass, "b", "(" + entityDesc + ")V"), 1));
+		assertProposal("entity", localVar(method(testClass, "b", "(" + entityDesc + ")V"), 1));
 
 		var entityNonSuffixedName = "com/a/b/c";
 		var entityNonSuffixedDesc = toDescriptor(entityNonSuffixedName);

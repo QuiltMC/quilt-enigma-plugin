@@ -39,6 +39,46 @@
                     "type": "boolean",
                     "description": "Whether the default name should be used if there's only a single entry using that name. Only applies if there is any fallback name"
                 },
+                "inherit": {
+                    "oneOf": [
+                        {
+                            "type": "boolean",
+                            "description": "Whether subclasses should inherit this simple type name."
+                        },
+                        {
+                            "type": "object",
+                            "description": "How to handle subclass naming.",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "description": "The type of subclass name handling to perform. Must be the first property.",
+                                    "enum": [ "NONE", "DIRECT", "TRUNCATED_SUBTYPE_NAME", "TRANSFORMED_SUBTYPE_NAME" ]
+                                },
+                                "suffix": {
+                                    "type": "string",
+                                    "description": "Only for TRUNCATED_SUBTYPE_NAME; used to recognize and truncate subclasses.",
+                                    "minLength": 1
+                                },
+                                "pattern": {
+                                    "type": "string",
+                                    "description": "Only for TRANSFORMED_SUBTYPE_NAME; regex used to match subclasses.",
+                                    "minLength": 1
+                                },
+                                "replacement": {
+                                    "type": "string",
+                                    "description": "Only for TRANSFORMED_SUBTYPE_NAME; replacement string used generate a name when \"pattern\" matches a subclass. May reference capturing groups defined in \"pattern\"."
+                                }
+                            },
+                            "required": [ "type" ],
+                            "if": { "properties": { "type": { "const": "TRUNCATED_SUBTYPE_NAME" }  } },
+                            "then": { "required": [ "suffix" ] },
+                            "else": {
+                                "if": { "properties": { "type": { "const": "TRANSFORMED_SUBTYPE_NAME" } } },
+                                "then": { "required": [ "pattern", "replacement" ] }
+                            }
+                        }
+                    ]
+                },
                 "fallback": {
                     "type": "array",
                     "description": "Fallback names to use in case an entry with the default name already exists",

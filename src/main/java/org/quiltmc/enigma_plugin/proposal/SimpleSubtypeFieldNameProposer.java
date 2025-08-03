@@ -16,7 +16,6 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
-import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
@@ -24,7 +23,7 @@ import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
-import org.quiltmc.enigma_plugin.index.simple_subtype_single.SimpleSubtypeSingleIndex;
+import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex;
 
 import java.util.Map;
 
@@ -44,49 +43,38 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 
 	@Override
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
-		this.index.getFields().forEach((field, fieldInfo) -> {
+		this.index.getFields().forEach((field, info) -> {
 			if (!this.hasJarProposal(remapper, field)) {
-				EntryMapping mapping = remapper.getMapping(new ClassEntry(fieldInfo.type()));
+				EntryMapping mapping = remapper.getMapping(new ClassEntry(info.type()));
 				String typeName = mapping.targetName();
 				if (typeName != null) {
-					String truncatedName = toLowerCaseTruncatedOrNull(typeName, fieldInfo.subtypeEntry().suffix());
-					if (truncatedName != null) {
-						this.insertDynamicProposal(
-								mappings, field,
-								fieldInfo.isConstant() ? toScreamingSnakeCase(truncatedName) : truncatedName
-						);
-					}
+					info.entry().renamer().rename(typeName)
+						.map(name -> info.isConstant() ? toScreamingSnakeCase(name) : unCapitalize(name))
+						.ifPresent(name -> this.insertDynamicProposal(mappings, field, name));
 				}
 			}
 		});
 
-		this.index.getParams().forEach((param, paramInfo) -> {
+		this.index.getParams().forEach((param, info) -> {
 			if (!this.hasJarProposal(remapper, param)) {
-				EntryMapping mapping = remapper.getMapping(new ClassEntry(paramInfo.type()));
+				EntryMapping mapping = remapper.getMapping(new ClassEntry(info.type()));
 				String typeName = mapping.targetName();
 				if (typeName != null) {
-					String truncatedName = toLowerCaseTruncatedOrNull(typeName, paramInfo.subtypeEntry().suffix());
-					if (truncatedName != null) {
-						this.insertDynamicProposal(mappings, param, truncatedName);
-					}
+					info.entry().renamer().rename(typeName)
+						.map(SimpleSubtypeFieldNameProposer::unCapitalize)
+						.ifPresent(name -> this.insertDynamicProposal(mappings, param, name));
 				}
 			}
 		});
 	}
 
-	@Nullable
-	private static String toLowerCaseTruncatedOrNull(String typeName, String suffix) {
-		int truncatedLen = typeName.length() - suffix.length();
-		if (truncatedLen > 0 && typeName.endsWith(suffix)) {
-			StringBuilder nameBuilder = new StringBuilder();
-			nameBuilder.append(Character.toLowerCase(typeName.charAt(0)));
-			for (int i = 1; i < truncatedLen; i++) {
-				nameBuilder.append(typeName.charAt(i));
-			}
-
-			return nameBuilder.toString();
-		} else {
-			return null;
+	private static String unCapitalize(String string) {
+		var builder = new StringBuilder();
+		builder.append(Character.toLowerCase(string.charAt(0)));
+		for (int i = 1; i < string.length(); i++) {
+			builder.append(string.charAt(i));
 		}
+
+		return builder.toString();
 	}
 }

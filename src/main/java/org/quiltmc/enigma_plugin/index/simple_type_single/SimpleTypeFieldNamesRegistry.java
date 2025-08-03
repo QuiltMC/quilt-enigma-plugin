@@ -25,11 +25,14 @@ import org.tinylog.Logger;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class SimpleTypeFieldNamesRegistry {
 	private final Path path;
@@ -70,7 +73,7 @@ public class SimpleTypeFieldNamesRegistry {
 						String localName = null;
 						String staticName = null;
 						boolean exclusive = false;
-						boolean inherit = false;
+						Inherit inherit = Inherit.DEFAULT;
 						List<Name> fallback = Collections.emptyList();
 
 						reader.beginObject();
@@ -82,7 +85,7 @@ public class SimpleTypeFieldNamesRegistry {
 								case "local_name" -> localName = reader.nextString();
 								case "static_name" -> staticName = reader.nextString();
 								case "exclusive" -> exclusive = reader.nextBoolean();
-								case "inherit" -> inherit = reader.nextBoolean();
+								case "inherit" -> inherit = Inherit.read(reader);
 								case "fallback" -> {
 									reader.beginArray();
 
@@ -156,9 +159,9 @@ public class SimpleTypeFieldNamesRegistry {
 		return list;
 	}
 
-	public record Entry(String type, Name name, boolean exclusive, boolean inherit, List<Name> fallback) {
+	public record Entry(String type, Name name, boolean exclusive, Inherit inherit, List<Name> fallback) {
 		public Entry(String type, String localName, String staticName) {
-			this(type, new Name(localName, staticName), false, false, Collections.emptyList());
+			this(type, new Name(localName, staticName), false, Inherit.None.INSTANCE, Collections.emptyList());
 		}
 
 		public @Nullable Name findFallback(Predicate<Name> predicate) {
@@ -172,6 +175,142 @@ public class SimpleTypeFieldNamesRegistry {
 		}
 	}
 
-	public record Name(String local, String staticName) {
+	public record Name(String local, String constant) {
+	}
+
+	public sealed interface Inherit {
+		Inherit DEFAULT = None.INSTANCE;
+
+		String KEY = "inherit";
+		String TYPE_KEY = "type";
+
+		String MISSING_REQUIREMENT_MESSAGE_TEMPLATE = "%s requires a %s";
+
+		static Inherit read(JsonReader reader) throws IOException {
+			switch (reader.peek()) {
+				case BOOLEAN -> {
+					return reader.nextBoolean() ? Direct.INSTANCE : None.INSTANCE;
+				}
+				case BEGIN_OBJECT -> {
+					reader.beginObject();
+
+					if (!reader.hasNext() || !reader.nextName().equals(TYPE_KEY)) {
+						throw new IllegalArgumentException("\"%s\" must be the first property of an \"%s\" object".formatted(TYPE_KEY, KEY));
+					}
+
+					String typeName = reader.nextString();
+					final Type type;
+					try {
+						type = Type.valueOf(typeName);
+					} catch (IllegalArgumentException e) {
+						throw new IllegalArgumentException(
+							"Invalid \"%s\" object \"%s\"; must be one of: %s".formatted(
+								KEY, TYPE_KEY,
+								Arrays.stream(Type.values())
+									.map(Object::toString)
+									.map(name -> "\"" + name + "\"")
+									.collect(Collectors.joining(", "))
+							),
+							e
+						);
+					}
+
+					Inherit inherit = type.read(reader);
+
+					while (reader.hasNext()) {
+						reader.skipValue();
+					}
+
+					reader.endObject();
+
+					return inherit;
+				}
+				default -> throw new IllegalArgumentException("Invalid \"%s\" value; must be BOOLEAN or OBJECT".formatted(KEY));
+			}
+		}
+
+		enum Type {
+			NONE,
+			DIRECT,
+			TRUNCATED_SUBTYPE_NAME,
+			TRANSFORMED_SUBTYPE_NAME;
+
+			Inherit read(JsonReader reader) throws IOException {
+				return switch (this) {
+					case NONE -> None.INSTANCE;
+					case DIRECT -> Direct.INSTANCE;
+					case TRUNCATED_SUBTYPE_NAME -> TruncatedSubtypeName.readValue(reader);
+					case TRANSFORMED_SUBTYPE_NAME -> TransformedSubtypeName.readValue(reader);
+				};
+			}
+		}
+
+		final class None implements Inherit {
+			public static final None INSTANCE = new None();
+
+			private None() { }
+		}
+
+		final class Direct implements Inherit {
+			public static final Direct INSTANCE = new Direct();
+
+			private Direct() { }
+		}
+
+		record TruncatedSubtypeName(String suffix) implements Inherit {
+			private static final String SUFFIX_KEY = "suffix";
+
+			private static TruncatedSubtypeName readValue(JsonReader reader) throws IOException {
+				while (reader.hasNext()) {
+					String key = reader.nextName();
+					if (key.equals(SUFFIX_KEY)) {
+						final String suffix = reader.nextString();
+						if (suffix.isEmpty() || !suffix.chars().allMatch(Character::isJavaIdentifierPart)) {
+							throw new IllegalArgumentException("invalid suffix: " + suffix);
+						}
+
+						return new TruncatedSubtypeName(suffix);
+					} else {
+						reader.skipValue();
+					}
+				}
+
+				throw new IllegalArgumentException(MISSING_REQUIREMENT_MESSAGE_TEMPLATE.formatted(
+					Type.TRUNCATED_SUBTYPE_NAME.toString(), SUFFIX_KEY
+				));
+			}
+		}
+
+		record TransformedSubtypeName(Pattern pattern, String replacement) implements Inherit {
+			private static final String PATTERN_KEY = "pattern";
+			private static final String REPLACEMENT_KEY = "replacement";
+
+			private static TransformedSubtypeName readValue(JsonReader reader) throws IOException {
+				Pattern pattern = null;
+				String replacement = null;
+				while (reader.hasNext()) {
+					String key = reader.nextName();
+					switch (key) {
+						case PATTERN_KEY -> pattern = Pattern.compile(reader.nextString());
+						case REPLACEMENT_KEY -> replacement = reader.nextString();
+						default -> reader.skipValue();
+					}
+				}
+
+				if (pattern == null) {
+					throw new IllegalArgumentException(MISSING_REQUIREMENT_MESSAGE_TEMPLATE.formatted(
+						Type.TRANSFORMED_SUBTYPE_NAME, PATTERN_KEY
+					));
+				}
+
+				if (replacement == null) {
+					throw new IllegalArgumentException(MISSING_REQUIREMENT_MESSAGE_TEMPLATE.formatted(
+						Type.TRANSFORMED_SUBTYPE_NAME, REPLACEMENT_KEY
+					));
+				}
+
+				return new TransformedSubtypeName(pattern, replacement);
+			}
+		}
 	}
 }

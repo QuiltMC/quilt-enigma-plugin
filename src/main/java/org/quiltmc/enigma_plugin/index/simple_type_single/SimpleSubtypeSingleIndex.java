@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.quiltmc.enigma_plugin.index.simple_subtype_single;
+package org.quiltmc.enigma_plugin.index.simple_type_single;
 
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -34,7 +34,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntr
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.index.Index;
-import org.quiltmc.enigma_plugin.index.simple_subtype_single.SimpleSubtypeFieldNamesRegistry.Entry;
+import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Inherit;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.Descriptors;
 
@@ -42,11 +42,15 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.quiltmc.enigma_plugin.util.AsmUtil.getObjectTypeOrNull;
+import static org.quiltmc.enigma_plugin.util.StringUtil.getObjectTypeOrNull;
+import static org.quiltmc.enigma_plugin.util.StringUtil.isValidJavaIdentifier;
 
 /**
  * Index of fields/local variables that are of a rather simple type (as-in easy to guess the variable name) and which
@@ -55,8 +59,8 @@ import static org.quiltmc.enigma_plugin.util.AsmUtil.getObjectTypeOrNull;
 public class SimpleSubtypeSingleIndex extends Index {
 	private final Map<LocalVariableEntry, ParamInfo> parameters = new HashMap<>();
 	private final Map<FieldEntry, FieldInfo> fields = new HashMap<>();
-	private final Map<ClassNode, Map<FieldEntry, FieldInfo>> fieldCache = new HashMap<>();
-	private SimpleSubtypeFieldNamesRegistry registry;
+	private final Map<ClassNode, FieldBuilders> fieldCache = new HashMap<>();
+	private SimpleTypeFieldNamesRegistry registry;
 
 	private InheritanceIndex inheritance;
 
@@ -68,7 +72,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 	public void withContext(EnigmaServiceContext<JarIndexerService> context) {
 		super.withContext(context);
 
-		this.loadRegistry(context.getSingleArgument(Arguments.SIMPLE_SUBTYPE_FIELD_NAMES_PATH)
+		this.loadRegistry(context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
 				.map(context::getPath).orElse(null));
 	}
 
@@ -83,7 +87,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 			return;
 		}
 
-		this.registry = new SimpleSubtypeFieldNamesRegistry(path);
+		this.registry = new SimpleTypeFieldNamesRegistry(path);
 		this.registry.read();
 	}
 
@@ -115,7 +119,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 
 		var parentEntry = new ClassEntry(node.name);
 
-		this.fields.putAll(this.collectMatchingFields(provider, node, parentEntry));
+		this.fields.putAll(this.collectMatchingFields(provider, node, parentEntry).build());
 
 		for (var method : node.methods) {
 			if (method.parameters == null) continue;
@@ -147,19 +151,11 @@ public class SimpleSubtypeSingleIndex extends Index {
 		}
 	}
 
-	private Map<FieldEntry, FieldInfo> collectMatchingFields(ClassProvider classProvider, ClassNode classNode, ClassEntry parentEntry) {
+	private FieldBuilders collectMatchingFields(ClassProvider classProvider, ClassNode classNode, ClassEntry parentEntry) {
 		var existing = this.fieldCache.get(classNode);
 
 		if (existing != null) return existing;
 
-		final Map<FieldEntry, FieldInfo> matchingFields = this.buildMatchingFields(classProvider, classNode, parentEntry).build();
-
-		this.fieldCache.put(classNode, matchingFields);
-
-		return matchingFields;
-	}
-
-	private FieldBuilders buildMatchingFields(ClassProvider classProvider, ClassNode classNode, ClassEntry parentEntry) {
 		var builders = FieldBuilders.of();
 
 		for (var field : classNode.fields) {
@@ -168,7 +164,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 				ClassNode outerClass = classProvider.get(classNode.outerClass);
 
 				if (outerClass != null) {
-					final FieldBuilders outerBuilders = this.buildMatchingFields(classProvider, outerClass, new ClassEntry(outerClass.name));
+					final FieldBuilders outerBuilders = this.collectMatchingFields(classProvider, outerClass, new ClassEntry(outerClass.name));
 					builders.fieldsByType.putAll(outerBuilders.fieldsByType);
 					builders.constantFieldsByType.putAll(outerBuilders.fieldsByType);
 				}
@@ -190,6 +186,8 @@ public class SimpleSubtypeSingleIndex extends Index {
 				}
 			}
 		}
+
+		this.fieldCache.put(classNode, builders);
 
 		return builders;
 	}
@@ -228,10 +226,11 @@ public class SimpleSubtypeSingleIndex extends Index {
 	}
 
 	@Nullable
-	private Entry getEntry(String type) {
+	private SubtypeEntry getEntry(String type) {
 		// TODO filter out abstract classes
 		if (this.registry.getEntry(type) != null) {
 			// do not propose names for the super type
+			// this also skips any type with a simple type name
 			return null;
 		}
 
@@ -240,18 +239,53 @@ public class SimpleSubtypeSingleIndex extends Index {
 			var entry = this.registry.getEntry(ancestor.getFullName());
 
 			if (entry != null) {
-				return entry;
+				if (entry.inherit() instanceof Inherit.TruncatedSubtypeName truncated) {
+					return new SubtypeEntry(entry.type(), new Renamer.Truncate(truncated.suffix()));
+				} else if (entry.inherit() instanceof Inherit.TransformedSubtypeName transformed) {
+					return new SubtypeEntry(entry.type(), new Renamer.Transform(transformed.pattern(), transformed.replacement()));
+				}
 			}
 		}
 
 		return null;
 	}
 
-	public record FieldInfo(Entry subtypeEntry, String type, boolean isConstant) { }
+	public record FieldInfo(SubtypeEntry entry, String type, boolean isConstant) { }
 
-	public record ParamInfo(Entry subtypeEntry, String type) { }
+	public record ParamInfo(SubtypeEntry entry, String type) { }
 
-	private record FieldBuilderEntry(ClassEntry parent, FieldNode field, String type, Entry subtypeEntry, boolean isConstant) {
+	public record SubtypeEntry(String type, Renamer renamer) { }
+
+	public sealed interface Renamer {
+		Optional<String> rename(String original);
+
+		record Truncate(String suffix) implements Renamer {
+			@Override
+			public Optional<String> rename(String original) {
+				int lenDiff = original.length() - this.suffix.length();
+				if (lenDiff > 0 && original.endsWith(this.suffix)) {
+					return Optional.of(original.substring(0, lenDiff));
+				} else {
+					return Optional.empty();
+				}
+			}
+		}
+
+		record Transform(Pattern pattern, String replacement) implements Renamer {
+			@Override
+			public Optional<String> rename(String original) {
+				Matcher matcher = this.pattern.matcher(original);
+				if (matcher.matches()) {
+					final String transformed = matcher.replaceFirst(this.replacement);
+					return isValidJavaIdentifier(transformed) ? Optional.of(transformed) : Optional.empty();
+				} else {
+					return Optional.empty();
+				}
+			}
+		}
+	}
+
+	private record FieldBuilderEntry(ClassEntry parent, FieldNode field, String type, SubtypeEntry subtypeEntry, boolean isConstant) {
 		static final FieldBuilderEntry DUPLICATE = new FieldBuilderEntry(null, null, null, null, false);
 
 		static boolean isNotDuplicate(FieldBuilderEntry entry) {

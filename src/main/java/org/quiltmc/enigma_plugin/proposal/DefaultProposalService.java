@@ -21,7 +21,7 @@ import org.quiltmc.enigma.api.service.NameProposalService;
 import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
-import org.quiltmc.enigma_plugin.index.simple_subtype_single.SimpleSubtypeSingleIndex;
+import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
 public class DefaultProposalService extends NameProposerService {
