@@ -73,6 +73,11 @@ public class SimpleTypeFieldNamesRegistry {
 			while (reader.hasNext()) {
 				String type = reader.nextName();
 
+				if (type.equals("$schema")) {
+					reader.skipValue();
+					continue;
+				}
+
 				if (this.entries.containsKey(type)) {
 					throw new IllegalArgumentException("Duplicate type " + type);
 				}

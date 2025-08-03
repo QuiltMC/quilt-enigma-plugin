@@ -7,7 +7,7 @@ import com.example.simple_subtype_names.LivingEntity;
 
 public class SimpleSubtypeNamesTest {
 	static final Entity ENTITY = new Entity();
-	static final LivingEntity LIVING = new LivingEntity();
+	static final LivingEntity LIVING_ENTITY = null;
 	static final BirdEntity BIRD = new BirdEntity();
 	static final EntityNonSuffixed NON_SUFFIXED = new EntityNonSuffixed();
 
@@ -25,7 +25,7 @@ public class SimpleSubtypeNamesTest {
 	}
 
 	Entity entity = new Entity();
-	LivingEntity living = new LivingEntity();
+	LivingEntity livingEntity = null;
 	BirdEntity bird = new BirdEntity();
 	EntityNonSuffixed nonSuffixed = new EntityNonSuffixed();
 

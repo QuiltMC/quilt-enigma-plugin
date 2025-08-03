@@ -147,7 +147,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 					.map(Map.Entry::getKey)
 					.collect(Collectors.toSet());
 
-			this.parameters.putAll(this.collectMatchingParameters(method, bannedTypes, parameters, methodEntry));
+			this.parameters.putAll(this.collectMatchingParameters(provider, method, methodEntry, bannedTypes, parameters));
 		}
 	}
 
@@ -175,7 +175,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 				continue;
 			}
 
-			var entry = this.getEntry(type);
+			var entry = this.getEntry(classProvider, type);
 			if (entry != null) {
 				boolean isConstant = AsmUtil.matchAccess(field, ACC_STATIC, ACC_FINAL);
 				Map<String, FieldBuilderEntry> destination = isConstant ? builders.constantFieldsByType : builders.fieldsByType;
@@ -193,13 +193,12 @@ public class SimpleSubtypeSingleIndex extends Index {
 	}
 
 	private Map<LocalVariableEntry, ParamInfo> collectMatchingParameters(
-			MethodNode method, Set<Type> bannedTypes,
-			List<Descriptors.ParameterEntry> parameters,
-			MethodEntry methodEntry
+			ClassProvider classProvider, MethodNode parentNode, MethodEntry parentEntry,
+			Set<Type> bannedTypes, List<Descriptors.ParameterEntry> parameters
 	) {
 		var matchingParameters = new HashMap<LocalVariableEntry, ParamInfo>();
 
-		for (int index = 0, lvtIndex = 0; index < method.parameters.size(); index++) {
+		for (int index = 0, lvtIndex = 0; index < parentNode.parameters.size(); index++) {
 			if (index > 0) {
 				lvtIndex += parameters.get(index - 1).getSize();
 			}
@@ -215,10 +214,10 @@ public class SimpleSubtypeSingleIndex extends Index {
 				continue;
 			}
 
-			var entry = this.getEntry(type);
+			var entry = this.getEntry(classProvider, type);
 			if (entry != null) {
-				boolean isStatic = AsmUtil.maskMatch(method.access, ACC_STATIC);
-				matchingParameters.put(new LocalVariableEntry(methodEntry, lvtIndex + (isStatic ? 0 : 1)), new ParamInfo(entry, type));
+				boolean isStatic = AsmUtil.matchAccess(parentNode, ACC_STATIC);
+				matchingParameters.put(new LocalVariableEntry(parentEntry, lvtIndex + (isStatic ? 0 : 1)), new ParamInfo(entry, type));
 			}
 		}
 
@@ -226,11 +225,16 @@ public class SimpleSubtypeSingleIndex extends Index {
 	}
 
 	@Nullable
-	private SubtypeEntry getEntry(String type) {
-		// TODO filter out abstract classes
+	private SubtypeEntry getEntry(ClassProvider classProvider, String type) {
 		if (this.registry.getEntry(type) != null) {
 			// do not propose names for the super type
 			// this also skips any type with a simple type name
+			return null;
+		}
+
+		final ClassNode typeClass = classProvider.get(type);
+		if (typeClass == null || AsmUtil.matchAccess(typeClass, ACC_ABSTRACT) || AsmUtil.matchAccess(typeClass, ACC_INTERFACE)) {
+			// skip non-concrete types
 			return null;
 		}
 

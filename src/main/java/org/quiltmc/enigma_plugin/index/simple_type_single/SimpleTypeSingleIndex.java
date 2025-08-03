@@ -50,6 +50,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import static org.quiltmc.enigma_plugin.util.StringUtil.getObjectTypeOrNull;
+
 /**
  * Index of fields/local variables that are of a rather simple type (as-in easy to guess the variable name) and which
  * they are entirely unique within their context (no other fields/local vars in the same scope have the same type).
@@ -178,7 +180,7 @@ public class SimpleTypeSingleIndex extends Index {
 
 			this.collectMatchingParameters(method, bannedTypes, parameters).forEach((name, param) -> {
 				if (!param.isNull()) {
-					boolean isStatic = AsmUtil.maskMatch(method.access, ACC_STATIC);
+					boolean isStatic = AsmUtil.matchAccess(method, ACC_STATIC);
 					int index = param.index() + (isStatic ? 0 : 1);
 					var paramEntry = new LocalVariableEntry(methodEntry, index);
 					this.parameters.put(paramEntry, name);
@@ -204,8 +206,10 @@ public class SimpleTypeSingleIndex extends Index {
 				}
 			}
 
-			if (field.desc.charAt(0) != 'L') continue;
-			String type = field.desc.substring(1, field.desc.length() - 1);
+			String type = getObjectTypeOrNull(field.desc);
+			if (type == null) {
+				continue;
+			}
 
 			var entry = this.getEntry(type);
 			if (entry != null) {
@@ -267,9 +271,8 @@ public class SimpleTypeSingleIndex extends Index {
 			if (bannedTypes.contains(parameters.get(index).type())) continue;
 
 			ParameterNode node = method.parameters.get(index);
-			String desc = parameters.get(index).getDescriptor();
-			if (desc.charAt(0) != 'L') continue;
-			String type = desc.substring(1, desc.length() - 1);
+			String type = getObjectTypeOrNull(parameters.get(index).getDescriptor());
+			if (type == null) continue;
 
 			var entry = this.getEntry(type);
 			if (entry != null) {

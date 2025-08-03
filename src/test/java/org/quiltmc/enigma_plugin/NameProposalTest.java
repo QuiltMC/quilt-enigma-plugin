@@ -360,12 +360,24 @@ public class NameProposalTest {
 		var livingEntityName = "com/a/b/d";
 		var livingEntityDesc = toDescriptor(livingEntityName);
 		insertAndDynamicallyPropose(new ClassEntry(livingEntityName), new EntryMapping("LivingEntity"));
-		assertDynamicProposal("LIVING", field(testClass, "b", livingEntityDesc));
-		assertDynamicProposal("living", field(testClass, "f", livingEntityDesc));
+		// LIVING_ENTITY
+		assertNotProposed(field(testClass, "b", livingEntityDesc));
+		// livingEntity
+		assertNotProposed(field(testClass, "f", livingEntityDesc));
 		// eatLivingStatic
-		assertDynamicProposal("living", localVar(method(testClass, "a", "(" + livingEntityDesc + ")Z"), 0));
+		assertNotProposed(localVar(method(testClass, "a", "(" + livingEntityDesc + ")Z"), 0));
 		// eatLiving
-		assertDynamicProposal("living", localVar(method(testClass, "b", "(" + livingEntityDesc + ")Z"), 1));
+		assertNotProposed(localVar(method(testClass, "b", "(" + livingEntityDesc + ")Z"), 1));
+
+		var birdEntityName = "com/a/b/a";
+		var birdEntityDesc = toDescriptor(birdEntityName);
+		insertAndDynamicallyPropose(new ClassEntry(birdEntityName), new EntryMapping("BirdEntity"));
+		assertDynamicProposal("BIRD", field(testClass, "c", birdEntityDesc));
+		assertDynamicProposal("bird", field(testClass, "g", birdEntityDesc));
+		// eatBirdStatic
+		assertDynamicProposal("bird", localVar(method(testClass, "a", "(I" + birdEntityDesc + ")I"), 1));
+		// eatBird
+		assertDynamicProposal("bird", localVar(method(testClass, "b", "(I" + birdEntityDesc + ")I"), 2));
 	}
 
 	@Test
