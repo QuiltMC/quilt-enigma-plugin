@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -53,13 +54,13 @@ import static org.quiltmc.enigma_plugin.util.StringUtil.getObjectTypeOrNull;
 import static org.quiltmc.enigma_plugin.util.StringUtil.isValidJavaIdentifier;
 
 /**
- * Index of fields/local variables that are of a rather simple type (as-in easy to guess the variable name) and which
- * they are entirely unique within their context (no other fields/local vars in the same scope have the same type).
+ * Index of fields/local variables that whose names can be derived from their types and which
+ * are entirely unique within their context (no other fields/local vars in the same scope have the same type).
  */
 public class SimpleSubtypeSingleIndex extends Index {
-	private final Map<LocalVariableEntry, ParamInfo> parameters = new HashMap<>();
-	private final Map<FieldEntry, FieldInfo> fields = new HashMap<>();
-	private final Map<ClassNode, FieldBuilders> fieldCache = new HashMap<>();
+	private final Map<ClassEntry, Map<LocalVariableEntry, ParamInfo>> paramsByType = new HashMap<>();
+	private final Map<ClassEntry, Map<FieldEntry, FieldInfo>> fieldsByType = new HashMap<>();
+	private final Map<ClassNode, FieldBuilders> fieldCacheByParent = new HashMap<>();
 	private SimpleTypeFieldNamesRegistry registry;
 
 	private InheritanceIndex inheritance;
@@ -97,15 +98,27 @@ public class SimpleSubtypeSingleIndex extends Index {
 	}
 
 	public void dropCache() {
-		this.fieldCache.clear();
+		this.fieldCacheByParent.clear();
 	}
 
-	public Map<FieldEntry, FieldInfo> getFields() {
-		return this.fields;
+	public void forEachField(MemberAction<FieldEntry, FieldInfo> action) {
+		this.fieldsByType.forEach((type, fields) -> {
+			fields.forEach((field, info) -> action.run(type, field, info));
+		});
 	}
 
-	public Map<LocalVariableEntry, ParamInfo> getParams() {
-		return this.parameters;
+	public void forEachFieldOfType(ClassEntry type, BiConsumer<FieldEntry, FieldInfo> action) {
+		this.fieldsByType.getOrDefault(type, Map.of()).forEach(action);
+	}
+
+	public void forEachParam(MemberAction<LocalVariableEntry, ParamInfo> action) {
+		this.paramsByType.forEach((type, params) -> {
+			params.forEach((param, info) -> action.run(type, param, info));
+		});
+	}
+
+	public void forEachParamOfType(ClassEntry type, BiConsumer<LocalVariableEntry, ParamInfo> action) {
+		this.paramsByType.getOrDefault(type, Map.of()).forEach(action);
 	}
 
 	@Override
@@ -119,7 +132,9 @@ public class SimpleSubtypeSingleIndex extends Index {
 
 		var parentEntry = new ClassEntry(node.name);
 
-		this.fields.putAll(this.collectMatchingFields(provider, node, parentEntry).build());
+		this.collectMatchingFields(provider, node, parentEntry).build().forEach((type, fields) -> {
+			this.fieldsByType.computeIfAbsent(type, ignored -> new HashMap<>()).putAll(fields);
+		});
 
 		for (var method : node.methods) {
 			if (method.parameters == null) continue;
@@ -147,12 +162,14 @@ public class SimpleSubtypeSingleIndex extends Index {
 					.map(Map.Entry::getKey)
 					.collect(Collectors.toSet());
 
-			this.parameters.putAll(this.collectMatchingParameters(provider, method, methodEntry, bannedTypes, parameters));
+			this.collectMatchingParameters(provider, method, methodEntry, bannedTypes, parameters).forEach((param, info) -> {
+				this.paramsByType.computeIfAbsent(new ClassEntry(info.type()), ignored -> new HashMap<>()).put(param, info);
+			});
 		}
 	}
 
 	private FieldBuilders collectMatchingFields(ClassProvider classProvider, ClassNode classNode, ClassEntry parentEntry) {
-		var existing = this.fieldCache.get(classNode);
+		var existing = this.fieldCacheByParent.get(classNode);
 
 		if (existing != null) return existing;
 
@@ -185,7 +202,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 			}
 		}
 
-		this.fieldCache.put(classNode, builders);
+		this.fieldCacheByParent.put(classNode, builders);
 
 		return builders;
 	}
@@ -313,14 +330,22 @@ public class SimpleSubtypeSingleIndex extends Index {
 			this.constantsByType.putAll(other.constantsByType);
 		}
 
-		Map<FieldEntry, FieldInfo> build() {
+		Map<ClassEntry, Map<FieldEntry, FieldInfo>> build() {
 			return Stream
 				.concat(this.fieldsByType.values().stream(), this.constantsByType.values().stream())
 				.filter(FieldBuilderEntry::isNotDuplicate)
-				.collect(Collectors.toMap(
-					FieldBuilderEntry::toEntry,
-					FieldBuilderEntry::toInfo
+				.collect(Collectors.groupingBy(
+					builder -> new ClassEntry(builder.type),
+					Collectors.toMap(
+						FieldBuilderEntry::toEntry,
+						FieldBuilderEntry::toInfo
+					)
 				));
 		}
+	}
+
+	@FunctionalInterface
+	public interface MemberAction<M, I> {
+		void run(ClassEntry type, M member, I info);
 	}
 }

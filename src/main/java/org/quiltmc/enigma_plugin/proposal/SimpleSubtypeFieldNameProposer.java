@@ -22,8 +22,12 @@ import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
+import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex;
+import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex.FieldInfo;
+import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex.ParamInfo;
 
 import java.util.Map;
 
@@ -32,6 +36,16 @@ import static org.quiltmc.enigma_plugin.util.CasingUtil.toScreamingSnakeCase;
 public class SimpleSubtypeFieldNameProposer extends NameProposer {
 	public static final String ID = "simple_subtype_field_names";
 	private final SimpleSubtypeSingleIndex index;
+
+	private static String unCapitalize(String string) {
+		var builder = new StringBuilder();
+		builder.append(Character.toLowerCase(string.charAt(0)));
+		for (int i = 1; i < string.length(); i++) {
+			builder.append(string.charAt(i));
+		}
+
+		return builder.toString();
+	}
 
 	public SimpleSubtypeFieldNameProposer(JarIndexer index) {
 		super(ID);
@@ -42,39 +56,56 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 	public void insertProposedNames(Enigma enigma, JarIndex index, Map<Entry<?>, EntryMapping> mappings) { }
 
 	@Override
-	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
-		this.index.getFields().forEach((field, info) -> {
-			if (!this.hasJarProposal(remapper, field)) {
-				EntryMapping mapping = remapper.getMapping(new ClassEntry(info.type()));
-				String typeName = mapping.targetName();
-				if (typeName != null) {
-					info.entry().renamer().rename(typeName)
-						.map(name -> info.isConstant() ? toScreamingSnakeCase(name) : unCapitalize(name))
-						.ifPresent(name -> this.insertDynamicProposal(mappings, field, name));
-				}
-			}
-		});
-
-		this.index.getParams().forEach((param, info) -> {
-			if (!this.hasJarProposal(remapper, param)) {
-				EntryMapping mapping = remapper.getMapping(new ClassEntry(info.type()));
-				String typeName = mapping.targetName();
-				if (typeName != null) {
-					info.entry().renamer().rename(typeName)
-						.map(SimpleSubtypeFieldNameProposer::unCapitalize)
-						.ifPresent(name -> this.insertDynamicProposal(mappings, param, name));
-				}
-			}
-		});
+	public void proposeDynamicNames(
+			EntryRemapper remapper, Entry<?> obfEntry,
+			EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings
+	) {
+		if (obfEntry == null) {
+			this.index.forEachField((type, field, info) -> this.proposeField(remapper, mappings, type, field, info));
+			this.index.forEachParam((type, param, info) -> this.proposeParam(remapper, mappings, type, param, info));
+		} else if (obfEntry instanceof ClassEntry type) {
+			this.index.forEachFieldOfType(type, (field, info) -> this.proposeField(remapper, mappings, type, field, info));
+			this.index.forEachParamOfType(type, (param, info) -> this.proposeParam(remapper, mappings, type, param, info));
+		}
 	}
 
-	private static String unCapitalize(String string) {
-		var builder = new StringBuilder();
-		builder.append(Character.toLowerCase(string.charAt(0)));
-		for (int i = 1; i < string.length(); i++) {
-			builder.append(string.charAt(i));
-		}
+	private void proposeField(
+			EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings,
+			ClassEntry type, FieldEntry field, FieldInfo info
+	) {
+		this.proposeField(remapper, mappings, remapper.getMapping(type).targetName(), field, info);
+	}
 
-		return builder.toString();
+	private void proposeField(
+			EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings,
+			String typeName, FieldEntry field, FieldInfo info
+	) {
+		if (!this.hasJarProposal(remapper, field)) {
+			if (typeName != null) {
+				info.entry().renamer().rename(typeName)
+					.map(name -> info.isConstant() ? toScreamingSnakeCase(name) : unCapitalize(name))
+					.ifPresent(name -> this.insertDynamicProposal(mappings, field, name));
+			}
+		}
+	}
+
+	private void proposeParam(
+			EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings,
+			ClassEntry type, LocalVariableEntry param, ParamInfo info
+	) {
+		this.proposeParam(remapper, mappings, remapper.getMapping(type).targetName(), param, info);
+	}
+
+	private void proposeParam(
+			EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings,
+			String typeName, LocalVariableEntry param, ParamInfo info
+	) {
+		if (!this.hasJarProposal(remapper, param)) {
+			if (typeName != null) {
+				info.entry().renamer().rename(typeName)
+					.map(SimpleSubtypeFieldNameProposer::unCapitalize)
+					.ifPresent(name -> this.insertDynamicProposal(mappings, param, name));
+			}
+		}
 	}
 }
