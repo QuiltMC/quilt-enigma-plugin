@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.source.TokenType;
@@ -23,6 +24,7 @@ import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
+import org.quiltmc.enigma_plugin.util.EntryUtil;
 
 import java.util.Map;
 
@@ -87,5 +89,13 @@ public abstract class NameProposer {
 	public abstract void insertProposedNames(Enigma enigma, JarIndex index, Map<Entry<?>, EntryMapping> mappings);
 
 	public void proposeDynamicNames(EntryRemapper remapper, Entry<?> obfEntry, EntryMapping oldMapping, EntryMapping newMapping, Map<Entry<?>, EntryMapping> mappings) {
+	}
+
+	public EntryMapping getMappingOrNonHashed(Entry<?> entry, EntryRemapper remapper, TokenType type) {
+		return EntryUtil.getMappingOrNonHashed(entry, remapper, type, this.getSourcePluginId());
+	}
+
+	public EntryMapping mappingOrNonHashed(Entry<?> entry, @Nullable EntryMapping mapping, TokenType type) {
+		return EntryUtil.mappingOrNonHashed(entry, mapping, type, this.getSourcePluginId());
 	}
 }

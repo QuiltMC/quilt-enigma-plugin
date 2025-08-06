@@ -18,6 +18,7 @@ package org.quiltmc.enigma_plugin.proposal;
 
 import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.source.TokenType;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
@@ -49,13 +50,13 @@ public class ConstructorParamsNameProposer extends NameProposer {
 					continue;
 				}
 
-				this.insertDynamicProposal(mappings, parameter, newMapping);
+				this.insertDynamicProposal(mappings, parameter, this.mappingOrNonHashed(parameter, newMapping, TokenType.DYNAMIC_PROPOSED));
 			}
 		} else if (obfEntry instanceof LocalVariableEntry parameter && this.index.isParameterLinked(parameter)) {
 			FieldEntry linkedField = this.index.getLinkedField(parameter);
 
 			if (!this.hasJarProposal(remapper, linkedField)) {
-				this.insertDynamicProposal(mappings, linkedField, newMapping);
+				this.insertDynamicProposal(mappings, linkedField, this.mappingOrNonHashed(linkedField, newMapping, TokenType.DYNAMIC_PROPOSED));
 			}
 
 			for (LocalVariableEntry param : this.index.getParametersForField(linkedField)) {
@@ -64,7 +65,7 @@ public class ConstructorParamsNameProposer extends NameProposer {
 				}
 
 				if (param != parameter) {
-					this.insertDynamicProposal(mappings, param, newMapping);
+					this.insertDynamicProposal(mappings, param, this.mappingOrNonHashed(param, newMapping, TokenType.DYNAMIC_PROPOSED));
 				}
 			}
 		} else if (obfEntry == null) {
@@ -75,7 +76,7 @@ public class ConstructorParamsNameProposer extends NameProposer {
 				}
 
 				FieldEntry linkedField = this.index.getLinkedField(parameter);
-				EntryMapping mapping = remapper.getMapping(linkedField);
+				EntryMapping mapping = this.getMappingOrNonHashed(linkedField, remapper, TokenType.DYNAMIC_PROPOSED);
 
 				this.insertDynamicProposal(mappings, parameter, mapping);
 			}
