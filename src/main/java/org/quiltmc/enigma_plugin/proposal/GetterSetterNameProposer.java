@@ -18,6 +18,7 @@ package org.quiltmc.enigma_plugin.proposal;
 
 import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.source.TokenType;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
@@ -67,7 +68,7 @@ public class GetterSetterNameProposer extends NameProposer {
 				}
 
 				FieldEntry linkedField = this.index.getLinkedField(method);
-				EntryMapping mapping = remapper.getMapping(linkedField);
+				EntryMapping mapping = this.getMappingOrNonHashed(linkedField, remapper, TokenType.DYNAMIC_PROPOSED);
 				var newName = getMethodName(mapping.targetName(), method);
 
 				if (newName == null) {
@@ -83,7 +84,7 @@ public class GetterSetterNameProposer extends NameProposer {
 				}
 
 				FieldEntry linkedField = this.index.getLinkedField(parameter);
-				EntryMapping mapping = remapper.getMapping(linkedField);
+				EntryMapping mapping = this.getMappingOrNonHashed(linkedField, remapper, TokenType.DYNAMIC_PROPOSED);
 				var newName = mapping.targetName();
 
 				if (newName == null || newName.isEmpty()) {
@@ -93,11 +94,8 @@ public class GetterSetterNameProposer extends NameProposer {
 				this.insertDynamicProposal(mappings, parameter, newName);
 			}
 
-			return;
-		}
-
-		if (obfEntry instanceof FieldEntry field && this.index.fieldHasLinks(field)) {
-			var name = newMapping.targetName();
+		} else if (obfEntry instanceof FieldEntry field && this.index.fieldHasLinks(field)) {
+			var name = this.mappingOrNonHashed(field, newMapping, TokenType.DYNAMIC_PROPOSED).targetName();
 
 			for (Entry<?> link : this.index.getFieldLinks(field)) {
 				if (this.hasJarProposal(remapper, link)) {
