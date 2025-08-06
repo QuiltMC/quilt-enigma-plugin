@@ -58,7 +58,7 @@ import static org.quiltmc.enigma_plugin.util.StringUtil.isValidJavaIdentifier;
  * are entirely unique within their context (no other fields/local vars in the same scope have the same type).
  */
 public class SimpleSubtypeSingleIndex extends Index {
-	private final Map<ClassEntry, Map<LocalVariableEntry, ParamInfo>> paramsByType = new HashMap<>();
+	private final Map<ClassEntry, Map<LocalVariableEntry, SubtypeEntry>> paramsByType = new HashMap<>();
 	private final Map<ClassEntry, Map<FieldEntry, FieldInfo>> fieldsByType = new HashMap<>();
 	private final Map<ClassNode, FieldBuilders> fieldCacheByParent = new HashMap<>();
 	private SimpleTypeFieldNamesRegistry registry;
@@ -111,13 +111,13 @@ public class SimpleSubtypeSingleIndex extends Index {
 		this.fieldsByType.getOrDefault(type, Map.of()).forEach(action);
 	}
 
-	public void forEachParam(MemberAction<LocalVariableEntry, ParamInfo> action) {
+	public void forEachParam(MemberAction<LocalVariableEntry, SubtypeEntry> action) {
 		this.paramsByType.forEach((type, params) -> {
-			params.forEach((param, info) -> action.run(type, param, info));
+			params.forEach((param, entry) -> action.run(type, param, entry));
 		});
 	}
 
-	public void forEachParamOfType(ClassEntry type, BiConsumer<LocalVariableEntry, ParamInfo> action) {
+	public void forEachParamOfType(ClassEntry type, BiConsumer<LocalVariableEntry, SubtypeEntry> action) {
 		this.paramsByType.getOrDefault(type, Map.of()).forEach(action);
 	}
 
@@ -162,8 +162,8 @@ public class SimpleSubtypeSingleIndex extends Index {
 					.map(Map.Entry::getKey)
 					.collect(Collectors.toSet());
 
-			this.collectMatchingParameters(provider, method, methodEntry, bannedTypes, parameters).forEach((param, info) -> {
-				this.paramsByType.computeIfAbsent(new ClassEntry(info.type()), ignored -> new HashMap<>()).put(param, info);
+			this.collectMatchingParameters(provider, method, methodEntry, bannedTypes, parameters).forEach((param, builder) -> {
+				this.paramsByType.computeIfAbsent(new ClassEntry(builder.type()), ignored -> new HashMap<>()).put(param, builder.entry());
 			});
 		}
 	}
@@ -207,11 +207,11 @@ public class SimpleSubtypeSingleIndex extends Index {
 		return builders;
 	}
 
-	private Map<LocalVariableEntry, ParamInfo> collectMatchingParameters(
+	private Map<LocalVariableEntry, ParamBuilderEntry> collectMatchingParameters(
 			ClassProvider classProvider, MethodNode parentNode, MethodEntry parentEntry,
 			Set<Type> bannedTypes, List<Descriptors.ParameterEntry> parameters
 	) {
-		var matchingParameters = new HashMap<LocalVariableEntry, ParamInfo>();
+		var matchingParameters = new HashMap<LocalVariableEntry, ParamBuilderEntry>();
 
 		for (int index = 0, lvtIndex = 0; index < parentNode.parameters.size(); index++) {
 			if (index > 0) {
@@ -232,7 +232,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 			var entry = this.getEntry(classProvider, type);
 			if (entry != null) {
 				boolean isStatic = AsmUtil.matchAccess(parentNode, ACC_STATIC);
-				matchingParameters.put(new LocalVariableEntry(parentEntry, lvtIndex + (isStatic ? 0 : 1)), new ParamInfo(entry, type));
+				matchingParameters.put(new LocalVariableEntry(parentEntry, lvtIndex + (isStatic ? 0 : 1)), new ParamBuilderEntry(entry, type));
 			}
 		}
 
@@ -269,9 +269,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 		return null;
 	}
 
-	public record FieldInfo(SubtypeEntry entry, String type, boolean isConstant) { }
-
-	public record ParamInfo(SubtypeEntry entry, String type) { }
+	public record FieldInfo(SubtypeEntry entry, boolean isConstant) { }
 
 	public record SubtypeEntry(String type, Renamer renamer) { }
 
@@ -304,6 +302,8 @@ public class SimpleSubtypeSingleIndex extends Index {
 		}
 	}
 
+	private record ParamBuilderEntry(SubtypeEntry entry, String type) { }
+
 	private record FieldBuilderEntry(ClassEntry parent, FieldNode field, String type, SubtypeEntry subtypeEntry, boolean isConstant) {
 		static final FieldBuilderEntry DUPLICATE = new FieldBuilderEntry(null, null, null, null, false);
 
@@ -312,7 +312,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 		}
 
 		FieldInfo toInfo() {
-			return new FieldInfo(this.subtypeEntry, this.type, this.isConstant);
+			return new FieldInfo(this.subtypeEntry, this.isConstant);
 		}
 
 		FieldEntry toEntry() {

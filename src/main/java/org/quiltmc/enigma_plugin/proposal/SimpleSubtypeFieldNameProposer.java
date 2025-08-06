@@ -27,7 +27,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntr
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex.FieldInfo;
-import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex.ParamInfo;
+import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex.SubtypeEntry;
 
 import java.util.Map;
 
@@ -62,10 +62,10 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 	) {
 		if (obfEntry == null) {
 			this.index.forEachField((type, field, info) -> this.proposeField(remapper, mappings, type, field, info));
-			this.index.forEachParam((type, param, info) -> this.proposeParam(remapper, mappings, type, param, info));
+			this.index.forEachParam((type, param, entry) -> this.proposeParam(remapper, mappings, type, param, entry));
 		} else if (obfEntry instanceof ClassEntry type) {
 			this.index.forEachFieldOfType(type, (field, info) -> this.proposeField(remapper, mappings, type, field, info));
-			this.index.forEachParamOfType(type, (param, info) -> this.proposeParam(remapper, mappings, type, param, info));
+			this.index.forEachParamOfType(type, (param, entry) -> this.proposeParam(remapper, mappings, type, param, entry));
 		}
 	}
 
@@ -91,18 +91,18 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 
 	private void proposeParam(
 			EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings,
-			ClassEntry type, LocalVariableEntry param, ParamInfo info
+			ClassEntry type, LocalVariableEntry param, SubtypeEntry entry
 	) {
-		this.proposeParam(remapper, mappings, remapper.getMapping(type).targetName(), param, info);
+		this.proposeParam(remapper, mappings, remapper.getMapping(type).targetName(), param, entry);
 	}
 
 	private void proposeParam(
 			EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings,
-			String typeName, LocalVariableEntry param, ParamInfo info
+			String typeName, LocalVariableEntry param, SubtypeEntry entry
 	) {
 		if (!this.hasJarProposal(remapper, param)) {
 			if (typeName != null) {
-				info.entry().renamer().rename(typeName)
+				entry.renamer().rename(typeName)
 					.map(SimpleSubtypeFieldNameProposer::unCapitalize)
 					.ifPresent(name -> this.insertDynamicProposal(mappings, param, name));
 			}
