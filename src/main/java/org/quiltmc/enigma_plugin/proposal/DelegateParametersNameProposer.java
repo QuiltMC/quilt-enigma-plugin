@@ -65,7 +65,7 @@ public class DelegateParametersNameProposer extends NameProposer {
 			return name;
 		}
 
-		var mapping = this.getMappingOrNonHashed(entry, remapper, TokenType.DYNAMIC_PROPOSED);
+		var mapping = remapper.getMapping(entry);
 		if (mapping.targetName() != null && shouldNotIgnoreMapping(mapping)) {
 			return mapping.targetName();
 		} else {
