@@ -54,17 +54,9 @@ public final class EntryUtil {
 		} else if (entry instanceof MethodEntry method) {
 			return name.startsWith("m_") || method.isConstructor() ? null : name;
 		} else if (entry instanceof ClassEntry clazz) {
-			return clazz.getSimpleName().startsWith("C_") ? null : getClassName(clazz);
+			return clazz.getSimpleName().startsWith("C_") ? null : clazz.getName();
 		} else {
 			return null;
-		}
-	}
-
-	private static String getClassName(ClassEntry clazz) {
-		if (clazz.getParent() == null) {
-			return clazz.getFullName();
-		} else {
-			return clazz.getSimpleName();
 		}
 	}
 }
