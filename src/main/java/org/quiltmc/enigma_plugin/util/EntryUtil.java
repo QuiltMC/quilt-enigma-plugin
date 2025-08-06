@@ -37,10 +37,8 @@ public final class EntryUtil {
 
 	public static EntryMapping mappingOrNonHashed(Entry<?> entry, @Nullable EntryMapping mapping, TokenType type, String sourcePluginId) {
 		if (mapping == null) {
-			mapping = EntryMapping.OBFUSCATED;
-		}
-
-		if (mapping.targetName() == null) {
+			return EntryMapping.OBFUSCATED;
+		} else if (mapping.targetName() == null) {
 			String name = getNonHashedNameOrNull(entry);
 			return name == null ? mapping : new EntryMapping(name, null, type, sourcePluginId);
 		} else {
