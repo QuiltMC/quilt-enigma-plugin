@@ -93,7 +93,6 @@ public class GetterSetterNameProposer extends NameProposer {
 
 				this.insertDynamicProposal(mappings, parameter, newName);
 			}
-
 		} else if (obfEntry instanceof FieldEntry field && this.index.fieldHasLinks(field)) {
 			var name = this.mappingOrNonHashed(field, newMapping, TokenType.DYNAMIC_PROPOSED).targetName();
 
