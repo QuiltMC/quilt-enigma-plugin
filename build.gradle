@@ -75,7 +75,8 @@ var obfJar = file('build/obf/obf.jar')
 var mappings = file('testMappings/')
 var profile = file('build/resources/testInputs/profile.json')
 
-task testEnigma(type: JavaExec, dependsOn: ["obfuscateTestInputs", "processTestInputsResources"]) {
+tasks.register('testEnigma', JavaExec) {
+	dependsOn "obfuscateTestInputs", "processTestInputsResources"
 	mainClass = "org.quiltmc.enigma.gui.Main"
 	classpath = files(configurations.enigmaRuntime) + sourceSets.test.runtimeClasspath
 
@@ -85,14 +86,14 @@ task testEnigma(type: JavaExec, dependsOn: ["obfuscateTestInputs", "processTestI
 	}
 }
 
-task testInputsJar(type: Jar) {
+tasks.register('testInputsJar', Jar) {
 	from sourceSets.testInputs.output
 
 	archiveFileName = "input.jar"
 	destinationDirectory = file("build/obf")
 }
 
-task obfuscateTestInputs(type: proguard.gradle.ProGuardTask) {
+tasks.register('obfuscateTestInputs', proguard.gradle.ProGuardTask) {
 	dependsOn testInputsJar
 
 	verbose
