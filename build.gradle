@@ -140,23 +140,6 @@ static String replaceRegion(String string, String replacement, int start, int en
 	return string.substring(0, start) + replacement + string.substring(end)
 }
 
-static void deleteFullDir(java.nio.file.Path dir) {
-	final contentsItr = Files.newDirectoryStream(dir).iterator()
-
-	while(contentsItr.hasNext()) {
-		final content = contentsItr.next()
-		if (Files.isDirectory(content)) {
-			deleteFullDir(content)
-		}
-
-		try {
-			Files.delete(content)
-		} catch (Exception e) {
-			System.err.println("Failed to delete: $e")
-		}
-	}
-}
-
 final qmapDest = layout.buildDirectory.dir('quilt-mappings')
 tasks.register('setupQmap') {
 	final projectVersion = project.version
