@@ -229,44 +229,6 @@ tasks.register('setupQmap') {
 		} else {
 			throw new GradleException("Cannot find $enigmaPlugin version.")
 		}
-
-		final classpathHoldersBuildGradle = dest.resolve('buildSrc/classpath-holders/build.gradle').toFile()
-
-		final enigmaSwing = 'enigmaSwing'
-		final enigmaServer = 'enigmaServer'
-
-		def classpathHoldersBuildGradleContents = classpathHoldersBuildGradle.text
-		[enigmaSwing, enigmaServer].each {
-			final configMatcher = classpathHoldersBuildGradleContents =~ /(?m)^(\s*)$it libs\.enigma\.plugin/
-			if (configMatcher.find()) {
-				final indent = configMatcher.group(1)
-
-				final changingConfig = indent + """\
-					$it (libs.enigma.plugin) {
-					$indent\tchanging = true
-					$indent}""".stripIndent()
-
-				classpathHoldersBuildGradleContents = replaceRegion(
-					classpathHoldersBuildGradleContents,
-					changingConfig,
-					configMatcher.start(), configMatcher.end()
-				)
-			} else {
-				throw new GradleException("Cannot find $it configuration.")
-			}
-		}
-
-		classpathHoldersBuildGradleContents += """
-		configurations {
-			[$enigmaSwing, $enigmaServer].each {
-				it.resolutionStrategy {
-					cacheChangingModulesFor (0, java.util.concurrent.TimeUnit.SECONDS)
-				}
-			}
-		}
-		""".stripIndent()
-
-		classpathHoldersBuildGradle.text = classpathHoldersBuildGradleContents
 	}
 }
 
@@ -280,7 +242,7 @@ tasks.register('diffQmap') {
 		EXEC.exec {
 			workingDir(qmapDest.get().asFile)
 			executable 'gradlew.bat'
-			args 'diffTarget', '--dest', output.get().asFile
+			args 'diffTarget', '--refresh-dependencies', '--dest', output.get().asFile
 		}
 	}
 }
