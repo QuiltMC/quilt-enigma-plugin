@@ -1,3 +1,6 @@
+import java.nio.file.Files
+import java.util.regex.Pattern
+
 buildscript {
 	repositories {
 		mavenCentral()
@@ -17,7 +20,14 @@ plugins {
 version '2.3.1'
 group 'org.quiltmc'
 
-version = version + (System.getenv("GITHUB_ACTIONS") ? "" : "+local")
+final ENV = System.getenv()
+interface ExecProvider {
+	@javax.inject.Inject
+	ExecOperations getOperations()
+}
+final EXEC = objects.newInstance(ExecProvider).operations
+
+version = version + (ENV.GITHUB_ACTIONS ? '' : '+local')
 
 sourceSets {
 	testInputs
@@ -121,6 +131,249 @@ tasks.register('obfuscateTestInputs', proguard.gradle.ProGuardTask) {
 
 tasks.test.dependsOn obfuscateTestInputs, processTestInputsResources
 
+static void replaceRegion(File file, String replacement, int start, int end) {
+	file.text = replaceRegion(file.text, replacement, start, end)
+}
+
+static String replaceRegion(String string, String replacement, int start, int end) {
+	return string.substring(0, start) + replacement + string.substring(end)
+}
+
+static void deleteFullDir(java.nio.file.Path dir) {
+	final contentsItr = Files.newDirectoryStream(dir).iterator()
+
+	while(contentsItr.hasNext()) {
+		final content = contentsItr.next()
+		if (Files.isDirectory(content)) {
+			deleteFullDir(content)
+		}
+
+		try {
+			Files.delete(content)
+		} catch (Exception e) {
+			System.err.println("Failed to delete: $e")
+		}
+	}
+}
+
+// tasks.register('setupQmap') {
+// 	final destProvider = layout.buildDirectory.dir('quilt-mappings')
+// 	final projectVersion = project.version
+//
+// 	inputs.property('projectVersion', projectVersion)
+// 	outputs.tap {
+// 		dir(destProvider)
+// 		// upToDateWhen {
+// 		// 	final dest = destProvider.get().asFile.toPath()
+// 		// 	if (!dest.resolve('.git').toFile().exists()) {
+// 		// 		return false
+// 		// 	}
+// 		//
+// 		// 	EXEC.exec {
+// 		// 		workingDir dest
+// 		// 		executable 'git'
+// 		// 		args 'fetch'
+// 		// 	}
+// 		//
+// 		// 	final localHash = new ByteArrayOutputStream()
+// 		// 	EXEC.exec {
+// 		// 		workingDir dest
+// 		// 		executable 'git'
+// 		// 		args 'rev-parse', 'HEAD'
+// 		// 		standardOutput = localHash
+// 		// 	}
+// 		//
+// 		// 	final originHash = new ByteArrayOutputStream()
+// 		// 	EXEC.exec {
+// 		// 		workingDir dest
+// 		// 		executable 'git'
+// 		// 		args 'rev-parse', 'origin/HEAD'
+// 		// 		standardOutput = originHash
+// 		// 	}
+// 		//
+// 		// 	final sameHash = originHash == localHash
+// 		// 	return sameHash
+// 		// }
+// 	}
+//
+// 	dependsOn publishToMavenLocal
+//
+// 	doFirst {
+// 		final dest = destProvider.get().asFile.toPath()
+//
+// 		// deleteFullDir(dest)
+// 		if (!dest.deleteDir()) {
+// 			throw new GradleException('Failed to delete old output.')
+// 		}
+// 	}
+// 	doLast {
+// 		final dest = destProvider.get().asFile.toPath()
+//
+// 		// deleteFullDir(dest)
+// 		// if (!dest.deleteDir()) {
+// 		// 	throw new GradleException('Failed to delete old output.')
+// 		// }
+//
+// 		EXEC.exec {
+// 			executable 'git'
+// 			args 'clone', 'https://github.com/QuiltMC/quilt-mappings', dest
+// 		}
+//
+// 		final versionsFile = dest.resolve('gradle/libs.versions.toml').toFile()
+// 		final enigmaPlugin = 'enigma_plugin'
+// 		final versionMatcher = versionsFile.text =~ /(?<=$enigmaPlugin = ").*(?=")/
+// 		if (versionMatcher.find()) {
+// 			replaceRegion(versionsFile, projectVersion.toString(), versionMatcher.start(), versionMatcher.end())
+// 		} else {
+// 			throw new GradleException("Cannot find $enigmaPlugin version.")
+// 		}
+//
+// 		final classpathHoldersBuildGradle = dest.resolve('buildSrc/classpath-holders/build.gradle').toFile()
+//
+// 		final enigmaSwing = 'enigmaSwing'
+// 		final enigmaServer = 'enigmaServer'
+//
+// 		def classpathHoldersBuildGradleContents = classpathHoldersBuildGradle.text
+// 		[enigmaSwing, enigmaServer].each {
+// 			final configMatcher = classpathHoldersBuildGradleContents =~ /(?m)^(\s*)$it libs\.enigma\.plugin/
+// 			if (configMatcher.find()) {
+// 				final indent = configMatcher.group(1)
+//
+// 				final changingConfig = indent + """\
+// 					$it (libs.enigma.plugin) {
+// 					$indent\tchanging = true
+// 					$indent}""".stripIndent()
+//
+// 				classpathHoldersBuildGradleContents = replaceRegion(
+// 					classpathHoldersBuildGradleContents,
+// 					changingConfig,
+// 					configMatcher.start(), configMatcher.end()
+// 				)
+// 			} else {
+// 				throw new GradleException("Cannot find $it configuration.")
+// 			}
+// 		}
+//
+// 		classpathHoldersBuildGradleContents += """
+// 		configurations {
+// 			[$enigmaSwing, $enigmaServer].each {
+// 				it.resolutionStrategy {
+// 					cacheChangingModulesFor (0, java.util.concurrent.TimeUnit.SECONDS)
+// 				}
+// 			}
+// 		}
+// 		""".stripIndent()
+//
+// 		classpathHoldersBuildGradle.text = classpathHoldersBuildGradleContents
+// 	}
+// }
+
+tasks.register('setupQmap') {
+	final destProvider = layout.buildDirectory.dir('quilt-mappings')
+	final projectVersion = project.version
+
+	dependsOn publishToMavenLocal
+
+	inputs.property('projectVersion', projectVersion)
+	outputs.tap {
+		dir(destProvider)
+		upToDateWhen {
+			final dest = destProvider.get().asFile.toPath()
+			if (!Files.exists(dest.resolve('.git'))) {
+				return false
+			}
+
+			EXEC.exec {
+				workingDir dest
+				executable 'git'
+				args 'fetch'
+			}
+
+			final localHash = new ByteArrayOutputStream()
+			EXEC.exec {
+				workingDir dest
+				executable 'git'
+				args 'rev-parse', 'HEAD'
+				standardOutput = localHash
+			}
+
+			final originHash = new ByteArrayOutputStream()
+			EXEC.exec {
+				workingDir dest
+				executable 'git'
+				args 'rev-parse', 'origin/HEAD'
+				standardOutput = originHash
+			}
+
+			return originHash.toString() == localHash.toString()
+		}
+	}
+
+	doLast {
+		final dest = destProvider.get().asFile.toPath()
+
+		EXEC.exec {
+			executable 'chmod'
+			args '-Rf', '+w', dest
+		}
+
+		dest.deleteDir()
+
+		EXEC.exec {
+			executable 'git'
+			args 'clone', 'https://github.com/QuiltMC/quilt-mappings', dest
+		}
+
+		final versionsFile = dest.resolve('gradle/libs.versions.toml').toFile()
+		final enigmaPlugin = 'enigma_plugin'
+		final versionMatcher = versionsFile.text =~ /(?<=$enigmaPlugin = ").*(?=")/
+		if (versionMatcher.find()) {
+			replaceRegion(versionsFile, projectVersion.toString(), versionMatcher.start(), versionMatcher.end())
+		} else {
+			throw new GradleException("Cannot find $enigmaPlugin version.")
+		}
+
+		final classpathHoldersBuildGradle = dest.resolve('buildSrc/classpath-holders/build.gradle').toFile()
+
+		final enigmaSwing = 'enigmaSwing'
+		final enigmaServer = 'enigmaServer'
+
+		def classpathHoldersBuildGradleContents = classpathHoldersBuildGradle.text
+		[enigmaSwing, enigmaServer].each {
+			final configMatcher = classpathHoldersBuildGradleContents =~ /(?m)^(\s*)$it libs\.enigma\.plugin/
+			if (configMatcher.find()) {
+				final indent = configMatcher.group(1)
+
+				final changingConfig = indent + """\
+					$it (libs.enigma.plugin) {
+					$indent\tchanging = true
+					$indent}""".stripIndent()
+
+				classpathHoldersBuildGradleContents = replaceRegion(
+					classpathHoldersBuildGradleContents,
+					changingConfig,
+					configMatcher.start(), configMatcher.end()
+				)
+			} else {
+				throw new GradleException("Cannot find $it configuration.")
+			}
+		}
+
+		classpathHoldersBuildGradleContents += """
+		configurations {
+			[$enigmaSwing, $enigmaServer].each {
+				it.resolutionStrategy {
+					cacheChangingModulesFor (0, java.util.concurrent.TimeUnit.SECONDS)
+				}
+			}
+		}
+		""".stripIndent()
+
+		classpathHoldersBuildGradle.text = classpathHoldersBuildGradleContents
+	}
+}
+
+
 license {
 	rule file('codeformat/FABRIC_MODIFIED_HEADER')
 	rule file('codeformat/HEADER')
@@ -141,7 +394,6 @@ test {
 }
 
 publishing {
-	def ENV = System.getenv()
 	publications {
 		maven(MavenPublication) {
 			from components.java
