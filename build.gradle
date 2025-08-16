@@ -274,6 +274,17 @@ tasks.register('setupQmap') {
 
 	dependsOn publishToMavenLocal
 
+	final execGit = { Action<ExecSpec> action ->
+		final dest = destProvider.get().asFile
+		dest.mkdirs()
+
+		EXEC.exec {
+			workingDir dest
+			executable 'git'
+			action(it)
+		}
+	}
+
 	inputs.property('projectVersion', projectVersion)
 	outputs.tap {
 		dir(destProvider)
@@ -283,26 +294,18 @@ tasks.register('setupQmap') {
 				return false
 			}
 
-			EXEC.exec {
-				workingDir dest
-				executable 'git'
-				args 'fetch'
-			}
+			execGit { it.args 'fetch' }
 
 			final localHash = new ByteArrayOutputStream()
-			EXEC.exec {
-				workingDir dest
-				executable 'git'
-				args 'rev-parse', 'HEAD'
-				standardOutput = localHash
+			execGit {
+				it.args 'rev-parse', 'HEAD'
+				it.standardOutput = localHash
 			}
 
 			final originHash = new ByteArrayOutputStream()
-			EXEC.exec {
-				workingDir dest
-				executable 'git'
-				args 'rev-parse', 'origin/HEAD'
-				standardOutput = originHash
+			execGit {
+				it.args 'rev-parse', 'origin/HEAD'
+				it.standardOutput = originHash
 			}
 
 			return originHash.toString() == localHash.toString()
@@ -312,16 +315,21 @@ tasks.register('setupQmap') {
 	doLast {
 		final dest = destProvider.get().asFile.toPath()
 
-		EXEC.exec {
-			executable 'chmod'
-			args '-Rf', '+w', dest
-		}
+		if (Files.isDirectory(dest.resolve('.git'))) {
+			execGit {
+				it.args 'reset', '--hard', 'origin/HEAD'
+			}
+		} else {
+			EXEC.exec {
+				executable 'chmod'
+				args '-Rf', '+w', dest
+			}
 
-		dest.deleteDir()
+			dest.deleteDir()
 
-		EXEC.exec {
-			executable 'git'
-			args 'clone', 'https://github.com/QuiltMC/quilt-mappings', dest
+			execGit {
+				it.args 'clone', 'https://github.com/QuiltMC/quilt-mappings', dest
+			}
 		}
 
 		final versionsFile = dest.resolve('gradle/libs.versions.toml').toFile()
@@ -372,7 +380,6 @@ tasks.register('setupQmap') {
 		classpathHoldersBuildGradle.text = classpathHoldersBuildGradleContents
 	}
 }
-
 
 license {
 	rule file('codeformat/FABRIC_MODIFIED_HEADER')
