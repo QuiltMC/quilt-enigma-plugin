@@ -7,11 +7,15 @@ public interface ZFunction {
 	void eat(String food);
 
 	static ZFunction ofInline(boolean val) {
-		return food -> { boolean b = true; };
+		return food -> {
+			boolean b = true;
+		};
 	}
 
 	static ZFunction ofLocal(int val) {
-		final ZFunction simple = food -> { int i = 0; };
+		final ZFunction simple = food -> {
+			int i = 0;
+		};
 		return simple;
 	}
 
@@ -30,7 +34,9 @@ public interface ZFunction {
 	}
 
 	static ZFunction ofOfArg(char c) {
-		return ofArg(food -> { String string = "food"; });
+		return ofArg(food -> {
+			String string = "food";
+		});
 	}
 
 	static ZFunction ofArgAnd(char c1, ZFunction function, char c2) {
@@ -38,12 +44,20 @@ public interface ZFunction {
 	}
 
 	static ZFunction ofOfArgAnd(byte b) {
-		return ofArgAnd('c', food -> { char c = 'c'; }, 'c');
+		return ofArgAnd(
+				'c',
+				food -> {
+					char c = 'c';
+				},
+				'c'
+		);
 	}
 
 	static ZFunction ofExtras(boolean[] bs) {
 		boolean b = false;
 		int i = 0;
-		return food -> { int j = b ? i : 1; };
+		return food -> {
+			int j = b ? i : 1;
+		};
 	}
 }

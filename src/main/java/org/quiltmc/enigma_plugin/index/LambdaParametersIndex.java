@@ -99,25 +99,25 @@ public class LambdaParametersIndex extends Index {
 												.findAny()
 												.ifPresent(lambda -> {
 													final List<LocalVariableEntry> functionalParams = this
-														.functionalMethodParams
-														.computeIfAbsent(functionalMethod, funcMethod ->
-																createParamEntries(invokeDynamicReturnType, funcMethod)
-														);
+															.functionalMethodParams
+															.computeIfAbsent(functionalMethod, funcMethod ->
+																	createParamEntries(invokeDynamicReturnType, funcMethod)
+															);
 
 													final List<LocalVariableEntry> lambdaParams =
-														createParamEntries(owner, lambda);
+															createParamEntries(owner, lambda);
 
 													final int lambdaParamOffset =
-														lambdaParams.size() - functionalParams.size();
+															lambdaParams.size() - functionalParams.size();
 													assert lambdaParamOffset >= 0;
 
 													for (int i = 0; i < functionalParams.size(); i++) {
 														this.lambdaParamsByFunctionalParam
-															.computeIfAbsent(
-																functionalParams.get(i),
-																ignored -> new ArrayList<>()
-															)
-															.add(lambdaParams.get(i + lambdaParamOffset));
+																.computeIfAbsent(
+																	functionalParams.get(i),
+																	ignored -> new ArrayList<>()
+																)
+																.add(lambdaParams.get(i + lambdaParamOffset));
 													}
 												});
 									}

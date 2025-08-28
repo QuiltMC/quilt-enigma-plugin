@@ -401,10 +401,10 @@ public class NameProposalTest {
 		);
 
 		Stream.of("a", "b", "c", "d", "e").forEach(minArgsMethodName ->
-			assertDynamicProposal(
+				assertDynamicProposal(
 					targetName,
 					localVar(method(testClass, minArgsMethodName, "(Ljava/lang/String;)V"), 0)
-			)
+				)
 		);
 
 		assertDynamicProposal(targetName, localVar(method(testClass, "a", "(ZILjava/lang/String;)V"), 2));
