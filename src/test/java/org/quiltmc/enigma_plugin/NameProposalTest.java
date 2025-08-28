@@ -37,6 +37,7 @@ import org.quiltmc.enigma.util.validation.ValidationContext;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 public class NameProposalTest {
 	private static final Path JAR = Path.of("build/obf/obf.jar");
@@ -387,6 +388,26 @@ public class NameProposalTest {
 
 		assertNotProposed(localVar(method, 1));
 		assertNotProposed(localVar(method, 2));
+	}
+
+	@Test
+	public void testLambdaParameters() {
+		final var testClass = new ClassEntry("com/a/f");
+		final String targetName = "dinner";
+		remapper.putMapping(
+				new ValidationContext(null),
+				localVar(method(testClass, "eat", "(Ljava/lang/String;)V"), 1),
+				new EntryMapping(targetName)
+		);
+
+		Stream.of("a", "b", "c", "d", "e").forEach(minArgsMethodName ->
+			assertDynamicProposal(
+					targetName,
+					localVar(method(testClass, minArgsMethodName, "(Ljava/lang/String;)V"), 0)
+			)
+		);
+
+		assertDynamicProposal(targetName, localVar(method(testClass, "a", "(ZILjava/lang/String;)V"), 2));
 	}
 
 	private static FieldEntry field(ClassEntry parent, String name, String desc) {
