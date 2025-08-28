@@ -1,5 +1,6 @@
 package org.quiltmc.enigma_plugin.index;
 
+import org.jetbrains.annotations.Unmodifiable;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -7,13 +8,16 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.quiltmc.enigma.api.class_provider.ClassProvider;
+import org.quiltmc.enigma.api.translation.representation.ArgumentDescriptor;
 import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.Arguments;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +25,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static org.quiltmc.enigma_plugin.util.AsmUtil.matchAccess;
 
@@ -34,27 +39,21 @@ public class LambdaParametersIndex extends Index {
 			"finalize", "()"
 	);
 
-	private final Map<ClassEntry, FunctionalMethodLambdas> functionalMethodLambdasByInterface = new HashMap<>();
+	private final Map<LocalVariableEntry, List<LocalVariableEntry>> lambdaParamsByFunctionalParam = new HashMap<>();
+	private final Map<MethodNode, List<LocalVariableEntry>> functionalMethodParams = new HashMap<>();
 
 	public LambdaParametersIndex() {
 		super(Arguments.DISABLE_LAMBDA_PARAMS);
 	}
 
-	public void forEachFunctionalMethodLambdaImplementing(ClassEntry functionalInterface, BiConsumer<MethodEntry, MethodEntry> action) {
-		final FunctionalMethodLambdas functionalMethodLambdas = this.functionalMethodLambdasByInterface.get(functionalInterface);
-		if (functionalMethodLambdas != null) {
-			for (final MethodEntry lambda : functionalMethodLambdas.lambdas()) {
-				action.accept(functionalMethodLambdas.functionalMethod(), lambda);
-			}
-		}
+	public Stream<LocalVariableEntry> streamLambdaParams(LocalVariableEntry functionalParam) {
+		return this.lambdaParamsByFunctionalParam.getOrDefault(functionalParam, List.of()).stream();
 	}
 
-	public void forEachFunctionalMethodLambda(BiConsumer<MethodEntry, MethodEntry> action) {
-		for (final FunctionalMethodLambdas functionalMethodLambdas : this.functionalMethodLambdasByInterface.values()) {
-			for (final MethodEntry lambda : functionalMethodLambdas.lambdas()) {
-				action.accept(functionalMethodLambdas.functionalMethod(), lambda);
-			}
-		}
+	public void forEachFunctionalParam(BiConsumer<LocalVariableEntry, Stream<LocalVariableEntry>> action) {
+		this.lambdaParamsByFunctionalParam.forEach((functionalParam, lambdaParams) -> {
+			action.accept(functionalParam, lambdaParams.stream());
+		});
 	}
 
 	@Override
@@ -64,43 +63,51 @@ public class LambdaParametersIndex extends Index {
 			method.instructions.forEach(instructions::add);
 			for (final AbstractInsnNode instruction : instructions) {
 				if (instruction instanceof InvokeDynamicInsnNode invokeDynamic) {
-					if (isLambdaMetaFactory(invokeDynamic.bsm)) {
-						getReturnType(invokeDynamic.desc)
-							.map(provider::get)
-							.ifPresent(invokeDynamicReturnType -> {
-								getFunctionalMethod(invokeDynamicReturnType).ifPresent(functionalMethod -> {
-									// TODO confirm LambdaMetaFactory bsm extra args contain at most one Handle
-									Arrays.stream(invokeDynamic.bsmArgs)
-										.<Handle>mapMulti((arg, addHandler) -> {
-											if (arg instanceof Handle handle) {
-												addHandler.accept(handle);
-											}
-										})
-										.findAny()
-										.ifPresent(handle -> {
-											final ClassNode owner = provider.get(handle.getOwner());
-											if (owner != null) {
-												owner.methods.stream()
-													.filter(handleMethod -> handleMethod.name.equals(handle.getName()))
-													.filter(handleMethod -> handleMethod.desc.equals(handle.getDesc()))
-													.filter(handleMethod -> matchAccess(handleMethod, ACC_SYNTHETIC))
-													.findAny()
-													.ifPresent(lambda -> {
-														// this.functionalMethodsByLambda.put(
-														// 	entryOf(owner, lambda),
-														// 	entryOf(invokeDynamicReturnType, functionalMethod)
-														// );
-														final ClassEntry functionalInterface = new ClassEntry(invokeDynamicReturnType.name);
-														this.functionalMethodLambdasByInterface
-															.computeIfAbsent(functionalInterface, type -> FunctionalMethodLambdas.of(entryOf(type, functionalMethod)))
-															.lambdas()
-															.add(entryOf(owner, lambda));
-													});
-											}
-										});
-								});
-							});
+					if (!isLambdaMetaFactory(invokeDynamic.bsm)) {
+						continue;
 					}
+
+					getReturnType(invokeDynamic.desc).map(provider::get).ifPresent(invokeDynamicReturnType -> {
+						getFunctionalMethod(invokeDynamicReturnType).ifPresent(functionalMethod -> Arrays
+								.stream(invokeDynamic.bsmArgs)
+								.flatMap(arg -> arg instanceof Handle handle ? Stream.of(handle) : Stream.empty())
+								// TODO confirm LambdaMetaFactory bsm extra args contain at most one Handle
+								.findAny()
+								.ifPresent(handle -> {
+									final ClassNode owner = provider.get(handle.getOwner());
+									if (owner != null) {
+										owner.methods.stream()
+												.filter(handleMethod -> handleMethod.name.equals(handle.getName()))
+												.filter(handleMethod -> handleMethod.desc.equals(handle.getDesc()))
+												.filter(handleMethod -> matchAccess(handleMethod, ACC_SYNTHETIC))
+												.findAny()
+												.ifPresent(lambda -> {
+													final List<LocalVariableEntry> functionalParams = this
+														.functionalMethodParams
+														.computeIfAbsent(functionalMethod, funcMethod ->
+																createParamEntries(invokeDynamicReturnType, funcMethod)
+														);
+
+													final List<LocalVariableEntry> lambdaParams =
+														createParamEntries(owner, lambda);
+
+													final int lambdaParamOffset =
+														lambdaParams.size() - functionalParams.size();
+													assert lambdaParamOffset >= 0;
+
+													for (int i = 0; i < functionalParams.size(); i++) {
+														this.lambdaParamsByFunctionalParam
+															.computeIfAbsent(
+																functionalParams.get(i),
+																ignored -> new ArrayList<>()
+															)
+															.add(lambdaParams.get(i + lambdaParamOffset));
+													}
+												});
+									}
+								})
+						);
+					});
 				}
 			}
 		}
@@ -112,6 +119,21 @@ public class LambdaParametersIndex extends Index {
 
 	private static MethodEntry entryOf(ClassEntry parent, MethodNode node) {
 		return new MethodEntry(parent, node.name, new MethodDescriptor(node.desc));
+	}
+
+	@Unmodifiable
+	private static List<LocalVariableEntry> createParamEntries(ClassNode parent, MethodNode funcMethod) {
+		final List<LocalVariableEntry> params = new ArrayList<>();
+		final MethodEntry parentEntry = entryOf(parent, funcMethod);
+
+		// TODO unnecessary? always static?
+		int i = matchAccess(funcMethod, ACC_STATIC) ? 0 : 1;
+		for (final ArgumentDescriptor paramDesc : parentEntry.getDesc().getArgumentDescs()) {
+			params.add(new LocalVariableEntry(parentEntry, i));
+			i += paramDesc.getSize();
+		}
+
+		return Collections.unmodifiableList(params);
 	}
 
 	private static boolean isFunctionalInterface(ClassNode clazz) {
@@ -147,11 +169,5 @@ public class LambdaParametersIndex extends Index {
 	private static boolean isLambdaMetaFactory(Handle handle) {
 		return handle.getOwner().equals("java/lang/invoke/LambdaMetafactory")
 				&& (handle.getName().equals("metafactory") || handle.getName().equals("altMetafactory"));
-	}
-
-	private record FunctionalMethodLambdas(MethodEntry functionalMethod, List<MethodEntry> lambdas) {
-		static FunctionalMethodLambdas of(MethodEntry functionalMethod) {
-			return new FunctionalMethodLambdas(functionalMethod, new ArrayList<>());
-		}
 	}
 }
