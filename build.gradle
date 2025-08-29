@@ -26,7 +26,6 @@ interface ExecProvider {
 	ExecOperations getOperations()
 }
 final EXEC = objects.newInstance(ExecProvider).operations
-final OBJECTS = project.objects
 
 version = version + (ENV.GITHUB_ACTIONS ? '' : '+local')
 
@@ -141,7 +140,7 @@ static String replaceRegion(String string, String replacement, int start, int en
 }
 
 final qmapDest = layout.buildDirectory.dir('quilt-mappings')
-tasks.register('setupQmap') {
+tasks.register('setupQMap') {
 	final projectVersion = project.version
 
 	dependsOn publishToMavenLocal
@@ -215,8 +214,8 @@ tasks.register('setupQmap') {
 	}
 }
 
-tasks.register('diffQmap') {
-	dependsOn(setupQmap)
+tasks.register('diffQMap') {
+	dependsOn(setupQMap)
 
 	final output = layout.buildDirectory.file('qmap.diff')
 	outputs.file(output)
