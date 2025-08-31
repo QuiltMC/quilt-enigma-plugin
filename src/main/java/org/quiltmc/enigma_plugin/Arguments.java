@@ -31,6 +31,7 @@ public class Arguments {
 	public static final String DISABLE_GETTER_SETTER = "disable_getter_setter";
 	public static final String DISABLE_CODECS = "disable_codecs";
 	public static final String DISABLE_DELEGATE_PARAMS = "disable_delegate_params";
+	public static final String DISABLE_DELEGATING_METHODS = "disable_delegating_methods";
 	public static final String DISABLE_CONFLICT_FIXER = "disable_conflict_fixer";
 	public static final String DISABLE_MAPPING_MERGE = "disable_mapping_merge";
 	public static final String CUSTOM_CODECS = "custom_codecs";

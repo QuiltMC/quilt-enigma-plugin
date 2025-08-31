@@ -29,6 +29,12 @@ final EXEC = objects.newInstance(ExecProvider).operations
 
 version = version + (ENV.GITHUB_ACTIONS ? '' : '+local')
 
+interface ArchiveProvider {
+	@javax.inject.Inject
+	ArchiveOperations getOperations()
+}
+final ARCHIVE = objects.newInstance(ArchiveProvider).operations
+
 sourceSets {
 	testInputs
 }
@@ -105,6 +111,8 @@ tasks.register('testInputsJar', Jar) {
 
 tasks.register('obfuscateTestInputs', proguard.gradle.ProGuardTask) {
 	dependsOn testInputsJar
+	final File obfExtractionDest = new File(obfJar.parent, "obf-extracted")
+	outputs.dir(obfExtractionDest)
 
 	verbose
 	injars testInputsJar
@@ -127,6 +135,16 @@ tasks.register('obfuscateTestInputs', proguard.gradle.ProGuardTask) {
 	keepattributes 'Signature'
 	keepattributes 'Record'
 	printmapping 'build/obf/obf.txt'
+
+	doLast {
+		obfExtractionDest.deleteDir()
+
+		ARCHIVE.zipTree(obfJar).visit { FileVisitDetails details ->
+			details.copyTo(
+				new File(obfExtractionDest.toString(), details.getRelativePath().getPathString())
+			)
+		}
+	}
 }
 
 tasks.test.dependsOn obfuscateTestInputs, processTestInputsResources
