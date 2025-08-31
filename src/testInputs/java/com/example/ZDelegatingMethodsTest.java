@@ -6,6 +6,8 @@ public class ZDelegatingMethodsTest {
 
 	int I = 0;
 
+	Integer I_BOXED = 100;
+
 	int getI() {
 		return this.I;
 	}
@@ -142,6 +144,10 @@ public class ZDelegatingMethodsTest {
 	char delegatingLocalStaticFieldGetter(int i) {
 		final Object o = this.getStaticO();
 		return this.charRoot(o, i, i);
+	}
+
+	char delegatingUnboxing(long l) {
+		return this.charRoot(null, this.I_BOXED, l);
 	}
 
 	// NON-DELEGATING

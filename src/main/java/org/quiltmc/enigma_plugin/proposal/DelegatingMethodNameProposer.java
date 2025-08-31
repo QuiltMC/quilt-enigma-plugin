@@ -6,7 +6,7 @@ import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
-import org.quiltmc.enigma_plugin.index.DelegatingMethodIndex;
+import org.quiltmc.enigma_plugin.index.delegating_method.DelegatingMethodIndex;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 
 import java.util.Map;
@@ -31,16 +31,21 @@ public class DelegatingMethodNameProposer extends NameProposer {
 				final EntryMapping mapping = remapper.getMapping(delegate);
 				if (mapping.targetName() != null) {
 					delegaters.forEach(delegater ->
-						this.insertDynamicProposal(mappings, delegater, new EntryMapping(mapping.targetName()))
+						this.insertDelegaterName(delegater, mappings, new EntryMapping(mapping.targetName()))
 					);
 				}
 			});
 		} else if (obfEntry instanceof MethodEntry method) {
 			if (newMapping.targetName() != null) {
 				this.index.streamDelegaters(method).forEach(delegater ->
-					this.insertDynamicProposal(mappings, delegater, new EntryMapping(newMapping.targetName()))
+					this.insertDelegaterName(delegater, mappings, new EntryMapping(newMapping.targetName()))
 				);
 			}
 		}
+	}
+
+	private void insertDelegaterName(MethodEntry delegater, Map<Entry<?>, EntryMapping> mappings, EntryMapping mapping) {
+		this.insertDynamicProposal(mappings, delegater, mapping);
+		this.index.streamDelegaters(delegater).forEach(outerDelegater -> this.insertDelegaterName(outerDelegater, mappings, mapping));
 	}
 }

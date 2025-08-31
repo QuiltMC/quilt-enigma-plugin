@@ -433,7 +433,7 @@ public class NameProposalTest {
 		// delegatingInlineLiteral
 		assertDynamicProposal(strings, method(testClass, "b", str, obj, j));
 		// doublyDelegating
-		method(testClass, "a", str, i, j);
+		assertDynamicProposal(strings, method(testClass, "a", str, i, j));
 		// delegatingMixed1
 		method(testClass, "a", str, obj);
 		// delegatingMixed2
@@ -465,6 +465,7 @@ public class NameProposalTest {
 
 		final String chars = "chars";
 		final MethodEntry charRoot = method(testClass, "e", c, obj, i, j);
+		remapper.putMapping(context, charRoot, new EntryMapping(chars));
 		// delegatingLocalGetter
 		method(testClass, "e", c, obj, j);
 		// delegatingInlineLiteralGetter
@@ -475,6 +476,8 @@ public class NameProposalTest {
 		method(testClass, "d", c, i, j);
 		// delegatingLocalStaticFieldGetter
 		method(testClass, "b", c, i);
+		// delegatingUnboxing
+		assertDynamicProposal(chars, method(testClass, "b", c, j));
 
 		Stream
 				.of(

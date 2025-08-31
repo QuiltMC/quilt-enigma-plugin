@@ -1,4 +1,4 @@
-package org.quiltmc.enigma_plugin.index;
+package org.quiltmc.enigma_plugin.index.delegating_method;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -14,6 +14,8 @@ import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.Arguments;
+import org.quiltmc.enigma_plugin.index.GetterSetterIndex;
+import org.quiltmc.enigma_plugin.index.Index;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 
 import java.util.ArrayList;
@@ -130,7 +132,11 @@ public class DelegatingMethodIndex extends Index {
 		// DEBUG TODO
 		final List<AbstractInsnNode> instructions = new ArrayList<>();
 		method.instructions.forEach(instructions::add);
-		if (method.name.equals("b") && method.desc.equals("(Ljava/lang/Object;J)Ljava/lang/String;")) {
+		if (method.name.equals("a") && method.desc.equals("(IJ)Ljava/lang/String;")) {
+			int i = 0;
+		}
+
+		if (method.name.equals("b") && method.desc.equals("(J)C")) {
 			int i = 0;
 		}
 
@@ -139,13 +145,18 @@ public class DelegatingMethodIndex extends Index {
 			if (prevInstruction instanceof VarInsnNode var) {
 				final int varOp = var.getOpcode();
 				if (varOp >= ILOAD && varOp <= ALOAD) {
-					if (var.var >= lastDelegateParamIndex) {
+					if (var.var > lastDelegateParamIndex) {
 						// TODO
 						return Optional.empty();
 					}
 					// else loading param to pass to finalCallMethod: OK
 				} else {
 					// TODO
+					return Optional.empty();
+				}
+			} else if (prevInstruction instanceof MethodInsnNode call) {
+				// TODO allow getters
+				if (!(isPrimitiveBoxOrUnbox(call))) {
 					return Optional.empty();
 				}
 			} else {
@@ -168,6 +179,24 @@ public class DelegatingMethodIndex extends Index {
 		instructions.get(0);
 
 		return Optional.of(new Delegation(delegateEntry, delegaterEntry));
+	}
+
+	private static boolean isPrimitiveBoxOrUnbox(MethodInsnNode call) {
+		return switch (call.owner) {
+			case "java/lang/Boolean" -> isBoxerOr(call, 'Z', "booleanValue");
+			case "java/lang/Byte" -> isBoxerOr(call, 'B', "byteValue");
+			case "java/lang/Character" -> isBoxerOr(call, 'C', "charValue");
+			case "java/lang/Integer" -> isBoxerOr(call, 'I', "intValue");
+			case "java/lang/Long" -> isBoxerOr(call, 'J', "longValue");
+			case "java/lang/Float" -> isBoxerOr(call, 'F', "floatValue");
+			case "java/lang/Double" -> isBoxerOr(call, 'D', "doubleValue");
+			default -> false;
+		};
+	}
+
+	private static boolean isBoxerOr(MethodInsnNode call, char primitiveDesc, String unboxer) {
+		return (call.name.equals("valueOf") && call.desc.startsWith("(" + primitiveDesc + ")"))
+				|| (call.name.equals(unboxer) && call.desc.startsWith("()"));
 	}
 
 	private static MethodEntry entryOf(ClassEntry parent, MethodNode node) {
@@ -203,5 +232,5 @@ public class DelegatingMethodIndex extends Index {
 		return method.parameters == null ? 0 : method.parameters.size();
 	}
 
-	private record Delegation(MethodEntry delegate, MethodEntry delegater) { }
+	static record Delegation(MethodEntry delegate, MethodEntry delegater) { }
 }
