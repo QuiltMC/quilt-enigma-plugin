@@ -42,13 +42,13 @@ public class ZDelegatingMethodsTest {
 		return staticRoot(this, o, 30, l);
 	}
 
-	static void staticVoidNoParamRoot() { }
+	static void staticVoidNoParamRoot() {}
 
 	static void staticVoidNoParamDelegating() {
 		staticVoidNoParamRoot();
 	}
 
-	void voidRoot(Object o, int i, long l) { }
+	void voidRoot(Object o, int i, long l) {}
 
 	void voidDelegating(Object o, int i) {
 		this.voidRoot(o, i, 0);
@@ -56,6 +56,10 @@ public class ZDelegatingMethodsTest {
 
 	String root(Object o, int i, long l) {
 		return "root";
+	}
+
+	String delegatingReuseParam(Object o, int i) {
+		return this.root(o, i, i);
 	}
 
 	String delegatingInlineLiteral(Object o, long l) {
@@ -157,7 +161,7 @@ public class ZDelegatingMethodsTest {
 		return this.root(o, i, i + i);
 	}
 
-	String extraCheck(int i , long l) {
+	String extraCheck(int i, long l) {
 		return this.root(O, i, i < l ? l : i);
 	}
 

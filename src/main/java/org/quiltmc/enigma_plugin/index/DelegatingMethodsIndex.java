@@ -5,9 +5,13 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
+import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
+import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.class_provider.ClassProvider;
+import org.quiltmc.enigma.api.translation.mapping.IndexEntryResolver;
 import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
@@ -17,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class DelegatingMethodsIndex extends Index {
 	private final Map<MethodEntry, List<MethodEntry>> delegatersByDelegate = new HashMap<>();
@@ -24,10 +29,16 @@ public class DelegatingMethodsIndex extends Index {
 	private final GetterSetterIndex getterSetterIndex;
 	// includes methods that return constants or static fields
 	private final Map<MethodNode, Boolean> getterCache = new HashMap<>();
+	private EntryIndex entryIndex;
 
 	public DelegatingMethodsIndex(GetterSetterIndex getterSetterIndex) {
 		super(Arguments.DISABLE_DELEGATING_METHODS);
 		this.getterSetterIndex = getterSetterIndex;
+	}
+
+	@Override
+	public void setIndexingContext(Set<String> classes, JarIndex jarIndex) {
+		this.entryIndex = jarIndex.getIndex(EntryIndex.class);
 	}
 
 	@Override
@@ -36,15 +47,18 @@ public class DelegatingMethodsIndex extends Index {
 		if (clazz.name.equals("com/a/f")) {
 			final ClassEntry classEntry = new ClassEntry(clazz.name);
 			for (final MethodNode method : clazz.methods) {
-				this.getDelegate(clazz, method).ifPresent(delegate -> this.delegatersByDelegate
-						.computeIfAbsent(entryOf(classEntry, delegate), ignored -> new ArrayList<>())
-						.add(entryOf(classEntry, method))
+				this.getDelegation(clazz, classEntry, method).ifPresent(delegation -> this.delegatersByDelegate
+						.computeIfAbsent(delegation.delegate, ignored -> new ArrayList<>())
+						.add(delegation.delegater)
 				);
 			}
+			// DEBUG TODO
+			int i = 0;
+			byte b = 0;
 		}
 	}
 
-	private Optional<MethodNode> getDelegate(ClassNode clazz, MethodNode method) {
+	private Optional<Delegation> getDelegation(ClassNode clazz, ClassEntry classEntry, MethodNode method) {
 		if (method.name.equals("<init>") || method.name.equals("<clinit>")) {
 			return Optional.empty();
 		}
@@ -63,15 +77,25 @@ public class DelegatingMethodsIndex extends Index {
 			return Optional.empty();
 		}
 
-		final int delegaterParamCount = getParamCount(method);
-		final int delegateParamCount = getParamCount(delegate);
-		if (delegaterParamCount > delegateParamCount || (delegaterParamCount == 0 && delegateParamCount > 0)) {
+		final MethodEntry delegaterEntry = entryOf(classEntry, method);
+		final MethodEntry delegateEntry = entryOf(classEntry, delegate);
+
+		final List<LocalVariableEntry> delegaterParams = delegaterEntry.getParameters(this.entryIndex);
+		final List<LocalVariableEntry> delegateParams = delegateEntry.getParameters(this.entryIndex);
+
+		if (delegaterParams.size() > delegateParams.size() || (delegaterParams.isEmpty() && !delegateParams.isEmpty())) {
 			return Optional.empty();
 		}
 
-		if (!haveDelegationCompatibleDescriptors(method, delegate)) {
+		if (!delegateEntry.getDesc().getReturnDesc().equals(delegaterEntry.getDesc().getReturnDesc())) {
 			return Optional.empty();
 		}
+
+		if (delegateEntry.canConflictWith(delegaterEntry)) {
+			return Optional.empty();
+		}
+
+		final int lastDelegateParamIndex = delegateParams.get(delegateParams.size() - 1).getIndex();
 
 		// DEBUG TODO
 		final List<AbstractInsnNode> instructions = new ArrayList<>();
@@ -82,7 +106,7 @@ public class DelegatingMethodsIndex extends Index {
 			if (prevInstruction instanceof VarInsnNode var) {
 				final int varOp = var.getOpcode();
 				if (varOp >= ILOAD && varOp <= ALOAD) {
-					if (var.var >= delegaterParamCount) {
+					if (var.var >= lastDelegateParamIndex) {
 						// TODO
 						return Optional.empty();
 					}
@@ -92,8 +116,12 @@ public class DelegatingMethodsIndex extends Index {
 					return Optional.empty();
 				}
 			} else {
-				// TODO
-				return Optional.empty();
+				final int prevOp = prevInstruction.getOpcode();
+				if (prevOp < I2L || prevOp > I2S) {
+					// TODO
+					return Optional.empty();
+				}
+				// else primitives cast: OK
 			}
 
 			prevInstruction = prevInstruction.getPrevious();
@@ -101,24 +129,11 @@ public class DelegatingMethodsIndex extends Index {
 		// DEBUG TODO
 		instructions.get(0);
 
-		return Optional.of(delegate);
+		return Optional.of(new Delegation(delegateEntry, delegaterEntry));
 	}
 
 	private static MethodEntry entryOf(ClassEntry parent, MethodNode node) {
 		return new MethodEntry(parent, node.name, new MethodDescriptor(node.desc));
-	}
-
-	private static boolean haveDelegationCompatibleDescriptors(MethodNode method1, MethodNode method2) {
-		final int returnStart1 = method1.desc.lastIndexOf(')');
-		final int returnStart2 = method2.desc.lastIndexOf(')');
-
-		// same return, different params
-		return method1.desc.substring(returnStart1).equals(method2.desc.substring(returnStart2))
-				&& !method1.desc.substring(0, returnStart1).equals(method2.desc.substring(0, returnStart2));
-	}
-
-	private static String getReturnDesc(MethodNode method) {
-		return method.desc.substring(method.desc.lastIndexOf(')'));
 	}
 
 	private boolean isGetter(MethodNode method) {
@@ -131,10 +146,10 @@ public class DelegatingMethodsIndex extends Index {
 	private static boolean isNonInstanceGetter(MethodNode method) {
 		if (method.instructions.size() == 2 && getParamCount(method) == 0) {
 			final int firstOp = method.instructions.getFirst().getOpcode();
-			if ((firstOp >= ACONST_NULL && firstOp <= LDC) || firstOp == GETSTATIC || firstOp == GETFIELD) {
+			if ((firstOp >= ACONST_NULL && firstOp <= LDC) || firstOp == GETSTATIC) {
 				// loading static field or constant
 				final int secondOp = method.instructions.getLast().getOpcode();
-				// returning constant
+				// returning value
 				return secondOp >= IRETURN && secondOp <= ARETURN;
 			}
 		}
@@ -145,4 +160,6 @@ public class DelegatingMethodsIndex extends Index {
 	private static int getParamCount(MethodNode method) {
 		return method.parameters == null ? 0 : method.parameters.size();
 	}
+
+	private record Delegation(MethodEntry delegate, MethodEntry delegater) { }
 }
