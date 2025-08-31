@@ -8,8 +8,8 @@ import org.objectweb.asm.tree.VarInsnNode;
 import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.class_provider.ClassProvider;
-import org.quiltmc.enigma.api.translation.mapping.IndexEntryResolver;
 import org.quiltmc.enigma.api.translation.representation.MethodDescriptor;
+import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
@@ -18,12 +18,15 @@ import org.quiltmc.enigma_plugin.util.AsmUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
-public class DelegatingMethodsIndex extends Index {
+public class DelegatingMethodIndex extends Index {
 	private final Map<MethodEntry, List<MethodEntry>> delegatersByDelegate = new HashMap<>();
 
 	private final GetterSetterIndex getterSetterIndex;
@@ -31,9 +34,17 @@ public class DelegatingMethodsIndex extends Index {
 	private final Map<MethodNode, Boolean> getterCache = new HashMap<>();
 	private EntryIndex entryIndex;
 
-	public DelegatingMethodsIndex(GetterSetterIndex getterSetterIndex) {
+	public DelegatingMethodIndex(GetterSetterIndex getterSetterIndex) {
 		super(Arguments.DISABLE_DELEGATING_METHODS);
 		this.getterSetterIndex = getterSetterIndex;
+	}
+
+	public Stream<MethodEntry> streamDelegaters(MethodEntry method) {
+		return this.delegatersByDelegate.getOrDefault(method, List.of()).stream();
+	}
+
+	public void forEachDelegation(BiConsumer<MethodEntry, Stream<MethodEntry>> action) {
+		this.delegatersByDelegate.forEach((delegate, delegaters) -> action.accept(delegate, delegaters.stream()));
 	}
 
 	@Override
@@ -46,11 +57,30 @@ public class DelegatingMethodsIndex extends Index {
 		// DEBUG TODO
 		if (clazz.name.equals("com/a/f")) {
 			final ClassEntry classEntry = new ClassEntry(clazz.name);
+			final Map<MethodEntry, Set<List<TypeDescriptor>>> conflictingDelegaterParamDescriptorsByDelegate = new HashMap<>();
 			for (final MethodNode method : clazz.methods) {
-				this.getDelegation(clazz, classEntry, method).ifPresent(delegation -> this.delegatersByDelegate
-						.computeIfAbsent(delegation.delegate, ignored -> new ArrayList<>())
-						.add(delegation.delegater)
-				);
+				this.getDelegation(clazz, classEntry, method).ifPresent(delegation -> {
+					final List<MethodEntry> delegaters = this.delegatersByDelegate.get(delegation.delegate);
+					if (delegaters != null) {
+						if (delegaters.removeIf(delegation.delegater::canConflictWith)) {
+							// new conflict
+							conflictingDelegaterParamDescriptorsByDelegate
+									.computeIfAbsent(delegation.delegate, ignored -> new HashSet<>())
+									.add(delegation.delegater.getDesc().getTypeDescs());
+						} else {
+							final Set<List<TypeDescriptor>> conflictParamsDescriptors =
+									conflictingDelegaterParamDescriptorsByDelegate.getOrDefault(delegation.delegate, Set.of());
+							if (!conflictParamsDescriptors.contains(delegation.delegater.getDesc().getTypeDescs())) {
+								delegaters.add(delegation.delegater);
+							}
+							// else additional conflict
+						}
+					} else {
+						final List<MethodEntry> newDelegaters = new ArrayList<>();
+						newDelegaters.add(delegation.delegater);
+						this.delegatersByDelegate.put(delegation.delegate, newDelegaters);
+					}
+				});
 			}
 			// DEBUG TODO
 			int i = 0;
@@ -100,6 +130,9 @@ public class DelegatingMethodsIndex extends Index {
 		// DEBUG TODO
 		final List<AbstractInsnNode> instructions = new ArrayList<>();
 		method.instructions.forEach(instructions::add);
+		if (method.name.equals("b") && method.desc.equals("(Ljava/lang/Object;J)Ljava/lang/String;")) {
+			int i = 0;
+		}
 
 		AbstractInsnNode prevInstruction = lastCall.getPrevious();
 		while (prevInstruction != null) {
@@ -117,11 +150,16 @@ public class DelegatingMethodsIndex extends Index {
 				}
 			} else {
 				final int prevOp = prevInstruction.getOpcode();
-				if (prevOp < I2L || prevOp > I2S) {
+				if (!(
+						isConstantLoad(prevOp)
+							|| prevOp == GETSTATIC
+							|| prevOp == GETFIELD
+							// primitive cast
+							|| (prevOp >= I2L && prevOp <= I2S)
+				)) {
 					// TODO
 					return Optional.empty();
 				}
-				// else primitives cast: OK
 			}
 
 			prevInstruction = prevInstruction.getPrevious();
@@ -146,7 +184,7 @@ public class DelegatingMethodsIndex extends Index {
 	private static boolean isNonInstanceGetter(MethodNode method) {
 		if (method.instructions.size() == 2 && getParamCount(method) == 0) {
 			final int firstOp = method.instructions.getFirst().getOpcode();
-			if ((firstOp >= ACONST_NULL && firstOp <= LDC) || firstOp == GETSTATIC) {
+			if (isConstantLoad(firstOp) || firstOp == GETSTATIC) {
 				// loading static field or constant
 				final int secondOp = method.instructions.getLast().getOpcode();
 				// returning value
@@ -155,6 +193,10 @@ public class DelegatingMethodsIndex extends Index {
 		}
 
 		return false;
+	}
+
+	private static boolean isConstantLoad(int opcode) {
+		return opcode >= ACONST_NULL && opcode <= LDC;
 	}
 
 	private static int getParamCount(MethodNode method) {

@@ -34,13 +34,17 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma.util.validation.ValidationContext;
+import org.quiltmc.enigma_plugin.proposal.DelegatingMethodNameProposer;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 public class NameProposalTest {
 	private static final Path JAR = Path.of("build/obf/obf.jar");
 	private static final Path PROFILE = Path.of("build/resources/testInputs/profile.json");
+	private static final String[] NO_STRINGS = new String[0];
+
 	private static EntryRemapper remapper;
 
 	@BeforeAll
@@ -389,8 +393,129 @@ public class NameProposalTest {
 		assertNotProposed(localVar(method, 2));
 	}
 
+	@Test
+	public void testDelegatingMethodNames() {
+		final String testClassName = "com/a/f";
+		final ClassEntry testClass = new ClassEntry(testClassName);
+
+		final String test = typeNameToDesc(testClassName);
+		final String obj = typeNameToDesc("java/lang/Object");
+		final String str = typeNameToDesc("java/lang/String");
+		final String enm = typeNameToDesc("java/lang/Enum");
+		final String i = "I";
+		final String j = "J";
+		final String f = "F";
+		final String b = "B";
+		final String c = "C";
+		final String v = "V";
+
+		final ValidationContext context = new ValidationContext(null);
+
+		final String statics = "statics";
+		final MethodEntry staticRoot = method(testClass, "a", obj, test, obj, i, j);
+		remapper.putMapping(context, staticRoot, new EntryMapping(statics));
+		// staticDelegating
+		assertDynamicProposal(statics, method(testClass, "a", obj, test, i, j));
+		// instanceDelegating
+		assertDynamicProposal(statics, method(testClass, "a", obj, obj, j));
+
+		final String voids = "voids";
+		final MethodEntry voidRoot = method(testClass, "a", v, obj, i, j);
+		remapper.putMapping(context, voidRoot, new EntryMapping(voids));
+		// voidDelegating
+		assertDynamicProposal(voids, method(testClass, "a", v, obj, i));
+
+		final String strings = "strings";
+		final MethodEntry stringRoot = method(testClass, "b", str, obj, i, j);
+		remapper.putMapping(context, stringRoot, new EntryMapping(strings));
+		// delegatingReusedParam
+		assertDynamicProposal(strings, method(testClass, "b", str, obj, i));
+		// delegatingInlineLiteral
+		assertDynamicProposal(strings, method(testClass, "b", str, obj, j));
+		// doublyDelegating
+		method(testClass, "a", str, i, j);
+		// delegatingMixed1
+		method(testClass, "a", str, obj);
+		// delegatingMixed2
+		method(testClass, "a", str, j);
+		// delegatingMixed3
+		method(testClass, "a", str, i);
+
+		final String enums = "enums";
+		final MethodEntry enumRoot = method(testClass, "c", enm, obj, i, j);
+		remapper.putMapping(context, enumRoot, new EntryMapping(enums));
+		// delegatingLocalLiteral
+		method(testClass, "c", enm, obj, i);
+		// delegatingFinalLocalLiteral
+		method(testClass, "c", enm, obj, j);
+		// delegatingInlineStaticField
+		assertDynamicProposal(enums, method(testClass, "b", enm, i, j));
+
+		final String ints = "ints";
+		final MethodEntry intRoot = method(testClass, "d", i, obj, i, j);
+		remapper.putMapping(context, intRoot, new EntryMapping(ints));
+		// delegatingLocalStaticField
+		method(testClass, "c", i, i, j);
+		// delegatingInlineField
+		assertDynamicProposal(ints, method(testClass, "d", i, obj, j));
+		// delegatingLocalField
+		method(testClass, "a", i, obj, f);
+		// delegatingInlineGetter
+		method(testClass, "a", i, obj, b);
+
+		final String chars = "chars";
+		final MethodEntry charRoot = method(testClass, "e", c, obj, i, j);
+		// delegatingLocalGetter
+		method(testClass, "e", c, obj, j);
+		// delegatingInlineLiteralGetter
+		method(testClass, "d", c, obj, i);
+		// delegatingLocalLiteralGetter
+		method(testClass, "b", c, obj, b);
+		// delegatingInlineStaticFieldGetter
+		method(testClass, "d", c, i, j);
+		// delegatingLocalStaticFieldGetter
+		method(testClass, "b", c, i);
+
+		Stream
+				.of(
+					// conflictWithDelegate
+					method(testClass, "f", str, obj, i, j),
+					// conflictWithCoDelegater1
+					method(testClass, "a", str, str),
+					// conflictWithCoDelegater2
+					method(testClass, "b", str, str),
+					// wrongReturn
+					method(testClass, "e", v, i, j),
+					// extraCall
+					method(testClass, "f", str, obj, j),
+					// nonGetterCall
+					method(testClass, "f", str, i, j),
+					// extraArithmetic
+					method(testClass, "e", str, obj, i),
+					// extraCheck
+					method(testClass, "g", str, i, j),
+					// noParamsToParams
+					method(testClass, "g", "()" + str),
+					// moreParams
+					method(testClass, "a", v, obj, i, j, str)
+				)
+				.forEach(entry -> assertNotProposedBy(entry, DelegatingMethodNameProposer.ID));
+	}
+
+	private static String methodDescOf(String returnDesc, String... paramDescriptors) {
+		return "(" + String.join("", paramDescriptors) + ")" + returnDesc;
+	}
+
+	private static String typeNameToDesc(String name) {
+		return "L" + name + ";";
+	}
+
 	private static FieldEntry field(ClassEntry parent, String name, String desc) {
 		return new FieldEntry(parent, name, new TypeDescriptor(desc));
+	}
+
+	private static MethodEntry method(ClassEntry parent, String name, String returnDesc, String... paramDescriptors) {
+		return new MethodEntry(parent, name, new MethodDescriptor(methodDescOf(returnDesc, paramDescriptors)));
 	}
 
 	private static MethodEntry method(ClassEntry parent, String name, String desc) {
