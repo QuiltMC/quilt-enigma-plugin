@@ -52,37 +52,31 @@ public class DelegatingMethodIndex extends Index {
 
 	@Override
 	public void visitClassNode(ClassProvider classProvider, ClassNode clazz) {
-		// DEBUG TODO
-		if (clazz.name.equals("com/a/f")) {
-			final ClassEntry classEntry = new ClassEntry(clazz.name);
-			final Map<MethodEntry, Set<List<TypeDescriptor>>> conflictingDelegaterParamDescriptorsByDelegate = new HashMap<>();
-			for (final MethodNode method : clazz.methods) {
-				this.getDelegation(classProvider, clazz, classEntry, method).ifPresent(delegation -> {
-					final List<MethodEntry> delegaters = this.delegatersByDelegate.get(delegation.delegate);
-					if (delegaters != null) {
-						if (delegaters.removeIf(delegation.delegater::canConflictWith)) {
-							// new conflict
-							conflictingDelegaterParamDescriptorsByDelegate
-									.computeIfAbsent(delegation.delegate, ignored -> new HashSet<>())
-									.add(delegation.delegater.getDesc().getTypeDescs());
-						} else {
-							final Set<List<TypeDescriptor>> conflictParamsDescriptors =
-									conflictingDelegaterParamDescriptorsByDelegate.getOrDefault(delegation.delegate, Set.of());
-							if (!conflictParamsDescriptors.contains(delegation.delegater.getDesc().getTypeDescs())) {
-								delegaters.add(delegation.delegater);
-							}
-							// else additional conflict
-						}
+		final ClassEntry classEntry = new ClassEntry(clazz.name);
+		final Map<MethodEntry, Set<List<TypeDescriptor>>> conflictingDelegaterParamDescriptorsByDelegate = new HashMap<>();
+		for (final MethodNode method : clazz.methods) {
+			this.getDelegation(classProvider, clazz, classEntry, method).ifPresent(delegation -> {
+				final List<MethodEntry> delegaters = this.delegatersByDelegate.get(delegation.delegate);
+				if (delegaters != null) {
+					if (delegaters.removeIf(delegation.delegater::canConflictWith)) {
+						// new conflict
+						conflictingDelegaterParamDescriptorsByDelegate
+								.computeIfAbsent(delegation.delegate, ignored -> new HashSet<>())
+								.add(delegation.delegater.getDesc().getTypeDescs());
 					} else {
-						final List<MethodEntry> newDelegaters = new ArrayList<>();
-						newDelegaters.add(delegation.delegater);
-						this.delegatersByDelegate.put(delegation.delegate, newDelegaters);
+						final Set<List<TypeDescriptor>> conflictParamsDescriptors =
+								conflictingDelegaterParamDescriptorsByDelegate.getOrDefault(delegation.delegate, Set.of());
+						if (!conflictParamsDescriptors.contains(delegation.delegater.getDesc().getTypeDescs())) {
+							delegaters.add(delegation.delegater);
+						}
+						// else additional conflict
 					}
-				});
-			}
-			// DEBUG TODO
-			int i = 0;
-			byte b = 0;
+				} else {
+					final List<MethodEntry> newDelegaters = new ArrayList<>();
+					newDelegaters.add(delegation.delegater);
+					this.delegatersByDelegate.put(delegation.delegate, newDelegaters);
+				}
+			});
 		}
 	}
 
@@ -121,19 +115,6 @@ public class DelegatingMethodIndex extends Index {
 
 		if (delegateEntry.canConflictWith(delegaterEntry)) {
 			return Optional.empty();
-		}
-
-		final int lastDelegateParamIndex = delegateParams.get(delegateParams.size() - 1).getIndex();
-
-		// DEBUG TODO
-		final List<AbstractInsnNode> instructions = new ArrayList<>();
-		method.instructions.forEach(instructions::add);
-		if (method.name.equals("a") && method.desc.equals("(IJ)Ljava/lang/String;")) {
-			int i = 0;
-		}
-
-		if (method.name.equals("e") && method.desc.equals("(Ljava/lang/Object;I)F")) {
-			int i = 0;
 		}
 
 		AbstractInsnNode prevInstruction = lastCall.getPrevious();
@@ -179,8 +160,6 @@ public class DelegatingMethodIndex extends Index {
 
 			prevInstruction = prevInstruction.getPrevious();
 		}
-		// DEBUG TODO
-		instructions.get(0);
 
 		return Optional.of(new Delegation(delegateEntry, delegaterEntry));
 	}
