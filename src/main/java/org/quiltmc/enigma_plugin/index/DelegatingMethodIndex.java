@@ -85,6 +85,7 @@ public class DelegatingMethodIndex extends Index {
 						if (!conflictParamsDescriptors.contains(delegation.delegater.getDesc().getTypeDescs())) {
 							delegaters.add(delegation.delegater);
 						}
+
 						// else additional conflict
 					}
 				} else {
@@ -140,13 +141,14 @@ public class DelegatingMethodIndex extends Index {
 			if (prevOp < ILOAD || prevOp > SALOAD) {
 				if (prevOp >= ISTORE && prevOp <= SASTORE) {
 					if (
-						// do not allow storing to any array
-						prevOp > ASTORE
-							// only allow storing to locals
-							|| !(prevInstruction instanceof VarInsnNode)
+							// do not allow storing to any array
+							prevOp > ASTORE
+								// only allow storing to locals
+								|| !(prevInstruction instanceof VarInsnNode)
 					) {
 						return Optional.empty();
 					}
+
 					// else storing local: OK
 				} else if (prevInstruction instanceof MethodInsnNode call) {
 					if (!isPrimitiveBoxOrUnbox(call)) {
@@ -160,15 +162,18 @@ public class DelegatingMethodIndex extends Index {
 							return Optional.empty();
 						}
 					}
+
 					// else getter or un/box: OK
 				} else {
-					if (!(
-						isConstantLoad(prevOp)
-							|| prevOp == GETSTATIC
-							|| prevOp == GETFIELD
-							// primitive cast
-							|| (prevOp >= I2L && prevOp <= I2S)
-					)) {
+					if (
+							!(
+								isConstantLoad(prevOp)
+									|| prevOp == GETSTATIC
+									|| prevOp == GETFIELD
+									// primitive cast
+									|| (prevOp >= I2L && prevOp <= I2S)
+							)
+					) {
 						return Optional.empty();
 					}
 				}

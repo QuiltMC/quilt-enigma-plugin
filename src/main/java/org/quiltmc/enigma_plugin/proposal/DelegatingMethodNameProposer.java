@@ -51,14 +51,14 @@ public class DelegatingMethodNameProposer extends NameProposer {
 				final EntryMapping mapping = remapper.getMapping(delegate);
 				if (mapping.targetName() != null) {
 					delegaters.forEach(delegater ->
-						this.insertDelegaterName(delegater, remapper, mappings, mapping.targetName())
+							this.insertDelegaterName(delegater, remapper, mappings, mapping.targetName())
 					);
 				}
 			});
 		} else if (obfEntry instanceof MethodEntry method) {
 			if (newMapping.targetName() != null) {
 				this.index.streamDelegaters(method).forEach(delegater ->
-					this.insertDelegaterName(delegater, remapper, mappings, newMapping.targetName())
+						this.insertDelegaterName(delegater, remapper, mappings, newMapping.targetName())
 				);
 			}
 		}
@@ -77,7 +77,7 @@ public class DelegatingMethodNameProposer extends NameProposer {
 			this.insertDynamicProposal(mappings, delegater, mapping);
 			// recur down the chain of delegaters
 			this.index.streamDelegaters(delegater).forEach(outerDelegater ->
-				this.insertDelegaterNameImpl(outerDelegater, delegateParamDescriptors, remapper, mappings, mapping)
+					this.insertDelegaterNameImpl(outerDelegater, delegateParamDescriptors, remapper, mappings, mapping)
 			);
 		}
 	}

@@ -34,14 +34,10 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma.util.validation.ValidationContext;
-import org.quiltmc.enigma_plugin.index.DelegatingMethodIndex;
-import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.quiltmc.enigma_plugin.proposal.DelegatingMethodNameProposer;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 public class NameProposalTest {
 	private static final Path JAR = Path.of("build/obf/obf.jar");
@@ -508,7 +504,6 @@ public class NameProposalTest {
 			// delegatingChain2
 			assertDynamicProposal(chains, method(testClass, "a", b, b, c, c));
 		}
-
 
 		final MethodEntry conflictWithChainAncestor = method(testClass, "b", b, b, c, i);
 		final MethodEntry childOfConflictWithChainAncestor = method(testClass, "a", b, b);
