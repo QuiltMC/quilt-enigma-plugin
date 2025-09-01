@@ -412,8 +412,8 @@ public class NameProposalTest {
 
 		final ValidationContext context = new ValidationContext(null);
 
-		final String statics = "statics";
 		final MethodEntry staticRoot = method(testClass, "a", obj, test, obj, i, j);
+		final String statics = "statics";
 		remapper.putMapping(context, staticRoot, new EntryMapping(statics));
 		// staticDelegating
 		assertDynamicProposal(statics, method(testClass, "a", obj, test, i, j));
@@ -433,12 +433,12 @@ public class NameProposalTest {
 		assertDynamicProposal(strings, method(testClass, "b", str, obj, i));
 		// delegatingInlineLiteral
 		assertDynamicProposal(strings, method(testClass, "b", str, obj, j));
-		// delegatingMixed1 TODO
-		method(testClass, "a", str, obj);
-		// delegatingMixed2 TODO
-		method(testClass, "a", str, j);
-		// delegatingMixed3 TODO
-		method(testClass, "a", str, i);
+		// delegatingMixed1
+		assertDynamicProposal(strings, method(testClass, "a", str, obj));
+		// delegatingMixed2
+		assertDynamicProposal(strings, method(testClass, "a", str, j));
+		// delegatingMixed3
+		assertDynamicProposal(strings, method(testClass, "a", str, i));
 
 		final String enums = "enums";
 		final MethodEntry enumRoot = method(testClass, "c", enm, obj, i, j);
@@ -459,22 +459,22 @@ public class NameProposalTest {
 		assertDynamicProposal(ints, method(testClass, "d", i, obj, j));
 		// delegatingLocalField
 		assertDynamicProposal(ints, method(testClass, "a", i, obj, f));
-		// delegatingInlineGetter TODO
-		method(testClass, "a", i, obj, b);
+		// delegatingInlineGetter
+		assertDynamicProposal(ints, method(testClass, "a", i, obj, b));
 
 		final String chars = "chars";
 		final MethodEntry charRoot = method(testClass, "e", c, obj, i, j);
 		remapper.putMapping(context, charRoot, new EntryMapping(chars));
-		// delegatingLocalGetter TODO
-		method(testClass, "e", c, obj, j);
-		// delegatingInlineLiteralGetter TODO
-		method(testClass, "d", c, obj, i);
-		// delegatingLocalLiteralGetter TODO
-		method(testClass, "b", c, obj, b);
-		// delegatingInlineStaticFieldGetter TODO
-		method(testClass, "c", c, i, j);
-		// delegatingLocalStaticFieldGetter TODO
-		method(testClass, "b", c, i);
+		// delegatingLocalGetter
+		assertDynamicProposal(chars, method(testClass, "e", c, obj, j));
+		// delegatingInlineLiteralGetter
+		assertDynamicProposal(chars, method(testClass, "d", c, obj, i));
+		// delegatingLocalLiteralGetter
+		assertDynamicProposal(chars, method(testClass, "b", c, obj, b));
+		// delegatingInlineStaticFieldGetter
+		assertDynamicProposal(chars, method(testClass, "c", c, i, j));
+		// delegatingLocalStaticFieldGetter
+		assertDynamicProposal(chars, method(testClass, "b", c, i));
 		// delegatingUnboxing
 		assertDynamicProposal(chars, method(testClass, "b", c, j));
 
@@ -528,12 +528,10 @@ public class NameProposalTest {
 				)
 				.forEach(entry -> assertNotProposedBy(entry, DelegatingMethodNameProposer.ID));
 
+		// allow propagation down a delegater chain if the conflict occurred above the explicitly named delegater
 		final String chainConflict = "chainConflict";
 		remapper.putMapping(context, conflictWithChainAncestor, new EntryMapping(chainConflict));
 		assertDynamicProposal(chainConflict, childOfConflictWithChainAncestor);
-		
-		/*
-		 */
 	}
 
 	private static String methodDescOf(String returnDesc, String... paramDescriptors) {

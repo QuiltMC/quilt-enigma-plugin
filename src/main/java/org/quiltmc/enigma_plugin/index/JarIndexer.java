@@ -40,11 +40,10 @@ public class JarIndexer implements JarIndexerService, Opcodes {
 		this.addIndex(new ConstantFieldIndex());
 		this.addIndex(new CodecIndex());
 		this.addIndex(new ConstructorParametersIndex());
-		final GetterSetterIndex getterSetterIndex = new GetterSetterIndex();
-		this.addIndex(getterSetterIndex);
+		this.addIndex(new GetterSetterIndex());
 		this.addIndex(new SimpleTypeSingleIndex());
 		this.addIndex(new DelegateParametersIndex());
-		this.addIndex(new DelegatingMethodIndex(getterSetterIndex));
+		this.addIndex(new DelegatingMethodIndex());
 		this.addIndex(new LoggerIndex());
 	}
 

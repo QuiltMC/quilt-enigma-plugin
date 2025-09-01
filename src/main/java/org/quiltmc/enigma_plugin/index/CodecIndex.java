@@ -236,7 +236,7 @@ public class CodecIndex extends Index {
 
 			// Try to find and name the field from the getter
 			AsmUtil.getMethod(parent, getterHandle.getName(), getterHandle.getDesc())
-					.flatMap(m -> AsmUtil.getFieldFromGetter(parent, m))
+					.flatMap(m -> AsmUtil.getOwnedFieldFromGetter(parent, m))
 					.ifPresent(f -> {
 						var fieldEntry = new FieldEntry(parentEntry, f.name, new TypeDescriptor(f.desc));
 						this.fieldNames.put(fieldEntry, camelCaseName);
@@ -272,7 +272,7 @@ public class CodecIndex extends Index {
 
 				// Try to find and name the field from the getter
 				AsmUtil.getMethod(parent, methodInsn.name, methodInsn.desc)
-						.flatMap(m -> AsmUtil.getFieldFromGetter(parent, m))
+						.flatMap(m -> AsmUtil.getOwnedFieldFromGetter(parent, m))
 						.ifPresent(f -> {
 							var fieldEntry = new FieldEntry(parentEntry, f.name, new TypeDescriptor(f.desc));
 							this.fieldNames.put(fieldEntry, camelCaseName);

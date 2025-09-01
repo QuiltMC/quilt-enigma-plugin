@@ -65,7 +65,7 @@ public class GetterSetterIndex extends Index {
 						continue; // Ignore booleans for now.
 					}
 
-					AsmUtil.getFieldFromGetter(node, method)
+					AsmUtil.getOwnedFieldFromGetter(node, method)
 							.ifPresent(field -> {
 								this.linkField(node, method, descriptor, field);
 							});

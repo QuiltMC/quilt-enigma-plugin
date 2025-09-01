@@ -29,14 +29,12 @@ import java.util.stream.Stream;
 public class DelegatingMethodIndex extends Index {
 	private final Map<MethodEntry, List<MethodEntry>> delegatersByDelegate = new HashMap<>();
 
-	private final GetterSetterIndex getterSetterIndex;
 	// includes methods that return constants or static fields
 	private final Map<MethodNode, Boolean> getterCache = new HashMap<>();
 	private EntryIndex entryIndex;
 
-	public DelegatingMethodIndex(GetterSetterIndex getterSetterIndex) {
+	public DelegatingMethodIndex() {
 		super(Arguments.DISABLE_DELEGATING_METHODS);
-		this.getterSetterIndex = getterSetterIndex;
 	}
 
 	public Stream<MethodEntry> streamDelegaters(MethodEntry method) {
@@ -59,7 +57,7 @@ public class DelegatingMethodIndex extends Index {
 			final ClassEntry classEntry = new ClassEntry(clazz.name);
 			final Map<MethodEntry, Set<List<TypeDescriptor>>> conflictingDelegaterParamDescriptorsByDelegate = new HashMap<>();
 			for (final MethodNode method : clazz.methods) {
-				this.getDelegation(clazz, classEntry, method).ifPresent(delegation -> {
+				this.getDelegation(classProvider, clazz, classEntry, method).ifPresent(delegation -> {
 					final List<MethodEntry> delegaters = this.delegatersByDelegate.get(delegation.delegate);
 					if (delegaters != null) {
 						if (delegaters.removeIf(delegation.delegater::canConflictWith)) {
@@ -88,7 +86,7 @@ public class DelegatingMethodIndex extends Index {
 		}
 	}
 
-	private Optional<Delegation> getDelegation(ClassNode clazz, ClassEntry classEntry, MethodNode method) {
+	private Optional<Delegation> getDelegation(ClassProvider classProvider, ClassNode clazz, ClassEntry classEntry, MethodNode method) {
 		if (method.name.equals("<init>") || method.name.equals("<clinit>")) {
 			return Optional.empty();
 		}
@@ -154,10 +152,18 @@ public class DelegatingMethodIndex extends Index {
 					}
 					// else storing local: OK
 				} else if (prevInstruction instanceof MethodInsnNode call) {
-					// TODO allow getters
-					if (!(isPrimitiveBoxOrUnbox(call))) {
-						return Optional.empty();
+					if (!isPrimitiveBoxOrUnbox(call)) {
+						final ClassNode callOwner = classProvider.get(call.owner);
+						if (
+								callOwner == null || AsmUtil
+										.getMethod(callOwner, call.name, call.desc)
+										.filter(this::isGetter)
+										.isEmpty()
+						) {
+							return Optional.empty();
+						}
 					}
+					// else getter or un/box: OK
 				} else {
 					if (!(
 						isConstantLoad(prevOp)
@@ -166,7 +172,6 @@ public class DelegatingMethodIndex extends Index {
 							// primitive cast
 							|| (prevOp >= I2L && prevOp <= I2S)
 					)) {
-						// TODO
 						return Optional.empty();
 					}
 				}
@@ -203,10 +208,9 @@ public class DelegatingMethodIndex extends Index {
 	}
 
 	private boolean isGetter(MethodNode method) {
-		return this.getterCache.computeIfAbsent(method, m -> {
-			// this.getterSetterIndex.getLinkedField(method) != null ||
-			return isNonInstanceGetter(m);
-		});
+		return this.getterCache.computeIfAbsent(method, m ->
+				AsmUtil.getFieldFromGetter(method).isPresent() || isNonInstanceGetter(m)
+		);
 	}
 
 	private static boolean isNonInstanceGetter(MethodNode method) {
