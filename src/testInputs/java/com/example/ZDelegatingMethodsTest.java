@@ -5,6 +5,7 @@ public class ZDelegatingMethodsTest {
 	static byte B = 20;
 
 	int I = 0;
+	long[] LONGS = new long[0];
 
 	Integer I_BOXED = 100;
 
@@ -146,6 +147,14 @@ public class ZDelegatingMethodsTest {
 		return this.charRoot(null, this.I_BOXED, l);
 	}
 
+	float floatRoot(Object o, int i, long l) {
+		return 0.1f;
+	}
+
+	float delegatingArrayLoad(Object o, int i) {
+		return this.floatRoot(o, i, this.LONGS[i]);
+	}
+
 	byte chainRoot(byte b, char c, int i, long l) {
 		return 2;
 	}
@@ -207,5 +216,19 @@ public class ZDelegatingMethodsTest {
 
 	void moreParams(Object o, int i, long l, String s) {
 		this.stringRoot(o, i, l);
+	}
+
+	Enum<?> extraSet(Object o) {
+		this.I = 2;
+		return this.enumRoot(o, 0, 0);
+	}
+
+	Enum<?> extraInlineSet(long l) {
+		return this.enumRoot(l, this.I = 2, l);
+	}
+
+	float extraArraySet(Object o, long l) {
+		this.LONGS[0] = l;
+		return this.floatRoot(o, 0, l);
 	}
 }

@@ -443,22 +443,22 @@ public class NameProposalTest {
 		final String enums = "enums";
 		final MethodEntry enumRoot = method(testClass, "c", enm, obj, i, j);
 		remapper.putMapping(context, enumRoot, new EntryMapping(enums));
-		// delegatingLocalLiteral TODO
-		method(testClass, "c", enm, obj, i);
-		// delegatingFinalLocalLiteral TODO
-		method(testClass, "c", enm, obj, j);
+		// delegatingLocalLiteral
+		assertDynamicProposal(enums, method(testClass, "c", enm, obj, i));
+		// delegatingFinalLocalLiteral
+		assertDynamicProposal(enums, method(testClass, "c", enm, obj, j));
 		// delegatingInlineStaticField
 		assertDynamicProposal(enums, method(testClass, "a", enm, i, j));
 
 		final String ints = "ints";
 		final MethodEntry intRoot = method(testClass, "d", i, obj, i, j);
 		remapper.putMapping(context, intRoot, new EntryMapping(ints));
-		// delegatingLocalStaticField TODO
-		method(testClass, "b", i, i, j);
+		// delegatingLocalStaticField
+		assertDynamicProposal(ints, method(testClass, "b", i, i, j));
 		// delegatingInlineField
 		assertDynamicProposal(ints, method(testClass, "d", i, obj, j));
-		// delegatingLocalField TODO
-		method(testClass, "a", i, obj, f);
+		// delegatingLocalField
+		assertDynamicProposal(ints, method(testClass, "a", i, obj, f));
 		// delegatingInlineGetter TODO
 		method(testClass, "a", i, obj, b);
 
@@ -478,6 +478,12 @@ public class NameProposalTest {
 		// delegatingUnboxing
 		assertDynamicProposal(chars, method(testClass, "b", c, j));
 
+		final String floats = "floats";
+		final MethodEntry floatRoot = method(testClass, "f", f, obj, i, j);
+		remapper.putMapping(context, floatRoot, new EntryMapping(floats));
+		// delegatingArrayLoad
+		assertDynamicProposal(floats, method(testClass, "e", f, obj, i));
+
 		final String chains = "chains";
 		final MethodEntry chainRoot = method(testClass, "a", b, b, c, i, j);
 		remapper.putMapping(context, chainRoot, new EntryMapping(chains));
@@ -492,33 +498,42 @@ public class NameProposalTest {
 		Stream
 				.of(
 					// conflictWithDelegate
-					method(testClass, "f", str, obj, i, j),
+					method(testClass, "g", str, obj, i, j),
 					// conflictWithCoDelegater1
 					method(testClass, "a", str, str),
 					// conflictWithCoDelegater2
 					method(testClass, "b", str, str),
+					conflictWithChainAncestor,
+					childOfConflictWithChainAncestor,
 					// wrongReturn
 					method(testClass, "d", v, i, j),
 					// extraCall
 					method(testClass, "f", str, obj, j),
 					// nonGetterCall
 					method(testClass, "e", str, i, j),
-					conflictWithChainAncestor,
-					childOfConflictWithChainAncestor,
 					// extraArithmetic
-					method(testClass, "e", str, obj, i),
+					method(testClass, "f", str, obj, i),
 					// extraCheck
 					method(testClass, "f", str, i, j),
 					// noParamsToParams
 					method(testClass, "g", "()" + str),
 					// moreParams
-					method(testClass, "a", v, obj, i, j, str)
+					method(testClass, "a", v, obj, i, j, str),
+					// extraSet
+					method(testClass, "b", enm, obj),
+					// extraInlineSet
+					method(testClass, "c", enm, j),
+					// extraArraySet
+					method(testClass, "g", f, obj, j)
 				)
 				.forEach(entry -> assertNotProposedBy(entry, DelegatingMethodNameProposer.ID));
 
 		final String chainConflict = "chainConflict";
 		remapper.putMapping(context, conflictWithChainAncestor, new EntryMapping(chainConflict));
 		assertDynamicProposal(chainConflict, childOfConflictWithChainAncestor);
+		
+		/*
+		 */
 	}
 
 	private static String methodDescOf(String returnDesc, String... paramDescriptors) {

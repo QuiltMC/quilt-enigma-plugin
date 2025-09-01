@@ -134,40 +134,41 @@ public class DelegatingMethodIndex extends Index {
 			int i = 0;
 		}
 
-		if (method.name.equals("b") && method.desc.equals("(J)C")) {
+		if (method.name.equals("e") && method.desc.equals("(Ljava/lang/Object;I)F")) {
 			int i = 0;
 		}
 
 		AbstractInsnNode prevInstruction = lastCall.getPrevious();
 		while (prevInstruction != null) {
-			if (prevInstruction instanceof VarInsnNode var) {
-				final int varOp = var.getOpcode();
-				if (varOp >= ILOAD && varOp <= ALOAD) {
-					if (var.var > lastDelegateParamIndex) {
-						// TODO
+			final int prevOp = prevInstruction.getOpcode();
+			// all loading: OK
+			if (prevOp < ILOAD || prevOp > SALOAD) {
+				if (prevOp >= ISTORE && prevOp <= SASTORE) {
+					if (
+						// do not allow storing to any array
+						prevOp > ASTORE
+							// only allow storing to locals
+							|| !(prevInstruction instanceof VarInsnNode)
+					) {
 						return Optional.empty();
 					}
-					// else loading param to pass to finalCallMethod: OK
+					// else storing local: OK
+				} else if (prevInstruction instanceof MethodInsnNode call) {
+					// TODO allow getters
+					if (!(isPrimitiveBoxOrUnbox(call))) {
+						return Optional.empty();
+					}
 				} else {
-					// TODO
-					return Optional.empty();
-				}
-			} else if (prevInstruction instanceof MethodInsnNode call) {
-				// TODO allow getters
-				if (!(isPrimitiveBoxOrUnbox(call))) {
-					return Optional.empty();
-				}
-			} else {
-				final int prevOp = prevInstruction.getOpcode();
-				if (!(
+					if (!(
 						isConstantLoad(prevOp)
 							|| prevOp == GETSTATIC
 							|| prevOp == GETFIELD
 							// primitive cast
 							|| (prevOp >= I2L && prevOp <= I2S)
-				)) {
-					// TODO
-					return Optional.empty();
+					)) {
+						// TODO
+						return Optional.empty();
+					}
 				}
 			}
 
