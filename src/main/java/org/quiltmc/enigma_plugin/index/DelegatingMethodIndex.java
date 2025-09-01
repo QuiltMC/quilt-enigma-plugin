@@ -1,4 +1,4 @@
-package org.quiltmc.enigma_plugin.index.delegating_method;
+package org.quiltmc.enigma_plugin.index;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -14,8 +14,6 @@ import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.Arguments;
-import org.quiltmc.enigma_plugin.index.GetterSetterIndex;
-import org.quiltmc.enigma_plugin.index.Index;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 
 import java.util.ArrayList;
@@ -232,5 +230,5 @@ public class DelegatingMethodIndex extends Index {
 		return method.parameters == null ? 0 : method.parameters.size();
 	}
 
-	static record Delegation(MethodEntry delegate, MethodEntry delegater) { }
+	record Delegation(MethodEntry delegate, MethodEntry delegater) { }
 }

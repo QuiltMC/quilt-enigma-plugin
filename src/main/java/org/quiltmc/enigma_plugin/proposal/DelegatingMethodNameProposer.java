@@ -4,17 +4,21 @@ import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
+import org.quiltmc.enigma.api.translation.representation.TypeDescriptor;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
-import org.quiltmc.enigma_plugin.index.delegating_method.DelegatingMethodIndex;
+import org.quiltmc.enigma_plugin.index.DelegatingMethodIndex;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DelegatingMethodNameProposer extends NameProposer {
 	public static final String ID = "delegating_method";
 
-	private final DelegatingMethodIndex index;
+	final DelegatingMethodIndex index;
 
 	public DelegatingMethodNameProposer(JarIndexer index) {
 		super(ID);
@@ -31,21 +35,34 @@ public class DelegatingMethodNameProposer extends NameProposer {
 				final EntryMapping mapping = remapper.getMapping(delegate);
 				if (mapping.targetName() != null) {
 					delegaters.forEach(delegater ->
-						this.insertDelegaterName(delegater, mappings, new EntryMapping(mapping.targetName()))
+						this.insertDelegaterName(delegater, remapper, mappings, mapping.targetName())
 					);
 				}
 			});
 		} else if (obfEntry instanceof MethodEntry method) {
 			if (newMapping.targetName() != null) {
 				this.index.streamDelegaters(method).forEach(delegater ->
-					this.insertDelegaterName(delegater, mappings, new EntryMapping(newMapping.targetName()))
+					this.insertDelegaterName(delegater, remapper, mappings, newMapping.targetName())
 				);
 			}
 		}
 	}
 
-	private void insertDelegaterName(MethodEntry delegater, Map<Entry<?>, EntryMapping> mappings, EntryMapping mapping) {
-		this.insertDynamicProposal(mappings, delegater, mapping);
-		this.index.streamDelegaters(delegater).forEach(outerDelegater -> this.insertDelegaterName(outerDelegater, mappings, mapping));
+	private void insertDelegaterName(MethodEntry delegater, EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings, String name) {
+		this.insertDelegaterNameImpl(delegater, new HashSet<>(), remapper, mappings, new EntryMapping(name));
+	}
+
+	private void insertDelegaterNameImpl(
+			MethodEntry delegater, Set<List<TypeDescriptor>> delegateParamDescriptors,
+			EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings, EntryMapping mapping
+	) {
+		// stop propagation if delegater is named or would conflict with a delegate earlier in the chain
+		if (remapper.getMapping(delegater).targetName() == null && delegateParamDescriptors.add(delegater.getDesc().getTypeDescs())) {
+			this.insertDynamicProposal(mappings, delegater, mapping);
+			// recur down the chain of delegaters
+			this.index.streamDelegaters(delegater).forEach(outerDelegater ->
+				this.insertDelegaterNameImpl(outerDelegater, delegateParamDescriptors, remapper, mappings, mapping)
+			);
+		}
 	}
 }

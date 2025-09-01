@@ -62,10 +62,6 @@ public class ZDelegatingMethodsTest {
 		return this.stringRoot(o, 2, l);
 	}
 
-	String doublyDelegating(int i, long l) {
-		return this.delegatingInlineLiteral(i, l);
-	}
-
 	String delegatingMixed1(Object o) {
 		long l = this.getLiteralL1();
 		return this.stringRoot(o, this.I, l);
@@ -150,6 +146,18 @@ public class ZDelegatingMethodsTest {
 		return this.charRoot(null, this.I_BOXED, l);
 	}
 
+	byte chainRoot(byte b, char c, int i, long l) {
+		return 2;
+	}
+
+	byte delegatingChain1(byte b, char c, int i) {
+		return this.chainRoot(b, c, i, i);
+	}
+
+	byte delegatingChain2(byte b, char c1, char c2) {
+		return this.delegatingChain1(b, c1, c2);
+	}
+
 	// NON-DELEGATING
 
 	String conflictWithDelegate(Object o, int i, long l) {
@@ -162,6 +170,14 @@ public class ZDelegatingMethodsTest {
 
 	String conflictWithCoDelegater2(String s) {
 		return this.stringRoot(s, 100, -2);
+	}
+
+	byte conflictWithChainAncestor(byte b, char c, int i) {
+		return this.delegatingChain2(b, c, (char) i);
+	}
+
+	byte childOfConflictWithChainAncestor(byte b) {
+		return this.conflictWithChainAncestor(b, (char) b, b);
 	}
 
 	void wrongReturn(int i, long l) {
