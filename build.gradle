@@ -224,8 +224,8 @@ tasks.register('diffQMap') {
 		EXEC.exec {
 			workingDir(qmapDest.get().asFile)
 
-			executable System.properties['os.name'].toLowerCase().contains('windows') ? 'gradlew.bat' : './gradlew'
-			// executable 'gradlew.bat'
+			executable System.properties['os.name'].toLowerCase().contains('windows') ? './gradlew.bat' : './gradlew'
+
 			args 'diffTarget', '--refresh-dependencies', '--dest', output.get().asFile
 		}
 	}
