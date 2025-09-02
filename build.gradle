@@ -203,6 +203,11 @@ tasks.register('setupQMap') {
 			}
 		}
 
+		EXEC.exec {
+			executable 'chmod'
+			args '-f', '+x', dest.resolve('gradlew.bat')
+		}
+
 		final versionsFile = dest.resolve('gradle/libs.versions.toml').toFile()
 		final enigmaPlugin = 'enigma_plugin'
 		final versionMatcher = versionsFile.text =~ /(?<=$enigmaPlugin = ").*(?=")/
@@ -223,7 +228,7 @@ tasks.register('diffQMap') {
 	doLast {
 		EXEC.exec {
 			workingDir(qmapDest.get().asFile)
-			executable 'gradlew.bat'
+			executable './gradlew.bat'
 			args 'diffTarget', '--refresh-dependencies', '--dest', output.get().asFile
 		}
 	}
