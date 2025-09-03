@@ -22,3 +22,19 @@
 
 - fix possible CME in conflict fixing
 - increase unit testing for conflict fixing
+
+# 2.4.0
+
+- implement mojang mapping proposal ([#16](https://github.com/QuiltMC/quilt-enigma-plugin/pull/16))
+  - consists of 2 components
+  - mojmap package proposer
+    - proposes packages based on the package structure of mojmap
+    - allows editing of names based on a JSON file, but structure is immutable and controlled by mojmap
+  - mojmap name proposer
+    - proposes fallback names based on mojmap for methods, fields and classes
+    - does not provide parameters as mojmap does not include them
+  - fully documented in javadoc and unit tested
+- add `diffQMap` task ([#23](https://github.com/QuiltMC/quilt-enigma-plugin/pull/23))
+  - allows testing of plugin updates by comparing against current QM
+- fix and improve proposal for non-hashed names ([#22](https://github.com/QuiltMC/quilt-enigma-plugin/pull/22))
+  - solves weird diffs when updating plugin in QM
