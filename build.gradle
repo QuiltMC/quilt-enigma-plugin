@@ -1,3 +1,6 @@
+import java.nio.file.Files
+import java.util.regex.Pattern
+
 buildscript {
 	repositories {
 		mavenCentral()
@@ -17,7 +20,14 @@ plugins {
 version '2.3.1'
 group 'org.quiltmc'
 
-version = version + (System.getenv("GITHUB_ACTIONS") ? "" : "+local")
+final ENV = System.getenv()
+interface ExecProvider {
+	@javax.inject.Inject
+	ExecOperations getOperations()
+}
+final EXEC = objects.newInstance(ExecProvider).operations
+
+version = version + (ENV.GITHUB_ACTIONS ? '' : '+local')
 
 sourceSets {
 	testInputs
@@ -75,7 +85,8 @@ var obfJar = file('build/obf/obf.jar')
 var mappings = file('testMappings/')
 var profile = file('build/resources/testInputs/profile.json')
 
-task testEnigma(type: JavaExec, dependsOn: ["obfuscateTestInputs", "processTestInputsResources"]) {
+tasks.register('testEnigma', JavaExec) {
+	dependsOn "obfuscateTestInputs", "processTestInputsResources"
 	mainClass = "org.quiltmc.enigma.gui.Main"
 	classpath = files(configurations.enigmaRuntime) + sourceSets.test.runtimeClasspath
 
@@ -85,14 +96,14 @@ task testEnigma(type: JavaExec, dependsOn: ["obfuscateTestInputs", "processTestI
 	}
 }
 
-task testInputsJar(type: Jar) {
+tasks.register('testInputsJar', Jar) {
 	from sourceSets.testInputs.output
 
 	archiveFileName = "input.jar"
 	destinationDirectory = file("build/obf")
 }
 
-task obfuscateTestInputs(type: proguard.gradle.ProGuardTask) {
+tasks.register('obfuscateTestInputs', proguard.gradle.ProGuardTask) {
 	dependsOn testInputsJar
 
 	verbose
@@ -120,6 +131,106 @@ task obfuscateTestInputs(type: proguard.gradle.ProGuardTask) {
 
 tasks.test.dependsOn obfuscateTestInputs, processTestInputsResources
 
+static void replaceRegion(File file, String replacement, int start, int end) {
+	file.text = replaceRegion(file.text, replacement, start, end)
+}
+
+static String replaceRegion(String string, String replacement, int start, int end) {
+	return string.substring(0, start) + replacement + string.substring(end)
+}
+
+final qmapDest = layout.buildDirectory.dir('quilt-mappings')
+tasks.register('setupQMap') {
+	final projectVersion = project.version
+
+	dependsOn publishToMavenLocal
+
+	final execGit = { Action<ExecSpec> action ->
+		final dest = qmapDest.get().asFile
+		dest.mkdirs()
+
+		EXEC.exec {
+			workingDir dest
+			executable 'git'
+			action(it)
+		}
+	}
+
+	inputs.property('projectVersion', projectVersion)
+	outputs.tap {
+		dir(qmapDest)
+		upToDateWhen {
+			final dest = qmapDest.get().asFile.toPath()
+			if (!Files.exists(dest.resolve('.git'))) {
+				return false
+			}
+
+			execGit { it.args 'fetch' }
+
+			final localHash = new ByteArrayOutputStream()
+			execGit {
+				it.args 'rev-parse', 'HEAD'
+				it.standardOutput = localHash
+			}
+
+			final originHash = new ByteArrayOutputStream()
+			execGit {
+				it.args 'rev-parse', 'origin/HEAD'
+				it.standardOutput = originHash
+			}
+
+			return originHash.toString() == localHash.toString()
+		}
+	}
+
+	doLast {
+		final dest = qmapDest.get().asFile.toPath()
+
+		if (Files.isDirectory(dest.resolve('.git'))) {
+			execGit {
+				it.args 'reset', '--hard', 'origin/HEAD'
+			}
+		} else {
+			EXEC.exec {
+				executable 'chmod'
+				args '-Rf', '+w', dest
+			}
+
+			dest.deleteDir()
+
+			execGit {
+				it.args 'clone', 'https://github.com/QuiltMC/quilt-mappings', dest
+			}
+		}
+
+		final versionsFile = dest.resolve('gradle/libs.versions.toml').toFile()
+		final enigmaPlugin = 'enigma_plugin'
+		final versionMatcher = versionsFile.text =~ /(?<=$enigmaPlugin = ").*(?=")/
+		if (versionMatcher.find()) {
+			replaceRegion(versionsFile, projectVersion.toString(), versionMatcher.start(), versionMatcher.end())
+		} else {
+			throw new GradleException("Cannot find $enigmaPlugin version.")
+		}
+	}
+}
+
+tasks.register('diffQMap') {
+	dependsOn(setupQMap)
+
+	final output = layout.buildDirectory.file('qmap.diff')
+	outputs.file(output)
+
+	doLast {
+		EXEC.exec {
+			workingDir(qmapDest.get().asFile)
+
+			executable System.properties['os.name'].toLowerCase().contains('windows') ? './gradlew.bat' : './gradlew'
+
+			args 'diffTarget', '--refresh-dependencies', '--dest', output.get().asFile
+		}
+	}
+}
+
 license {
 	rule file('codeformat/FABRIC_MODIFIED_HEADER')
 	rule file('codeformat/HEADER')
@@ -140,7 +251,6 @@ test {
 }
 
 publishing {
-	def ENV = System.getenv()
 	publications {
 		maven(MavenPublication) {
 			from components.java
