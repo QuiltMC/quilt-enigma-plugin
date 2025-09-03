@@ -18,6 +18,7 @@ package org.quiltmc.enigma_plugin.proposal;
 
 import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
+import org.quiltmc.enigma.api.source.TokenType;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
@@ -68,7 +69,7 @@ public class DelegateParametersNameProposer extends NameProposer {
 		if (mapping.targetName() != null && shouldNotIgnoreMapping(mapping)) {
 			return mapping.targetName();
 		} else {
-			mapping = mappings.get(entry);
+			mapping = this.mappingOrNonHashed(entry, mappings.get(entry), TokenType.DYNAMIC_PROPOSED);
 			if (mapping != null && mapping.targetName() != null && shouldNotIgnoreMapping(mapping)) {
 				return mapping.targetName();
 			} else {
@@ -131,11 +132,7 @@ public class DelegateParametersNameProposer extends NameProposer {
 					this.insertDynamicProposal(mappings, parameterNames.get(name), name);
 				}
 			}
-
-			return;
-		}
-
-		if (obfEntry instanceof LocalVariableEntry paramEntry) {
+		} else if (obfEntry instanceof LocalVariableEntry paramEntry) {
 			String name;
 			if (newMapping.targetName() != null) {
 				name = newMapping.targetName();

@@ -25,6 +25,7 @@ import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.analysis.index.mapping.MappingsIndex;
 import org.quiltmc.enigma.api.analysis.index.mapping.PackageIndex;
+import org.quiltmc.enigma.api.source.TokenType;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.mapping.tree.EntryTree;
@@ -152,9 +153,15 @@ public class MappingMergePackageProposer extends NameProposer {
 		String target;
 		String obfPackage = mergeTarget.substring(0, mergeTarget.lastIndexOf('/'));
 
-		if (newMapping != null && newMapping.targetName() != null) {
-			target = mergeTarget.substring(0, mergeTarget.lastIndexOf('/'))
-				+ newMapping.targetName().substring(newMapping.targetName().lastIndexOf('/'));
+		final EntryMapping mapping = this.mappingOrNonHashed(entry, newMapping, TokenType.DYNAMIC_PROPOSED);
+		if (mapping.targetName() != null) {
+			int mappingPackageEnd = mapping.targetName().lastIndexOf('/');
+			if (mappingPackageEnd >= 0) {
+				target = mergeTarget.substring(0, mergeTarget.lastIndexOf('/'))
+					+ mapping.targetName().substring(mappingPackageEnd);
+			} else {
+				target = mergeTarget;
+			}
 		} else {
 			target = mergeTarget;
 		}
