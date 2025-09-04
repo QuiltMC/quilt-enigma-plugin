@@ -125,6 +125,8 @@ public class NameProposalTest {
 		assertProposal("ONE", new FieldEntry(classEntry, "g", desc));
 		assertProposal("TWO", new FieldEntry(classEntry, "h", desc));
 		assertProposal("THREE", new FieldEntry(classEntry, "i", desc));
+		// don't propose 123ABC for INVALID
+		assertNotProposed(field(classEntry, "j", desc.toString()));
 
 		var class2Entry = new ClassEntry("com/a/a/a");
 

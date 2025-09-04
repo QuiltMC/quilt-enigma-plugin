@@ -53,6 +53,20 @@ public class ConstantFieldNameFinder implements Opcodes {
 		return insn.getOpcode() == INVOKESPECIAL && ((MethodInsnNode) insn).name.equals("<init>");
 	}
 
+	private static boolean isValidJavaIdentifier(String id) {
+		if (id.isEmpty() || !Character.isJavaIdentifierStart(id.charAt(0))) {
+			return false;
+		}
+
+		for (int i = 1; i < id.length(); i++) {
+			if (!Character.isJavaIdentifierPart(id.charAt(i))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	private static String processIdentifierPath(String name) {
 		if (name == null) {
 			return null;
@@ -192,7 +206,7 @@ public class ConstantFieldNameFinder implements Opcodes {
 				String s = processIdentifierPath(name);
 				var fieldName = CasingUtil.toSafeScreamingSnakeCase(s);
 
-				if (fieldName == null || fieldName.isEmpty()) {
+				if (fieldName == null || !isValidJavaIdentifier(fieldName)) {
 					continue;
 				}
 

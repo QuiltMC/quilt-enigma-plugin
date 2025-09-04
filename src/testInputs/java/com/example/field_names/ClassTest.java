@@ -10,6 +10,7 @@ public class ClassTest {
 	public static final Something ONE = create(new Something("One"));
 	public static final Something TWO = create(new Something(new Something("Two")));
 	public static final Something THREE = create(new Something(new Something(new Something("Three"))));
+	public static final Something INVALID = create("123ABC");
 
 	private static Something create(String value) {
 		return new Something(value);
