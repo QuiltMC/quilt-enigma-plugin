@@ -55,6 +55,9 @@ public class LambdaParametersIndex extends Index {
 			"finalize", "()"
 	);
 
+	private static final String RETURN_TYPE_GROUP = "returnType";
+	private static final Pattern RETURN_TYPE_PATTERN = Pattern.compile("\\([^\\)]*\\)L(?<" + RETURN_TYPE_GROUP + ">.+);");
+
 	private final Map<LocalVariableEntry, List<LocalVariableEntry>> lambdaParamsByFunctionalParam = new HashMap<>();
 	private final Map<MethodNode, List<LocalVariableEntry>> functionalMethodParams = new HashMap<>();
 
@@ -173,10 +176,9 @@ public class LambdaParametersIndex extends Index {
 	}
 
 	private static Optional<String> getReturnType(String desc) {
-		final Pattern pattern = Pattern.compile("\\([^\\)]*\\)L(.+);");
-		final Matcher matcher = pattern.matcher(desc);
+		final Matcher matcher = RETURN_TYPE_PATTERN.matcher(desc);
 		if (matcher.find()) {
-			return Optional.of(matcher.group(1));
+			return Optional.of(matcher.group(RETURN_TYPE_GROUP));
 		} else {
 			return Optional.empty();
 		}
