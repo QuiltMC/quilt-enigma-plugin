@@ -200,7 +200,7 @@ void registerTestJarTasks(String name, String... input) {
 		keepattributes 'Deprecated'
 		keepattributes 'Signature'
 		keepattributes 'Record'
-		printmapping obfDest.map { it.file("/${name}-obf.txt") }
+		printmapping obfDest.map { it.file("${name}-obf.txt") }
 	}
 
 	test.dependsOn(testObf)
