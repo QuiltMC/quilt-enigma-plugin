@@ -72,7 +72,6 @@ public class SimpleTypeFieldNameProposerTest implements CommonDescriptors {
 		asserter.assertProposal("VALUE_B", field(fallbacks, "g", VALUE_B));
 		asserter.assertProposal("valueC", field(fallbacks, "h", VALUE_C));
 
-
 		final var inheritance = new ClassEntry(fields, "c");
 		asserter.assertProposal("valueD", field(inheritance, "a", VALUE_DD));
 		// valueE
