@@ -1,18 +1,18 @@
-package com.example;
+package com.example.simple_type_names;
 
-import com.example.simple_type_names.Config;
-import com.example.simple_type_names.Pos;
-import com.example.simple_type_names.Position;
-import com.example.simple_type_names.RandomPosition;
-import com.example.simple_type_names.StateA;
-import com.example.simple_type_names.StateB;
-import com.example.simple_type_names.ValueA;
-import com.example.simple_type_names.ValueB;
-import com.example.simple_type_names.ValueC;
-import com.example.simple_type_names.ValueD;
-import com.example.simple_type_names.ValueDD;
-import com.example.simple_type_names.ValueE;
-import com.example.simple_type_names.ValueEE;
+import com.example.simple_type_names.named.Config;
+import com.example.simple_type_names.named.Pos;
+import com.example.simple_type_names.named.Position;
+import com.example.simple_type_names.named.RandomPosition;
+import com.example.simple_type_names.named.StateA;
+import com.example.simple_type_names.named.StateB;
+import com.example.simple_type_names.named.ValueA;
+import com.example.simple_type_names.named.ValueB;
+import com.example.simple_type_names.named.ValueC;
+import com.example.simple_type_names.named.ValueD;
+import com.example.simple_type_names.named.ValueDD;
+import com.example.simple_type_names.named.ValueE;
+import com.example.simple_type_names.named.ValueEE;
 
 public class SimpleTypeNamesTest {
 	public static class Fields {

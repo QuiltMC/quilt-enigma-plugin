@@ -1,5 +1,5 @@
 import java.nio.file.Files
-import java.util.regex.Pattern
+import proguard.gradle.ProGuardTask
 
 buildscript {
 	repositories {
@@ -86,7 +86,9 @@ var mappings = file('testMappings/')
 var profile = file('build/resources/testInputs/profile.json')
 
 tasks.register('testEnigma', JavaExec) {
-	dependsOn "obfuscateTestInputs", "processTestInputsResources"
+	// dependsOn "obfuscateTestInputs", "processTestInputsResources"
+	// TODO de-stringify
+	dependsOn "completeTestObf", "processTestInputsResources"
 	mainClass = "org.quiltmc.enigma.gui.Main"
 	classpath = files(configurations.enigmaRuntime) + sourceSets.test.runtimeClasspath
 
@@ -96,40 +98,133 @@ tasks.register('testEnigma', JavaExec) {
 	}
 }
 
-tasks.register('testInputsJar', Jar) {
-	from sourceSets.testInputs.output
+// tasks.register('testInputsJar', Jar) {
+// 	from sourceSets.testInputs.output
+//
+// 	archiveFileName = "input.jar"
+// 	destinationDirectory = file("build/obf")
+// }
+//
+// tasks.register('obfuscateTestInputs', proguard.gradle.ProGuardTask) {
+// 	dependsOn testInputsJar
+//
+// 	verbose
+// 	injars testInputsJar
+// 	outjars obfJar
+//
+// 	libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+// 	libraryjars sourceSets.testInputs.compileClasspath
+//
+// 	dontshrink()
+// 	dontoptimize()
+// 	keepclasseswithmembers 'public class * {\
+// \t\tpublic static void main(java.lang.String[]);\
+// \t}'
+// 	keepattributes 'SourceFile'
+// 	keepattributes '*Annotation*'
+// 	keepattributes 'InnerClasses'
+// 	keepattributes 'NestMembers'
+// 	keepattributes 'EnclosingMethod'
+// 	keepattributes 'Deprecated'
+// 	keepattributes 'Signature'
+// 	keepattributes 'Record'
+// 	printmapping 'build/obf/obf.txt'
+// }
+//
+// tasks.test.dependsOn obfuscateTestInputs, processTestInputsResources
 
-	archiveFileName = "input.jar"
-	destinationDirectory = file("build/obf")
+static String convertToGradleTaskName(String name) {
+	final length = name.length();
+
+	if (length == 0) {
+		throw new IllegalArgumentException("name must not be empty!");
+	}
+
+	final builder = new StringBuilder()
+
+	final first = name.charAt(0)
+
+	final underscore = (char) '_'
+	if (first != underscore) {
+		builder.append(Character.toLowerCase(first))
+	}
+
+	for (int i = 1; i < length; i++) {
+		final c = name.charAt(i)
+		if (c == underscore) {
+			if (i < length - 1) {
+				builder.append(Character.toUpperCase(name.charAt(++i)))
+			}
+		} else {
+			builder.append(c)
+		}
+	}
+
+	return builder.toString()
 }
 
-tasks.register('obfuscateTestInputs', proguard.gradle.ProGuardTask) {
-	dependsOn testInputsJar
+void registerTestJarTasks(String name, String... input) {
+	final taskName = convertToGradleTaskName(name)
+	final testJar = tasks.register("${taskName}TestJar", Jar.class) {
+		group("test-setup")
+		from(sourceSets.testInputs.output) {
+			include input
+		}
 
-	verbose
-	injars testInputsJar
-	outjars obfJar
+		archiveFileName = "${name}.jar"
+		destinationDirectory = project.layout.buildDirectory.dir('test-inputs')
+	}
 
-	libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
-	libraryjars sourceSets.testInputs.compileClasspath
+	final testObf = tasks.register("${taskName}TestObf", ProGuardTask) {
+		group("test-setup")
 
-	dontshrink()
-	dontoptimize()
-	keepclasseswithmembers 'public class * {\
+		final obfDest = project.layout.buildDirectory.dir('test-obf')
+
+		verbose()
+		injars testJar.flatMap { it.archiveFile }
+		outjars obfDest.map { it.file("${name}-obf.jar") }
+
+		libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+		libraryjars sourceSets.testInputs.compileClasspath
+
+		dontshrink()
+		dontoptimize()
+		keepclasseswithmembers 'public class * {\
 \t\tpublic static void main(java.lang.String[]);\
 \t}'
-	keepattributes 'SourceFile'
-	keepattributes '*Annotation*'
-	keepattributes 'InnerClasses'
-	keepattributes 'NestMembers'
-	keepattributes 'EnclosingMethod'
-	keepattributes 'Deprecated'
-	keepattributes 'Signature'
-	keepattributes 'Record'
-	printmapping 'build/obf/obf.txt'
+		keepattributes 'SourceFile'
+		keepattributes '*Annotation*'
+		keepattributes 'InnerClasses'
+		keepattributes 'NestMembers'
+		keepattributes 'EnclosingMethod'
+		keepattributes 'Deprecated'
+		keepattributes 'Signature'
+		keepattributes 'Record'
+		printmapping obfDest.map { it.file("/${name}-obf.txt") }
+	}
+
+	test.dependsOn(testObf)
 }
 
-tasks.test.dependsOn obfuscateTestInputs, processTestInputsResources
+final rootInputPackage = 'com/example'
+
+registerTestJarTasks("complete", "${rootInputPackage}/**/*.class")
+
+file("src/testInputs/java/${rootInputPackage}").listFiles().each {
+	String input
+	String name
+	if (it.directory) {
+		name = it.name
+		input = "${rootInputPackage}/${name}/**/*.class"
+	} else if (it.name.endsWith('.java')) {
+		name = it.name.substring(0, it.name.length() - '.java'.length())
+		input = "${rootInputPackage}/${name}*.class"
+	} else {
+		return
+	}
+
+	registerTestJarTasks(name, input)
+}
 
 static void replaceRegion(File file, String replacement, int start, int end) {
 	file.text = replaceRegion(file.text, replacement, start, end)
