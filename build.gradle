@@ -156,7 +156,7 @@ static String convertToGradleTaskName(String name) {
 				builder.append(Character.toUpperCase(name.charAt(++i)))
 			}
 		} else {
-			builder.append(c)
+			builder.append(Character.toLowerCase(c))
 		}
 	}
 
@@ -225,6 +225,13 @@ file("src/testInputs/java/${rootInputPackage}").listFiles().each {
 
 	registerTestJarTasks(name, input)
 }
+
+registerTestJarTasks(
+	"DELEGATE_PARAMETERS",
+	"${rootInputPackage}/DelegateParametersTest*.class",
+	"${rootInputPackage}/GetterSetterTest.class",
+	"${rootInputPackage}/field_names/EnumTest.class",
+)
 
 static void replaceRegion(File file, String replacement, int start, int end) {
 	file.text = replaceRegion(file.text, replacement, start, end)
