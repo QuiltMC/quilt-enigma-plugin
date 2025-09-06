@@ -23,27 +23,22 @@ import org.quiltmc.enigma_plugin.util.TestUtil;
 
 import java.nio.file.Path;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.field;
+import static org.quiltmc.enigma_plugin.util.TestUtil.localVar;
 import static org.quiltmc.enigma_plugin.util.TestUtil.method;
 
-public class CodecNameProposerTest {
+public class ConstructorParamsNameProposerTest {
 	private static final Path JAR = TestUtil.obfJarPathOf("CodecTest-obf");
 
 	@Test
-	public void testCodecNames() {
-		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), CodecNameProposer.ID);
+	public void testConstructorParameterNames() {
+		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConstructorParamsNameProposer.ID);
 
 		var codecTest = new ClassEntry("com/a/a");
+		var constructor = method(codecTest, "<init>", "(IDLjava/util/Optional;J)V");
 
-		asserter.assertProposal("value", field(codecTest, "c", "I"));
-		asserter.assertProposal("getValue", method(codecTest, "a", "()I"));
-
-		asserter.assertProposal("scale", field(codecTest, "d", "D"));
-		asserter.assertProposal("getScale", method(codecTest, "b", "()D"));
-
-		asserter.assertProposal("factor", field(codecTest, "e", "Ljava/util/Optional;"));
-		asserter.assertProposal("getFactor", method(codecTest, "c", "()Ljava/util/Optional;"));
-
-		asserter.assertProposal("seed", field(codecTest, "b", "J"));
+		asserter.assertDynamicProposal("value", localVar(constructor, 1));
+		asserter.assertDynamicProposal("scale", localVar(constructor, 2));
+		asserter.assertDynamicProposal("factor", localVar(constructor, 4));
+		asserter.assertDynamicProposal("seed", localVar(constructor, 5));
 	}
 }
