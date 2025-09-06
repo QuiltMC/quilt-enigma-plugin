@@ -98,11 +98,19 @@ public final class TestUtil {
 		return new FieldEntry(parent, name, new TypeDescriptor(desc));
 	}
 
+	public static MethodEntry method(ClassEntry parent, String name, String returnDesc, String... paramDescriptors) {
+		return method(parent, name, "(" + String.join("", paramDescriptors) + ")" + returnDesc);
+	}
+
 	public static MethodEntry method(ClassEntry parent, String name, String desc) {
 		return new MethodEntry(parent, name, new MethodDescriptor(desc));
 	}
 
 	public static LocalVariableEntry localVar(MethodEntry parent, int index) {
 		return new LocalVariableEntry(parent, index);
+	}
+
+	public static String typeDescOf(String typeName) {
+		return "L" + typeName + ";";
 	}
 }
