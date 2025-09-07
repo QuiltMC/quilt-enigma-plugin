@@ -23,7 +23,7 @@ import org.quiltmc.enigma_plugin.util.TestUtil;
 
 import java.nio.file.Path;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.field;
+import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
 
 public class ConstantFieldNameProposerTest {
@@ -39,44 +39,44 @@ public class ConstantFieldNameProposerTest {
 		final var classTest = new ClassEntry("a/a/a/c");
 		final String something = typeDescOf("a/a/a/f");
 
-		asserter.assertProposal("FOO", field(classTest, "a", something));
-		asserter.assertProposal("BAR_FOO", field(classTest, "b", something));
-		asserter.assertProposal("BAZ_FOO", field(classTest, "c", something));
-		asserter.assertProposal("LOREM_IPSUM_BAZ", field(classTest, "d", something));
-		asserter.assertProposal("AN_ID", field(classTest, "e", something));
-		asserter.assertProposal("ANOTHER_ID_FOO", field(classTest, "f", something));
-		asserter.assertProposal("ONE", field(classTest, "g", something));
-		asserter.assertProposal("TWO", field(classTest, "h", something));
-		asserter.assertProposal("THREE", field(classTest, "i", something));
+		asserter.assertProposal("FOO", fieldOf(classTest, "a", something));
+		asserter.assertProposal("BAR_FOO", fieldOf(classTest, "b", something));
+		asserter.assertProposal("BAZ_FOO", fieldOf(classTest, "c", something));
+		asserter.assertProposal("LOREM_IPSUM_BAZ", fieldOf(classTest, "d", something));
+		asserter.assertProposal("AN_ID", fieldOf(classTest, "e", something));
+		asserter.assertProposal("ANOTHER_ID_FOO", fieldOf(classTest, "f", something));
+		asserter.assertProposal("ONE", fieldOf(classTest, "g", something));
+		asserter.assertProposal("TWO", fieldOf(classTest, "h", something));
+		asserter.assertProposal("THREE", fieldOf(classTest, "i", something));
 
 		final var class2Test = new ClassEntry("a/a/a/a");
 
-		asserter.assertProposal("FOO", field(class2Test, "a", something));
-		asserter.assertProposal("BAR_FOO", field(class2Test, "b", something));
-		asserter.assertProposal("AN_ID", field(class2Test, "c", something));
-		asserter.assertProposal("NORTH", field(class2Test, "d", something));
-		asserter.assertProposal("EAST", field(class2Test, "e", something));
+		asserter.assertProposal("FOO", fieldOf(class2Test, "a", something));
+		asserter.assertProposal("BAR_FOO", fieldOf(class2Test, "b", something));
+		asserter.assertProposal("AN_ID", fieldOf(class2Test, "c", something));
+		asserter.assertProposal("NORTH", fieldOf(class2Test, "d", something));
+		asserter.assertProposal("EAST", fieldOf(class2Test, "e", something));
 
 		final var class3Test = new ClassEntry("a/a/a/b");
 
-		asserter.assertProposal("FOO", field(class3Test, "a", something));
-		asserter.assertProposal("BAR_FOO", field(class3Test, "b", something));
+		asserter.assertProposal("FOO", fieldOf(class3Test, "a", something));
+		asserter.assertProposal("BAR_FOO", fieldOf(class3Test, "b", something));
 
 		final var enumTest = new ClassEntry(ENUM_TEST_NAME);
 		final String enumDesc = typeDescOf(ENUM_TEST_NAME);
 
-		asserter.assertProposal("NORTH", field(enumTest, "a", enumDesc));
-		asserter.assertProposal("EAST", field(enumTest, "b", enumDesc));
-		asserter.assertProposal("WEST", field(enumTest, "c", enumDesc));
-		asserter.assertProposal("SOUTH", field(enumTest, "d", enumDesc));
+		asserter.assertProposal("NORTH", fieldOf(enumTest, "a", enumDesc));
+		asserter.assertProposal("EAST", fieldOf(enumTest, "b", enumDesc));
+		asserter.assertProposal("WEST", fieldOf(enumTest, "c", enumDesc));
+		asserter.assertProposal("SOUTH", fieldOf(enumTest, "d", enumDesc));
 
 		final var enum2Test = new ClassEntry(ENUM_2_TEST_NAME);
 		final String enum2Desc = typeDescOf(ENUM_2_TEST_NAME);
 
-		asserter.assertProposal("CONSTANT", field(enum2Test, "a", enum2Desc));
-		asserter.assertProposal("INT", field(enum2Test, "b", enum2Desc));
-		asserter.assertProposal("DOUBLE", field(enum2Test, "c", enum2Desc));
-		asserter.assertProposal("EXPONENTIAL", field(enum2Test, "d", enum2Desc));
-		asserter.assertProposal("GAUSSIAN", field(enum2Test, "e", enum2Desc));
+		asserter.assertProposal("CONSTANT", fieldOf(enum2Test, "a", enum2Desc));
+		asserter.assertProposal("INT", fieldOf(enum2Test, "b", enum2Desc));
+		asserter.assertProposal("DOUBLE", fieldOf(enum2Test, "c", enum2Desc));
+		asserter.assertProposal("EXPONENTIAL", fieldOf(enum2Test, "d", enum2Desc));
+		asserter.assertProposal("GAUSSIAN", fieldOf(enum2Test, "e", enum2Desc));
 	}
 }

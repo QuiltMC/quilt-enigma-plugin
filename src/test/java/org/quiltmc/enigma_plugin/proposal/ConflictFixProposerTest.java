@@ -27,9 +27,9 @@ import org.quiltmc.enigma_plugin.util.TestUtil;
 
 import java.nio.file.Path;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.field;
+import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.javaLangDescOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.localVar;
+import static org.quiltmc.enigma_plugin.util.TestUtil.localOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
 
@@ -46,16 +46,16 @@ public class ConflictFixProposerTest implements CommonDescriptors {
 		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, javaLangDescOf("CharSequence"));
 
 		// param 2 is initially 'id'
-		asserter.assertProposal("id", localVar(constructor, 2));
+		asserter.assertProposal("id", localOf(constructor, 2));
 
 		// fires dynamic proposal for the constructor parameter, creating a conflict
 		// the conflict should then be automatically fixed by moving to the 'identifier' name
 		// note we bypass putMapping so that we can create a conflict
-		asserter.remapper().getMappings().insert(field(conflictTest, "a", I), new EntryMapping("id"));
-		asserter.remapper().insertDynamicallyProposedMappings(field(conflictTest, "a", I), EntryMapping.OBFUSCATED, new EntryMapping("id"));
+		asserter.remapper().getMappings().insert(fieldOf(conflictTest, "a", I), new EntryMapping("id"));
+		asserter.remapper().insertDynamicallyProposedMappings(fieldOf(conflictTest, "a", I), EntryMapping.OBFUSCATED, new EntryMapping("id"));
 
-		asserter.assertDynamicProposal("id", localVar(constructor, 1));
-		asserter.assertDynamicProposal("identifier", localVar(constructor, 2));
+		asserter.assertDynamicProposal("id", localOf(constructor, 1));
+		asserter.assertDynamicProposal("identifier", localOf(constructor, 2));
 	}
 
 	@Test
@@ -66,17 +66,17 @@ public class ConflictFixProposerTest implements CommonDescriptors {
 		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, typeDescOf("java/lang/StringBuilder"));
 
 		// param 2 is initially 'id'
-		asserter.assertProposal("stringBuilder", localVar(constructor, 2));
+		asserter.assertProposal("stringBuilder", localOf(constructor, 2));
 
 		// fires dynamic proposal for the constructor parameter, creating a conflict
 		// the conflict should then be automatically fixed via removing the name
 		// note we bypass putMapping so that we can create a conflict
-		final FieldEntry backingField = field(conflictTest, "a", "I");
+		final FieldEntry backingField = fieldOf(conflictTest, "a", "I");
 		final EntryMapping mapping = new EntryMapping("stringBuilder");
 		asserter.remapper().getMappings().insert(backingField, mapping);
 		asserter.remapper().insertDynamicallyProposedMappings(backingField, EntryMapping.OBFUSCATED, mapping);
 
-		asserter.assertDynamicProposal("stringBuilder", localVar(constructor, 1));
-		asserter.assertNotProposed(localVar(constructor, 2));
+		asserter.assertDynamicProposal("stringBuilder", localOf(constructor, 1));
+		asserter.assertNotProposed(localOf(constructor, 2));
 	}
 }

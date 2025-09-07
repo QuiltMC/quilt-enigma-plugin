@@ -24,7 +24,7 @@ import org.quiltmc.enigma_plugin.util.TestUtil;
 
 import java.nio.file.Path;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.field;
+import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 
 public class CodecNameProposerTest implements CommonDescriptors {
@@ -36,15 +36,15 @@ public class CodecNameProposerTest implements CommonDescriptors {
 
 		final var codecTest = new ClassEntry("com/a/a");
 
-		asserter.assertProposal("value", field(codecTest, "c", I));
+		asserter.assertProposal("value", fieldOf(codecTest, "c", I));
 		asserter.assertProposal("getValue", methodOf(codecTest, "a", I));
 
-		asserter.assertProposal("scale", field(codecTest, "d", D));
+		asserter.assertProposal("scale", fieldOf(codecTest, "d", D));
 		asserter.assertProposal("getScale", methodOf(codecTest, "b", D));
 
-		asserter.assertProposal("factor", field(codecTest, "e", OPT));
+		asserter.assertProposal("factor", fieldOf(codecTest, "e", OPT));
 		asserter.assertProposal("getFactor", methodOf(codecTest, "c", OPT));
 
-		asserter.assertProposal("seed", field(codecTest, "b", J));
+		asserter.assertProposal("seed", fieldOf(codecTest, "b", J));
 	}
 }

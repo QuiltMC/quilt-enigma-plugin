@@ -110,7 +110,7 @@ public final class TestUtil {
 		}
 	}
 
-	public static FieldEntry field(ClassEntry parent, String name, String desc) {
+	public static FieldEntry fieldOf(ClassEntry parent, String name, String desc) {
 		return new FieldEntry(parent, name, new TypeDescriptor(desc));
 	}
 
@@ -119,7 +119,7 @@ public final class TestUtil {
 		return new MethodEntry(parent, name, new MethodDescriptor(desc));
 	}
 
-	public static LocalVariableEntry localVar(MethodEntry parent, int index) {
+	public static LocalVariableEntry localOf(MethodEntry parent, int index) {
 		return new LocalVariableEntry(parent, index);
 	}
 

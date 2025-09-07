@@ -25,8 +25,8 @@ import org.quiltmc.enigma_plugin.util.TestUtil;
 
 import java.nio.file.Path;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.field;
-import static org.quiltmc.enigma_plugin.util.TestUtil.localVar;
+import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
+import static org.quiltmc.enigma_plugin.util.TestUtil.localOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
 
@@ -58,89 +58,89 @@ public class SimpleTypeFieldNameProposerTest implements CommonDescriptors {
 		final var fields = new ClassEntry(simpleTypeNamesTest, "a");
 		final ClassEntry duplicate = new ClassEntry(fields, "a");
 		// unnamedValueA
-		asserter.assertNotProposed(field(duplicate, "a", VALUE_A));
+		asserter.assertNotProposed(fieldOf(duplicate, "a", VALUE_A));
 		// unnamedValueA2
-		asserter.assertNotProposed(field(duplicate, "b", VALUE_A));
+		asserter.assertNotProposed(fieldOf(duplicate, "b", VALUE_A));
 
 		final var fallbacks = new ClassEntry(fields, "b");
-		asserter.assertProposal("POS", field(fallbacks, "a", POS));
-		asserter.assertProposal("position", field(fallbacks, "b", POSITION));
-		asserter.assertProposal("randomPosition", field(fallbacks, "c", RANDOM_POSITION));
-		asserter.assertProposal("STATIC_STATE_A", field(fallbacks, "d", STATE_A));
-		asserter.assertProposal("STATIC_STATE_B", field(fallbacks, "e", STATE_B));
-		asserter.assertProposal("VALUE_A", field(fallbacks, "f", VALUE_A));
-		asserter.assertProposal("VALUE_B", field(fallbacks, "g", VALUE_B));
-		asserter.assertProposal("valueC", field(fallbacks, "h", VALUE_C));
+		asserter.assertProposal("POS", fieldOf(fallbacks, "a", POS));
+		asserter.assertProposal("position", fieldOf(fallbacks, "b", POSITION));
+		asserter.assertProposal("randomPosition", fieldOf(fallbacks, "c", RANDOM_POSITION));
+		asserter.assertProposal("STATIC_STATE_A", fieldOf(fallbacks, "d", STATE_A));
+		asserter.assertProposal("STATIC_STATE_B", fieldOf(fallbacks, "e", STATE_B));
+		asserter.assertProposal("VALUE_A", fieldOf(fallbacks, "f", VALUE_A));
+		asserter.assertProposal("VALUE_B", fieldOf(fallbacks, "g", VALUE_B));
+		asserter.assertProposal("valueC", fieldOf(fallbacks, "h", VALUE_C));
 
 		final var inheritance = new ClassEntry(fields, "c");
-		asserter.assertProposal("valueD", field(inheritance, "a", VALUE_DD));
+		asserter.assertProposal("valueD", fieldOf(inheritance, "a", VALUE_DD));
 		// valueE
-		asserter.assertNotProposed(field(inheritance, "b", VALUE_EE));
+		asserter.assertNotProposed(fieldOf(inheritance, "b", VALUE_EE));
 
 		final var unique = new ClassEntry(fields, "d");
-		asserter.assertProposal("CONFIG", field(unique, "a", CONFIG));
-		asserter.assertProposal("STATIC_STATE", field(unique, "b", STATE_A));
-		asserter.assertProposal("value", field(unique, "c", VALUE_C));
+		asserter.assertProposal("CONFIG", fieldOf(unique, "a", CONFIG));
+		asserter.assertProposal("STATIC_STATE", fieldOf(unique, "b", STATE_A));
+		asserter.assertProposal("value", fieldOf(unique, "c", VALUE_C));
 
 		final var parameters = new ClassEntry(simpleTypeNamesTest, "b");
 
 		// method name: config
-		asserter.assertProposal("config", localVar(methodOf(parameters, "a", V, CONFIG), 0));
+		asserter.assertProposal("config", localOf(methodOf(parameters, "a", V, CONFIG), 0));
 
 		// method name: pos
-		asserter.assertProposal("pos", localVar(methodOf(parameters, "a", V, POS), 1));
+		asserter.assertProposal("pos", localOf(methodOf(parameters, "a", V, POS), 1));
 
 		final MethodEntry pos1 = methodOf(parameters, "a", V, POS, POSITION);
-		asserter.assertProposal("pos", localVar(pos1, 1));
-		asserter.assertProposal("position", localVar(pos1, 2));
+		asserter.assertProposal("pos", localOf(pos1, 1));
+		asserter.assertProposal("position", localOf(pos1, 2));
 
 		final MethodEntry pos2 = methodOf(parameters, "a", V, POS, RANDOM_POSITION);
-		asserter.assertProposal("pos", localVar(pos2, 1));
-		asserter.assertProposal("position", localVar(pos2, 2));
+		asserter.assertProposal("pos", localOf(pos2, 1));
+		asserter.assertProposal("position", localOf(pos2, 2));
 
 		final MethodEntry pos3 = methodOf(parameters, "a", V, POS, POSITION, RANDOM_POSITION);
-		asserter.assertProposal("pos", localVar(pos3, 1));
-		asserter.assertProposal("position", localVar(pos3, 2));
-		asserter.assertProposal("randomPosition", localVar(pos3, 3));
+		asserter.assertProposal("pos", localOf(pos3, 1));
+		asserter.assertProposal("position", localOf(pos3, 2));
+		asserter.assertProposal("randomPosition", localOf(pos3, 3));
 
 		// method name: state
-		asserter.assertProposal("state", localVar(methodOf(parameters, "a", V, STATE_A), 1));
+		asserter.assertProposal("state", localOf(methodOf(parameters, "a", V, STATE_A), 1));
 
 		final MethodEntry state = methodOf(parameters, "a", V, STATE_A, STATE_B);
-		asserter.assertProposal("stateA", localVar(state, 0));
-		asserter.assertProposal("stateB", localVar(state, 1));
+		asserter.assertProposal("stateA", localOf(state, 0));
+		asserter.assertProposal("stateB", localOf(state, 1));
 
 		final MethodEntry value1 = methodOf(parameters, "a", V, VALUE_A, VALUE_B, VALUE_C);
-		asserter.assertProposal("valueA", localVar(value1, 0));
-		asserter.assertProposal("valueB", localVar(value1, 1));
-		asserter.assertProposal("valueC", localVar(value1, 2));
+		asserter.assertProposal("valueA", localOf(value1, 0));
+		asserter.assertProposal("valueB", localOf(value1, 1));
+		asserter.assertProposal("valueC", localOf(value1, 2));
 
 		final MethodEntry value2 = methodOf(parameters, "a", V, VALUE_A, VALUE_A);
 		// unnamedValueA
-		asserter.assertNotProposed(localVar(value2, 0));
+		asserter.assertNotProposed(localOf(value2, 0));
 		// unnamedValueA2
-		asserter.assertNotProposed(localVar(value2, 1));
+		asserter.assertNotProposed(localOf(value2, 1));
 
 		// Check that both the parent and child class have names
 		// method name: value
-		asserter.assertProposal("valueD", localVar(methodOf(parameters, "a", V, VALUE_D), 0));
+		asserter.assertProposal("valueD", localOf(methodOf(parameters, "a", V, VALUE_D), 0));
 
 		// method name: value
-		asserter.assertProposal("valueD", localVar(methodOf(parameters, "a", V, VALUE_DD), 0));
+		asserter.assertProposal("valueD", localOf(methodOf(parameters, "a", V, VALUE_DD), 0));
 
 		// Check that just the parent class has a name
 		// method name: value
-		asserter.assertProposal("valueE", localVar(methodOf(parameters, "a", V, VALUE_E), 0));
+		asserter.assertProposal("valueE", localOf(methodOf(parameters, "a", V, VALUE_E), 0));
 
 		// method name: value; param name: valueD
-		asserter.assertNotProposed(localVar(methodOf(parameters, "a", V, VALUE_EE), 0));
+		asserter.assertNotProposed(localOf(methodOf(parameters, "a", V, VALUE_EE), 0));
 
 		// Check that indexing order doesn't affect inheritance tree
 		final ClassEntry valueD = new ClassEntry(VALUE_D_NAME);
 		// method name: value
-		asserter.assertProposal("valueD", localVar(methodOf(valueD, "a", V, VALUE_D), 0));
+		asserter.assertProposal("valueD", localOf(methodOf(valueD, "a", V, VALUE_D), 0));
 
 		// method name: value
-		asserter.assertProposal("valueD", localVar(methodOf(valueD, "a", V, VALUE_DD), 0));
+		asserter.assertProposal("valueD", localOf(methodOf(valueD, "a", V, VALUE_DD), 0));
 	}
 }

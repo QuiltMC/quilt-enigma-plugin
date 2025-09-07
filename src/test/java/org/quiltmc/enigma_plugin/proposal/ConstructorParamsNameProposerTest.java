@@ -25,7 +25,7 @@ import org.quiltmc.enigma_plugin.util.TestUtil;
 
 import java.nio.file.Path;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.localVar;
+import static org.quiltmc.enigma_plugin.util.TestUtil.localOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 
 public class ConstructorParamsNameProposerTest implements CommonDescriptors {
@@ -38,9 +38,9 @@ public class ConstructorParamsNameProposerTest implements CommonDescriptors {
 		final var codecTest = new ClassEntry("com/a/a");
 		final MethodEntry constructor = methodOf(codecTest, "<init>", V, I, D, OPT, J);
 
-		asserter.assertDynamicProposal("value", localVar(constructor, 1));
-		asserter.assertDynamicProposal("scale", localVar(constructor, 2));
-		asserter.assertDynamicProposal("factor", localVar(constructor, 4));
-		asserter.assertDynamicProposal("seed", localVar(constructor, 5));
+		asserter.assertDynamicProposal("value", localOf(constructor, 1));
+		asserter.assertDynamicProposal("scale", localOf(constructor, 2));
+		asserter.assertDynamicProposal("factor", localOf(constructor, 4));
+		asserter.assertDynamicProposal("seed", localOf(constructor, 5));
 	}
 }

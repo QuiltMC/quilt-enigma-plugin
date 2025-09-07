@@ -24,7 +24,7 @@ import org.quiltmc.enigma_plugin.util.TestUtil;
 
 import java.nio.file.Path;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.field;
+import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 
 public class RecordComponentNameProposerTest implements CommonDescriptors {
@@ -36,13 +36,13 @@ public class RecordComponentNameProposerTest implements CommonDescriptors {
 
 		final var recordNamingTest = new ClassEntry("a/a/a");
 
-		asserter.assertProposal("value", field(recordNamingTest, "b", I));
+		asserter.assertProposal("value", fieldOf(recordNamingTest, "b", I));
 		asserter.assertProposal("value", methodOf(recordNamingTest, "a", I));
 
-		asserter.assertProposal("scale", field(recordNamingTest, "c", D));
+		asserter.assertProposal("scale", fieldOf(recordNamingTest, "c", D));
 		asserter.assertProposal("scale", methodOf(recordNamingTest, "b", D));
 
-		asserter.assertProposal("s", field(recordNamingTest, "d", OPT));
+		asserter.assertProposal("s", fieldOf(recordNamingTest, "d", OPT));
 		asserter.assertProposal("s", methodOf(recordNamingTest, "c", OPT));
 
 		// Overridden component getters could return other components, there's no way to be sure which
@@ -65,7 +65,7 @@ public class RecordComponentNameProposerTest implements CommonDescriptors {
 
 		final var codecTestExampleRecord = new ClassEntry("com/a/a$a");
 
-		asserter.assertProposal("value", field(codecTestExampleRecord, "b", I));
+		asserter.assertProposal("value", fieldOf(codecTestExampleRecord, "b", I));
 		asserter.assertProposal("value", methodOf(codecTestExampleRecord, "a", I));
 	}
 }

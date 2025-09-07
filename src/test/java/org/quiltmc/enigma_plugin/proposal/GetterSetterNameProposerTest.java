@@ -27,8 +27,8 @@ import org.quiltmc.enigma_plugin.util.TestUtil;
 
 import java.nio.file.Path;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.field;
-import static org.quiltmc.enigma_plugin.util.TestUtil.localVar;
+import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
+import static org.quiltmc.enigma_plugin.util.TestUtil.localOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 
 public class GetterSetterNameProposerTest implements CommonDescriptors {
@@ -41,19 +41,19 @@ public class GetterSetterNameProposerTest implements CommonDescriptors {
 		final var getterSetterTest = new ClassEntry("a/a/a");
 
 		final var context = new ValidationContext(null);
-		asserter.remapper().putMapping(context, field(getterSetterTest, "a", "I"), new EntryMapping("silliness"));
-		asserter.remapper().putMapping(context, field(getterSetterTest, "b", "Ljava/lang/String;"), new EntryMapping("name"));
+		asserter.remapper().putMapping(context, fieldOf(getterSetterTest, "a", "I"), new EntryMapping("silliness"));
+		asserter.remapper().putMapping(context, fieldOf(getterSetterTest, "b", "Ljava/lang/String;"), new EntryMapping("name"));
 
 		asserter.assertDynamicProposal("getSilliness", methodOf(getterSetterTest, "a", I));
 
 		final MethodEntry setSilliness = methodOf(getterSetterTest, "a", V, I);
 		asserter.assertDynamicProposal("setSilliness", setSilliness);
-		asserter.assertDynamicProposal("silliness", localVar(setSilliness, 1));
+		asserter.assertDynamicProposal("silliness", localOf(setSilliness, 1));
 
 		asserter.assertDynamicProposal("getName", methodOf(getterSetterTest, "b", STR));
 
 		final MethodEntry setName = methodOf(getterSetterTest, "b", V, STR);
 		asserter.assertDynamicProposal("setName", setName);
-		asserter.assertDynamicProposal("name", localVar(setName, 1));
+		asserter.assertDynamicProposal("name", localOf(setName, 1));
 	}
 }
