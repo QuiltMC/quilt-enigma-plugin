@@ -16,7 +16,7 @@
 
 package org.quiltmc.enigma_plugin.util;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
+import static org.quiltmc.enigma_plugin.util.TestUtil.javaLangDescOf;
 
 public interface CommonDescriptors {
 	/**
@@ -65,8 +65,4 @@ public interface CommonDescriptors {
 	String LONG = javaLangDescOf("Long");
 	String FLOAT = javaLangDescOf("Float");
 	String DOUBLE = javaLangDescOf("Double");
-
-	static String javaLangDescOf(String simpleName) {
-		return typeDescOf("java/lang/" + simpleName);
-	}
 }

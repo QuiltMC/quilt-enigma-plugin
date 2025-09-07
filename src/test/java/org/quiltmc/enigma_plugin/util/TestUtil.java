@@ -129,4 +129,8 @@ public final class TestUtil {
 	public static String typeDescOf(String typeName) {
 		return "L" + typeName + ";";
 	}
+
+	public static String javaLangDescOf(String simpleName) {
+		return typeDescOf("java/lang/" + simpleName);
+	}
 }

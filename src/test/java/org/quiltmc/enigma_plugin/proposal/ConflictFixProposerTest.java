@@ -21,16 +21,19 @@ import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma_plugin.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.util.ProposalAsserter;
 import org.quiltmc.enigma_plugin.util.TestUtil;
 
 import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.util.TestUtil.field;
+import static org.quiltmc.enigma_plugin.util.TestUtil.javaLangDescOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.localVar;
 import static org.quiltmc.enigma_plugin.util.TestUtil.method;
+import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 
-public class ConflictFixProposerTest {
+public class ConflictFixProposerTest implements CommonDescriptors {
 	private static final Path JAR = TestUtil.obfJarPathOf("z_conflicts-obf");
 
 	@Test
@@ -40,7 +43,7 @@ public class ConflictFixProposerTest {
 		// tests the conflict fixer via introducing a conflict manually
 
 		final var conflictTest = new ClassEntry("a/a/a/a");
-		final MethodEntry constructor = method(conflictTest, "<init>", "(ILjava/lang/CharSequence;)V");
+		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, javaLangDescOf("CharSequence"));
 
 		// param 2 is initially 'id'
 		asserter.assertProposal("id", localVar(constructor, 2));
@@ -48,8 +51,8 @@ public class ConflictFixProposerTest {
 		// fires dynamic proposal for the constructor parameter, creating a conflict
 		// the conflict should then be automatically fixed by moving to the 'identifier' name
 		// note we bypass putMapping so that we can create a conflict
-		asserter.remapper().getMappings().insert(field(conflictTest, "a", "I"), new EntryMapping("id"));
-		asserter.remapper().insertDynamicallyProposedMappings(field(conflictTest, "a", "I"), EntryMapping.OBFUSCATED, new EntryMapping("id"));
+		asserter.remapper().getMappings().insert(field(conflictTest, "a", I), new EntryMapping("id"));
+		asserter.remapper().insertDynamicallyProposedMappings(field(conflictTest, "a", I), EntryMapping.OBFUSCATED, new EntryMapping("id"));
 
 		asserter.assertDynamicProposal("id", localVar(constructor, 1));
 		asserter.assertDynamicProposal("identifier", localVar(constructor, 2));
