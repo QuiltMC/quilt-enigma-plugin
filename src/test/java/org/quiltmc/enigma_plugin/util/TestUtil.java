@@ -114,7 +114,7 @@ public final class TestUtil {
 		return new FieldEntry(parent, name, new TypeDescriptor(desc));
 	}
 
-	public static MethodEntry method(ClassEntry parent, String name, String returnDesc, String... paramDescriptors) {
+	public static MethodEntry methodOf(ClassEntry parent, String name, String returnDesc, String... paramDescriptors) {
 		return method(parent, name, "(" + String.join("", paramDescriptors) + ")" + returnDesc);
 	}
 

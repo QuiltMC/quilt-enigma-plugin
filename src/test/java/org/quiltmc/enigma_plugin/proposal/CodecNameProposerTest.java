@@ -18,6 +18,7 @@ package org.quiltmc.enigma_plugin.proposal;
 
 import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma_plugin.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.util.ProposalAsserter;
 import org.quiltmc.enigma_plugin.util.TestUtil;
 
@@ -25,25 +26,28 @@ import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.util.TestUtil.field;
 import static org.quiltmc.enigma_plugin.util.TestUtil.method;
+import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
+import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
 
-public class CodecNameProposerTest {
+public class CodecNameProposerTest implements CommonDescriptors {
 	private static final Path JAR = TestUtil.obfJarPathOf("CodecTest-obf");
 
 	@Test
 	public void testCodecNames() {
-		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), CodecNameProposer.ID);
+		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), CodecNameProposer.ID);
 
-		var codecTest = new ClassEntry("com/a/a");
+		final var codecTest = new ClassEntry("com/a/a");
 
-		asserter.assertProposal("value", field(codecTest, "c", "I"));
-		asserter.assertProposal("getValue", method(codecTest, "a", "()I"));
+		asserter.assertProposal("value", field(codecTest, "c", I));
+		asserter.assertProposal("getValue", methodOf(codecTest, "a", I));
 
-		asserter.assertProposal("scale", field(codecTest, "d", "D"));
-		asserter.assertProposal("getScale", method(codecTest, "b", "()D"));
+		asserter.assertProposal("scale", field(codecTest, "d", D));
+		asserter.assertProposal("getScale", methodOf(codecTest, "b", D));
 
-		asserter.assertProposal("factor", field(codecTest, "e", "Ljava/util/Optional;"));
-		asserter.assertProposal("getFactor", method(codecTest, "c", "()Ljava/util/Optional;"));
+		final String opt = typeDescOf("java/util/Optional");
+		asserter.assertProposal("factor", field(codecTest, "e", opt));
+		asserter.assertProposal("getFactor", methodOf(codecTest, "c", opt));
 
-		asserter.assertProposal("seed", field(codecTest, "b", "J"));
+		asserter.assertProposal("seed", field(codecTest, "b", J));
 	}
 }
