@@ -25,7 +25,6 @@ import org.quiltmc.enigma_plugin.util.TestUtil;
 import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.util.TestUtil.field;
-import static org.quiltmc.enigma_plugin.util.TestUtil.method;
 import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
 
