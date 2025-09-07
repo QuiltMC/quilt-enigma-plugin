@@ -34,7 +34,7 @@ import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
 
 public class ConflictFixProposerTest implements CommonDescriptors {
-	private static final Path JAR = TestUtil.obfJarPathOf("z_conflicts-obf");
+	private static final Path JAR = TestUtil.obfJarPathOf("conflicts-obf");
 
 	@Test
 	public void testSimpleTypeNameConflictFix() {

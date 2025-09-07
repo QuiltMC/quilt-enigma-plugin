@@ -1,4 +1,4 @@
-package com.example.z_conflicts;
+package com.example.conflicts;
 
 public class ConflictTest {
 	public final int a;
