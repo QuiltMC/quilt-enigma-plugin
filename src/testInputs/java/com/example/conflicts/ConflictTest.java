@@ -1,16 +1,16 @@
 package com.example.conflicts;
 
 public class ConflictTest {
-	public final int a;
-	public final CharSequence b;
+	public final int integer;
+	public final Identifiable idAble;
 
-	public ConflictTest(int a, CharSequence b) {
-		this.a = a;
-		this.b = b;
+	public ConflictTest(int integer, Identifiable idAble) {
+		this.integer = integer;
+		this.idAble = idAble;
 	}
 
-	public ConflictTest(int a, StringBuilder string) {
-		this.a = a;
-		this.b = string.toString();
+	public ConflictTest(int integer, Identified identified) {
+		this.integer = integer;
+		this.idAble = identified;
 	}
 }

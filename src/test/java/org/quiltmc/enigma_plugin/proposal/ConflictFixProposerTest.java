@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.util.ProposalAsserter;
@@ -28,13 +29,15 @@ import org.quiltmc.enigma_plugin.util.TestUtil;
 import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.javaLangDescOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.localOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
 
 public class ConflictFixProposerTest implements CommonDescriptors {
 	private static final Path JAR = TestUtil.obfJarPathOf("conflicts-obf");
+
+	private static final String IDENTIFIABLE = typeDescOf("a/a/a/b");
+	private static final String IDENTIFIED = typeDescOf("a/a/a/c");
 
 	@Test
 	public void testSimpleTypeNameConflictFix() {
@@ -43,19 +46,25 @@ public class ConflictFixProposerTest implements CommonDescriptors {
 		// tests the conflict fixer via introducing a conflict manually
 
 		final var conflictTest = new ClassEntry("a/a/a/a");
-		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, javaLangDescOf("CharSequence"));
+		// typeDesc: Identifiable
+		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, IDENTIFIABLE);
 
-		// param 2 is initially 'id'
-		asserter.assertProposal("id", localOf(constructor, 2));
+		final String simpleName = "idAble";
+		final LocalVariableEntry param2 = localOf(constructor, 2);
+
+		// param 2 is initially 'idAble'
+		asserter.assertProposal(simpleName, param2);
 
 		// fires dynamic proposal for the constructor parameter, creating a conflict
-		// the conflict should then be automatically fixed by moving to the 'identifier' name
+		// the conflict should then be automatically fixed by moving to the 'identifiable' name
 		// note we bypass putMapping so that we can create a conflict
-		asserter.remapper().getMappings().insert(fieldOf(conflictTest, "a", I), new EntryMapping("id"));
-		asserter.remapper().insertDynamicallyProposedMappings(fieldOf(conflictTest, "a", I), EntryMapping.OBFUSCATED, new EntryMapping("id"));
+		final FieldEntry integer = fieldOf(conflictTest, "a", I);
+		asserter.remapper().getMappings().insert(integer, new EntryMapping(simpleName));
+		asserter.remapper().insertDynamicallyProposedMappings(integer, EntryMapping.OBFUSCATED, new EntryMapping(simpleName));
 
-		asserter.assertDynamicProposal("id", localOf(constructor, 1));
-		asserter.assertDynamicProposal("identifier", localOf(constructor, 2));
+		asserter.assertDynamicProposal(simpleName, localOf(constructor, 1));
+		// fallback name
+		asserter.assertDynamicProposal("identifiable", param2);
 	}
 
 	@Test
@@ -63,20 +72,23 @@ public class ConflictFixProposerTest implements CommonDescriptors {
 		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConflictFixProposer.ID);
 
 		final var conflictTest = new ClassEntry("a/a/a/a");
-		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, typeDescOf("java/lang/StringBuilder"));
+		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, IDENTIFIED);
 
-		// param 2 is initially 'id'
-		asserter.assertProposal("stringBuilder", localOf(constructor, 2));
+		final String simpleName = "identified";
+		final LocalVariableEntry param2 = localOf(constructor, 2);
+
+		// param 2 is initially 'identified'
+		asserter.assertProposal(simpleName, param2);
 
 		// fires dynamic proposal for the constructor parameter, creating a conflict
 		// the conflict should then be automatically fixed via removing the name
 		// note we bypass putMapping so that we can create a conflict
-		final FieldEntry backingField = fieldOf(conflictTest, "a", "I");
-		final EntryMapping mapping = new EntryMapping("stringBuilder");
+		final FieldEntry backingField = fieldOf(conflictTest, "a", I);
+		final EntryMapping mapping = new EntryMapping(simpleName);
 		asserter.remapper().getMappings().insert(backingField, mapping);
 		asserter.remapper().insertDynamicallyProposedMappings(backingField, EntryMapping.OBFUSCATED, mapping);
 
-		asserter.assertDynamicProposal("stringBuilder", localOf(constructor, 1));
-		asserter.assertNotProposed(localOf(constructor, 2));
+		asserter.assertDynamicProposal(simpleName, localOf(constructor, 1));
+		asserter.assertNotProposed(param2);
 	}
 }

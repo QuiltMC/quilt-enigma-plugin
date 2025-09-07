@@ -4,15 +4,15 @@
     "a/a/a/a/a": "config",
 
     // for conflict fix test
-    "java/lang/CharSequence": {
-        local_name: "id",
+    "a/a/a/b": { // Identifiable
+        local_name: "idAble",
         exclusive: true,
         fallback: [
-            "identifier"
+            "identifiable"
         ]
     },
-    "java/lang/StringBuilder": {
-        "local_name": "stringBuilder",
+    "a/a/a/c": { // Identified
+        "local_name": "identified",
         exclusive: true
     },
 
