@@ -27,6 +27,7 @@ import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.util.TestUtil.field;
 import static org.quiltmc.enigma_plugin.util.TestUtil.localVar;
+import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
 
 public class SimpleTypeFieldNameProposerTest implements CommonDescriptors {
@@ -84,37 +85,37 @@ public class SimpleTypeFieldNameProposerTest implements CommonDescriptors {
 		final var parameters = new ClassEntry(simpleTypeNamesTest, "b");
 
 		// method name: config
-		asserter.assertProposal("config", localVar(TestUtil.methodOf(parameters, "a", V, CONFIG), 0));
+		asserter.assertProposal("config", localVar(methodOf(parameters, "a", V, CONFIG), 0));
 
 		// method name: pos
-		asserter.assertProposal("pos", localVar(TestUtil.methodOf(parameters, "a", V, POS), 1));
+		asserter.assertProposal("pos", localVar(methodOf(parameters, "a", V, POS), 1));
 
-		final MethodEntry pos1 = TestUtil.methodOf(parameters, "a", V, POS, POSITION);
+		final MethodEntry pos1 = methodOf(parameters, "a", V, POS, POSITION);
 		asserter.assertProposal("pos", localVar(pos1, 1));
 		asserter.assertProposal("position", localVar(pos1, 2));
 
-		final MethodEntry pos2 = TestUtil.methodOf(parameters, "a", V, POS, RANDOM_POSITION);
+		final MethodEntry pos2 = methodOf(parameters, "a", V, POS, RANDOM_POSITION);
 		asserter.assertProposal("pos", localVar(pos2, 1));
 		asserter.assertProposal("position", localVar(pos2, 2));
 
-		final MethodEntry pos3 = TestUtil.methodOf(parameters, "a", V, POS, POSITION, RANDOM_POSITION);
+		final MethodEntry pos3 = methodOf(parameters, "a", V, POS, POSITION, RANDOM_POSITION);
 		asserter.assertProposal("pos", localVar(pos3, 1));
 		asserter.assertProposal("position", localVar(pos3, 2));
 		asserter.assertProposal("randomPosition", localVar(pos3, 3));
 
 		// method name: state
-		asserter.assertProposal("state", localVar(TestUtil.methodOf(parameters, "a", V, STATE_A), 1));
+		asserter.assertProposal("state", localVar(methodOf(parameters, "a", V, STATE_A), 1));
 
-		final MethodEntry state = TestUtil.methodOf(parameters, "a", V, STATE_A, STATE_B);
+		final MethodEntry state = methodOf(parameters, "a", V, STATE_A, STATE_B);
 		asserter.assertProposal("stateA", localVar(state, 0));
 		asserter.assertProposal("stateB", localVar(state, 1));
 
-		final MethodEntry value1 = TestUtil.methodOf(parameters, "a", V, VALUE_A, VALUE_B, VALUE_C);
+		final MethodEntry value1 = methodOf(parameters, "a", V, VALUE_A, VALUE_B, VALUE_C);
 		asserter.assertProposal("valueA", localVar(value1, 0));
 		asserter.assertProposal("valueB", localVar(value1, 1));
 		asserter.assertProposal("valueC", localVar(value1, 2));
 
-		final MethodEntry value2 = TestUtil.methodOf(parameters, "a", V, VALUE_A, VALUE_A);
+		final MethodEntry value2 = methodOf(parameters, "a", V, VALUE_A, VALUE_A);
 		// unnamedValueA
 		asserter.assertNotProposed(localVar(value2, 0));
 		// unnamedValueA2
@@ -122,24 +123,24 @@ public class SimpleTypeFieldNameProposerTest implements CommonDescriptors {
 
 		// Check that both the parent and child class have names
 		// method name: value
-		asserter.assertProposal("valueD", localVar(TestUtil.methodOf(parameters, "a", V, VALUE_D), 0));
+		asserter.assertProposal("valueD", localVar(methodOf(parameters, "a", V, VALUE_D), 0));
 
 		// method name: value
-		asserter.assertProposal("valueD", localVar(TestUtil.methodOf(parameters, "a", V, VALUE_DD), 0));
+		asserter.assertProposal("valueD", localVar(methodOf(parameters, "a", V, VALUE_DD), 0));
 
 		// Check that just the parent class has a name
 		// method name: value
-		asserter.assertProposal("valueE", localVar(TestUtil.methodOf(parameters, "a", V, VALUE_E), 0));
+		asserter.assertProposal("valueE", localVar(methodOf(parameters, "a", V, VALUE_E), 0));
 
 		// method name: value; param name: valueD
-		asserter.assertNotProposed(localVar(TestUtil.methodOf(parameters, "a", V, VALUE_EE), 0));
+		asserter.assertNotProposed(localVar(methodOf(parameters, "a", V, VALUE_EE), 0));
 
 		// Check that indexing order doesn't affect inheritance tree
 		final ClassEntry valueD = new ClassEntry(VALUE_D_NAME);
 		// method name: value
-		asserter.assertProposal("valueD", localVar(TestUtil.methodOf(valueD, "a", V, VALUE_D), 0));
+		asserter.assertProposal("valueD", localVar(methodOf(valueD, "a", V, VALUE_D), 0));
 
 		// method name: value
-		asserter.assertProposal("valueD", localVar(TestUtil.methodOf(valueD, "a", V, VALUE_DD), 0));
+		asserter.assertProposal("valueD", localVar(methodOf(valueD, "a", V, VALUE_DD), 0));
 	}
 }

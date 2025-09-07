@@ -115,10 +115,7 @@ public final class TestUtil {
 	}
 
 	public static MethodEntry methodOf(ClassEntry parent, String name, String returnDesc, String... paramDescriptors) {
-		return method(parent, name, "(" + String.join("", paramDescriptors) + ")" + returnDesc);
-	}
-
-	public static MethodEntry method(ClassEntry parent, String name, String desc) {
+		final String desc = "(" + String.join("", paramDescriptors) + ")" + returnDesc;
 		return new MethodEntry(parent, name, new MethodDescriptor(desc));
 	}
 

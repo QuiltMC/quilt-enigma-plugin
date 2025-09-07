@@ -30,8 +30,8 @@ import java.nio.file.Path;
 import static org.quiltmc.enigma_plugin.util.TestUtil.field;
 import static org.quiltmc.enigma_plugin.util.TestUtil.javaLangDescOf;
 import static org.quiltmc.enigma_plugin.util.TestUtil.localVar;
-import static org.quiltmc.enigma_plugin.util.TestUtil.method;
 import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
+import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
 
 public class ConflictFixProposerTest implements CommonDescriptors {
 	private static final Path JAR = TestUtil.obfJarPathOf("z_conflicts-obf");
@@ -63,7 +63,7 @@ public class ConflictFixProposerTest implements CommonDescriptors {
 		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConflictFixProposer.ID);
 
 		final var conflictTest = new ClassEntry("a/a/a/a");
-		final MethodEntry constructor = method(conflictTest, "<init>", "(ILjava/lang/StringBuilder;)V");
+		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, typeDescOf("java/lang/StringBuilder"));
 
 		// param 2 is initially 'id'
 		asserter.assertProposal("stringBuilder", localVar(constructor, 2));
