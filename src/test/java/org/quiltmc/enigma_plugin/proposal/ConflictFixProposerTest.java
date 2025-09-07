@@ -38,7 +38,7 @@ public class ConflictFixProposerTest implements CommonDescriptors {
 
 	@Test
 	public void testSimpleTypeNameConflictFix() {
-		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConflictFixProposer.ID);
+		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConflictFixProposer.ID);
 
 		// tests the conflict fixer via introducing a conflict manually
 

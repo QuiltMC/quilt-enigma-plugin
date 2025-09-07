@@ -34,7 +34,7 @@ public class ConstantFieldNameProposerTest {
 
 	@Test
 	public void testConstantFieldNames() {
-		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConstantFieldNameProposer.ID);
+		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConstantFieldNameProposer.ID);
 
 		final var classTest = new ClassEntry("a/a/a/c");
 		final String something = typeDescOf("a/a/a/f");

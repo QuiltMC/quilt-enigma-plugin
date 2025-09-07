@@ -38,7 +38,7 @@ public class DelegateParametersNameProposerTest implements CommonDescriptors {
 
 	@Test
 	public void testDelegateParameterNames() {
-		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), DelegateParametersNameProposer.ID);
+		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), DelegateParametersNameProposer.ID);
 
 		final var delegateParametersTest = new ClassEntry(DELEGATE_PARAMETERS_TEST_NAME);
 

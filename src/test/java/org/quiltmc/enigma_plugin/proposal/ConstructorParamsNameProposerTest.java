@@ -33,7 +33,7 @@ public class ConstructorParamsNameProposerTest implements CommonDescriptors {
 
 	@Test
 	public void testConstructorParameterNames() {
-		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConstructorParamsNameProposer.ID);
+		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConstructorParamsNameProposer.ID);
 
 		final var codecTest = new ClassEntry("com/a/a");
 		final MethodEntry constructor = methodOf(codecTest, "<init>", V, I, D, OPT, J);

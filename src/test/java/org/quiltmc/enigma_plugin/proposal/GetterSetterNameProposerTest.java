@@ -21,6 +21,7 @@ import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma.util.validation.ValidationContext;
+import org.quiltmc.enigma_plugin.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.util.ProposalAsserter;
 import org.quiltmc.enigma_plugin.util.TestUtil;
 
@@ -28,30 +29,30 @@ import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.util.TestUtil.field;
 import static org.quiltmc.enigma_plugin.util.TestUtil.localVar;
-import static org.quiltmc.enigma_plugin.util.TestUtil.method;
+import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 
-public class GetterSetterNameProposerTest {
+public class GetterSetterNameProposerTest implements CommonDescriptors {
 	private static final Path JAR = TestUtil.obfJarPathOf("GetterSetterTest-obf");
 
 	@Test
 	public void testGetterSetterNames() {
-		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), GetterSetterNameProposer.ID);
+		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), GetterSetterNameProposer.ID);
 
-		var getterSetterTest = new ClassEntry("a/a/a");
+		final var getterSetterTest = new ClassEntry("a/a/a");
 
-		var context = new ValidationContext(null);
+		final var context = new ValidationContext(null);
 		asserter.remapper().putMapping(context, field(getterSetterTest, "a", "I"), new EntryMapping("silliness"));
 		asserter.remapper().putMapping(context, field(getterSetterTest, "b", "Ljava/lang/String;"), new EntryMapping("name"));
 
-		asserter.assertDynamicProposal("getSilliness", method(getterSetterTest, "a", "()I"));
+		asserter.assertDynamicProposal("getSilliness", methodOf(getterSetterTest, "a", I));
 
-		final MethodEntry setSilliness = method(getterSetterTest, "a", "(I)V");
+		final MethodEntry setSilliness = methodOf(getterSetterTest, "a", V, I);
 		asserter.assertDynamicProposal("setSilliness", setSilliness);
 		asserter.assertDynamicProposal("silliness", localVar(setSilliness, 1));
 
-		asserter.assertDynamicProposal("getName", method(getterSetterTest, "b", "()Ljava/lang/String;"));
+		asserter.assertDynamicProposal("getName", methodOf(getterSetterTest, "b", STR));
 
-		final MethodEntry setName = method(getterSetterTest, "b", "(Ljava/lang/String;)V");
+		final MethodEntry setName = methodOf(getterSetterTest, "b", V, STR);
 		asserter.assertDynamicProposal("setName", setName);
 		asserter.assertDynamicProposal("name", localVar(setName, 1));
 	}
