@@ -18,40 +18,42 @@ package org.quiltmc.enigma_plugin.proposal;
 
 import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma_plugin.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.util.ProposalAsserter;
 import org.quiltmc.enigma_plugin.util.TestUtil;
 
 import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.util.TestUtil.field;
-import static org.quiltmc.enigma_plugin.util.TestUtil.method;
+import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 
-public class RecordComponentNameProposerTest {
+public class RecordComponentNameProposerTest implements CommonDescriptors {
 	private static final Path JAR = TestUtil.obfJarPathOf("RecordNamingTest-obf");
 
 	@Test
 	public void testRecordNames() {
-		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), RecordComponentNameProposer.ID);
+		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), RecordComponentNameProposer.ID);
 
-		var recordNamingTest = new ClassEntry("a/a/a");
+		final var recordNamingTest = new ClassEntry("a/a/a");
 
-		asserter.assertProposal("value", field(recordNamingTest, "b", "I"));
-		asserter.assertProposal("value", method(recordNamingTest, "a", "()I"));
+		asserter.assertProposal("value", field(recordNamingTest, "b", I));
+		asserter.assertProposal("value", methodOf(recordNamingTest, "a", I));
 
-		asserter.assertProposal("scale", field(recordNamingTest, "c", "D"));
-		asserter.assertProposal("scale", method(recordNamingTest, "b", "()D"));
+		asserter.assertProposal("scale", field(recordNamingTest, "c", D));
+		asserter.assertProposal("scale", methodOf(recordNamingTest, "b", D));
 
-		asserter.assertProposal("s", field(recordNamingTest, "d", "Ljava/util/Optional;"));
-		asserter.assertProposal("s", method(recordNamingTest, "c", "()Ljava/util/Optional;"));
+		asserter.assertProposal("s", field(recordNamingTest, "d", OPT));
+		asserter.assertProposal("s", methodOf(recordNamingTest, "c", OPT));
 
-		// Overridden component getters could return other components, there's no way to be sure which (overridden) getter corresponds to which component
-		recordNamingTest = new ClassEntry(recordNamingTest, "a");
+		// Overridden component getters could return other components, there's no way to be sure which
+		// (overridden) getter corresponds to which component
+		final var inner1 = new ClassEntry(recordNamingTest, "a");
 
 		// scale override
-		asserter.assertNotProposedByPlugin(method(recordNamingTest, "a", "()D"));
+		asserter.assertNotProposedByPlugin(methodOf(inner1, "a", D));
 		// factor override
-		asserter.assertNotProposed(method(recordNamingTest, "b", "()D"));
-		asserter.assertProposal("value", method(recordNamingTest, "c", "()I"));
+		asserter.assertNotProposed(methodOf(inner1, "b", D));
+		asserter.assertProposal("value", methodOf(inner1, "c", I));
 	}
 
 	@Test
@@ -61,9 +63,9 @@ public class RecordComponentNameProposerTest {
 				RecordComponentNameProposer.ID
 		);
 
-		var codecTestExampleRecord = new ClassEntry("com/a/a$a");
+		final var codecTestExampleRecord = new ClassEntry("com/a/a$a");
 
-		asserter.assertProposal("value", field(codecTestExampleRecord, "b", "I"));
-		asserter.assertProposal("value", method(codecTestExampleRecord, "a", "()I"));
+		asserter.assertProposal("value", field(codecTestExampleRecord, "b", I));
+		asserter.assertProposal("value", methodOf(codecTestExampleRecord, "a", I));
 	}
 }
