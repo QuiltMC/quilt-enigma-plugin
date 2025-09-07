@@ -81,63 +81,11 @@ dependencies {
 	enigmaRuntime libs.dfu
 }
 
-var obfJar = file('build/obf/obf.jar')
-var mappings = file('testMappings/')
-var profile = file('build/resources/testInputs/profile.json')
-
-tasks.register('testEnigma', JavaExec) {
-	// dependsOn "obfuscateTestInputs", "processTestInputsResources"
-	// TODO de-stringify
-	dependsOn "completeTestObf", "processTestInputsResources"
-	mainClass = "org.quiltmc.enigma.gui.Main"
-	classpath = files(configurations.enigmaRuntime) + sourceSets.test.runtimeClasspath
-
-	args('-jar', obfJar, '-mappings', mappings.getAbsolutePath(), '-profile', profile.getAbsolutePath(), '--development')
-	doFirst {
-		mappings.mkdirs()
-	}
-}
-
-// tasks.register('testInputsJar', Jar) {
-// 	from sourceSets.testInputs.output
-//
-// 	archiveFileName = "input.jar"
-// 	destinationDirectory = file("build/obf")
-// }
-//
-// tasks.register('obfuscateTestInputs', proguard.gradle.ProGuardTask) {
-// 	dependsOn testInputsJar
-//
-// 	verbose
-// 	injars testInputsJar
-// 	outjars obfJar
-//
-// 	libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
-// 	libraryjars sourceSets.testInputs.compileClasspath
-//
-// 	dontshrink()
-// 	dontoptimize()
-// 	keepclasseswithmembers 'public class * {\
-// \t\tpublic static void main(java.lang.String[]);\
-// \t}'
-// 	keepattributes 'SourceFile'
-// 	keepattributes '*Annotation*'
-// 	keepattributes 'InnerClasses'
-// 	keepattributes 'NestMembers'
-// 	keepattributes 'EnclosingMethod'
-// 	keepattributes 'Deprecated'
-// 	keepattributes 'Signature'
-// 	keepattributes 'Record'
-// 	printmapping 'build/obf/obf.txt'
-// }
-//
-// tasks.test.dependsOn obfuscateTestInputs, processTestInputsResources
-
-static String convertToGradleTaskName(String name) {
-	final length = name.length();
+static String taskNameFrom(String name) {
+	final length = name.length()
 
 	if (length == 0) {
-		throw new IllegalArgumentException("name must not be empty!");
+		throw new IllegalArgumentException("name must not be empty!")
 	}
 
 	final builder = new StringBuilder()
@@ -163,8 +111,8 @@ static String convertToGradleTaskName(String name) {
 	return builder.toString()
 }
 
-void registerTestJarTasks(String name, String... input) {
-	final taskName = convertToGradleTaskName(name)
+TaskProvider<ProGuardTask> registerTestJarTasks(String name, String... input) {
+	final taskName = taskNameFrom(name)
 	final testJar = tasks.register("${taskName}TestJar", Jar.class) {
 		group("test-setup")
 		from(sourceSets.testInputs.output) {
@@ -204,11 +152,13 @@ void registerTestJarTasks(String name, String... input) {
 	}
 
 	test.dependsOn(testObf)
+
+	return testObf
 }
 
 final rootInputPackage = 'com/example'
 
-registerTestJarTasks("complete", "${rootInputPackage}/**/*.class")
+final completeTestObf = registerTestJarTasks("complete", "${rootInputPackage}/**/*.class")
 
 file("src/testInputs/java/${rootInputPackage}").listFiles().each {
 	String input
@@ -232,6 +182,28 @@ registerTestJarTasks(
 	"${rootInputPackage}/GetterSetterTest.class",
 	"${rootInputPackage}/field_names/EnumTest.class",
 )
+
+tasks.register('testEnigma', JavaExec) {
+	final completeObf = completeTestObf.map { it.outJarFileCollection.getSingleFile() }
+	final mappings = file('testMappings/')
+	dependsOn processTestInputsResources
+
+	inputs.file(completeObf)
+	outputs.dir(mappings)
+
+	mainClass = "org.quiltmc.enigma.gui.Main"
+	classpath = files(configurations.enigmaRuntime) + sourceSets.test.runtimeClasspath
+
+	doFirst {
+		args(
+			'-jar', completeObf.get(),
+			'-mappings', mappings.getAbsolutePath(),
+			'-profile', new File(processTestInputsResources.destinationDir.absolutePath, 'profile.json'),
+			'--development'
+		)
+		mappings.mkdirs()
+	}
+}
 
 static void replaceRegion(File file, String replacement, int start, int end) {
 	file.text = replaceRegion(file.text, replacement, start, end)
