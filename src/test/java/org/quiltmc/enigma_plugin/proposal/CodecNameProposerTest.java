@@ -26,7 +26,6 @@ import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.util.TestUtil.field;
 import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
 
 public class CodecNameProposerTest implements CommonDescriptors {
 	private static final Path JAR = TestUtil.obfJarPathOf("CodecTest-obf");
@@ -43,9 +42,8 @@ public class CodecNameProposerTest implements CommonDescriptors {
 		asserter.assertProposal("scale", field(codecTest, "d", D));
 		asserter.assertProposal("getScale", methodOf(codecTest, "b", D));
 
-		final String opt = typeDescOf("java/util/Optional");
-		asserter.assertProposal("factor", field(codecTest, "e", opt));
-		asserter.assertProposal("getFactor", methodOf(codecTest, "c", opt));
+		asserter.assertProposal("factor", field(codecTest, "e", OPT));
+		asserter.assertProposal("getFactor", methodOf(codecTest, "c", OPT));
 
 		asserter.assertProposal("seed", field(codecTest, "b", J));
 	}

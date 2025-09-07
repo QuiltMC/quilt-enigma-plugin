@@ -17,6 +17,7 @@
 package org.quiltmc.enigma_plugin.util;
 
 import static org.quiltmc.enigma_plugin.util.TestUtil.javaLangDescOf;
+import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
 
 public interface CommonDescriptors {
 	/**
@@ -55,6 +56,7 @@ public interface CommonDescriptors {
 
 	String OBJ = javaLangDescOf("Object");
 	String STR = javaLangDescOf("String");
+	String OPT = typeDescOf("java/util/Optional");
 
 	String VOID = javaLangDescOf("Void");
 

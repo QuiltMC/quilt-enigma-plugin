@@ -18,23 +18,25 @@ package org.quiltmc.enigma_plugin.proposal;
 
 import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
+import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma_plugin.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.util.ProposalAsserter;
 import org.quiltmc.enigma_plugin.util.TestUtil;
 
 import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.util.TestUtil.localVar;
-import static org.quiltmc.enigma_plugin.util.TestUtil.method;
+import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
 
-public class ConstructorParamsNameProposerTest {
+public class ConstructorParamsNameProposerTest implements CommonDescriptors {
 	private static final Path JAR = TestUtil.obfJarPathOf("CodecTest-obf");
 
 	@Test
 	public void testConstructorParameterNames() {
 		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConstructorParamsNameProposer.ID);
 
-		var codecTest = new ClassEntry("com/a/a");
-		var constructor = method(codecTest, "<init>", "(IDLjava/util/Optional;J)V");
+		final var codecTest = new ClassEntry("com/a/a");
+		final MethodEntry constructor = methodOf(codecTest, "<init>", V, I, D, OPT, J);
 
 		asserter.assertDynamicProposal("value", localVar(constructor, 1));
 		asserter.assertDynamicProposal("scale", localVar(constructor, 2));
