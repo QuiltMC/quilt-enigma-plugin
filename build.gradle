@@ -143,8 +143,6 @@ final qmapDest = layout.buildDirectory.dir('quilt-mappings')
 tasks.register('setupQMap') {
 	final projectVersion = project.version
 
-	dependsOn publishToMavenLocal
-
 	inputs.property('projectVersion', projectVersion)
 	outputs.tap {
 		dir(qmapDest)
@@ -224,7 +222,7 @@ tasks.register('setupQMap') {
 }
 
 tasks.register('diffQMap') {
-	dependsOn(setupQMap)
+	dependsOn(setupQMap, publishToMavenLocal)
 
 	final output = layout.buildDirectory.file('qmap.diff')
 	outputs.file(output)
