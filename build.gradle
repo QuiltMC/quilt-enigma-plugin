@@ -143,9 +143,12 @@ final qmapDest = layout.buildDirectory.dir('quilt-mappings')
 tasks.register('setupQMap') {
 	final projectVersion = project.version
 
+	dependsOn publishToMavenLocal, jar
+
 	inputs.property('projectVersion', projectVersion)
-	outputs.tap {
-		dir(qmapDest)
+	outputs.dir(qmapDest)
+	outputs.upToDateWhen {
+		!jar.didWork
 	}
 
 	final libsPath = 'gradle/libs.versions.toml'
@@ -162,6 +165,10 @@ tasks.register('setupQMap') {
 	}
 
 	final qmapNeedsUpdate = {
+		if (jar.didWork) {
+			return true
+		}
+
 		final dest = qmapDest.get().asFile.toPath()
 		if (!Files.isDirectory(dest.resolve('.git'))) {
 			return true
@@ -222,7 +229,7 @@ tasks.register('setupQMap') {
 }
 
 tasks.register('diffQMap') {
-	dependsOn(setupQMap, publishToMavenLocal)
+	dependsOn(setupQMap)
 
 	final output = layout.buildDirectory.file('qmap.diff')
 	outputs.file(output)
@@ -233,7 +240,7 @@ tasks.register('diffQMap') {
 
 			executable System.properties['os.name'].toLowerCase().contains('windows') ? './gradlew.bat' : './gradlew'
 
-			args 'diffTarget', '--no-daemon', '--refresh-dependencies', '--dest', output.get().asFile
+			args '--no-daemon', 'diffTarget', '--refresh-dependencies', '--dest', output.get().asFile
 		}
 	}
 }
