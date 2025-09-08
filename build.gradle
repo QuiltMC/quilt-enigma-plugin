@@ -145,6 +145,13 @@ tasks.register('setupQMap') {
 
 	dependsOn publishToMavenLocal
 
+	inputs.property('projectVersion', projectVersion)
+	outputs.tap {
+		dir(qmapDest)
+	}
+
+	final libsPath = 'gradle/libs.versions.toml'
+
 	final execGit = { Action<ExecSpec> action ->
 		final dest = qmapDest.get().asFile
 		dest.mkdirs()
@@ -156,54 +163,56 @@ tasks.register('setupQMap') {
 		}
 	}
 
-	inputs.property('projectVersion', projectVersion)
-	outputs.tap {
-		dir(qmapDest)
-		upToDateWhen {
-			final dest = qmapDest.get().asFile.toPath()
-			if (!Files.exists(dest.resolve('.git'))) {
-				return false
-			}
-
-			execGit { it.args 'fetch' }
-
-			final localHash = new ByteArrayOutputStream()
-			execGit {
-				it.args 'rev-parse', 'HEAD'
-				it.standardOutput = localHash
-			}
-
-			final originHash = new ByteArrayOutputStream()
-			execGit {
-				it.args 'rev-parse', 'origin/HEAD'
-				it.standardOutput = originHash
-			}
-
-			return originHash.toString() == localHash.toString()
+	final qmapNeedsUpdate = {
+		final dest = qmapDest.get().asFile.toPath()
+		if (!Files.isDirectory(dest.resolve('.git'))) {
+			return true
 		}
+
+		if (!Files.isRegularFile(dest.resolve(libsPath))) {
+			return true
+		}
+
+		execGit { it.args 'fetch' }
+
+		final localHash = new ByteArrayOutputStream()
+		execGit {
+			it.args 'rev-parse', 'HEAD'
+			it.standardOutput = localHash
+		}
+
+		final originHash = new ByteArrayOutputStream()
+		execGit {
+			it.args 'rev-parse', 'origin/HEAD'
+			it.standardOutput = originHash
+		}
+
+		return originHash.toString() != localHash.toString()
 	}
 
 	doLast {
 		final dest = qmapDest.get().asFile.toPath()
 
-		if (Files.isDirectory(dest.resolve('.git'))) {
-			execGit {
-				it.args 'reset', '--hard', 'origin/HEAD'
-			}
-		} else {
-			EXEC.exec {
-				executable 'chmod'
-				args '-Rf', '+w', dest
-			}
+		if (qmapNeedsUpdate()) {
+			if (Files.isDirectory(dest.resolve('.git'))) {
+				execGit {
+					it.args 'reset', '--hard', 'origin/HEAD'
+				}
+			} else {
+				EXEC.exec {
+					executable 'chmod'
+					args '-Rf', '+w', dest
+				}
 
-			dest.deleteDir()
+				dest.deleteDir()
 
-			execGit {
-				it.args 'clone', 'https://github.com/QuiltMC/quilt-mappings', dest
+				execGit {
+					it.args 'clone', 'https://github.com/QuiltMC/quilt-mappings', dest
+				}
 			}
 		}
 
-		final versionsFile = dest.resolve('gradle/libs.versions.toml').toFile()
+		final versionsFile = dest.resolve(libsPath).toFile()
 		final enigmaPlugin = 'enigma_plugin'
 		final versionMatcher = versionsFile.text =~ /(?<=$enigmaPlugin = ").*(?=")/
 		if (versionMatcher.find()) {
