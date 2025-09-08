@@ -233,7 +233,7 @@ tasks.register('diffQMap') {
 
 			executable System.properties['os.name'].toLowerCase().contains('windows') ? './gradlew.bat' : './gradlew'
 
-			args 'diffTarget', '--refresh-dependencies', '--dest', output.get().asFile
+			args 'diffTarget', '--no-daemon', '--refresh-dependencies', '--dest', output.get().asFile
 		}
 	}
 }
