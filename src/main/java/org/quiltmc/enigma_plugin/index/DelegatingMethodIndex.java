@@ -102,12 +102,17 @@ public class DelegatingMethodIndex extends Index {
 			return Optional.empty();
 		}
 
-		final int lastOp = method.instructions.getLast().getOpcode();
+		final AbstractInsnNode lastInstruction = method.instructions.getLast();
+		if (lastInstruction == null) {
+			return Optional.empty();
+		}
+
+		final int lastOp = lastInstruction.getOpcode();
 		if (lastOp < IRETURN || lastOp > RETURN) {
 			return Optional.empty();
 		}
 
-		if (!(method.instructions.getLast().getPrevious() instanceof MethodInsnNode lastCall)) {
+		if (!(lastInstruction.getPrevious() instanceof MethodInsnNode lastCall)) {
 			return Optional.empty();
 		}
 
