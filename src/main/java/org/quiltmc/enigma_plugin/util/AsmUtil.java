@@ -98,7 +98,13 @@ public class AsmUtil implements Opcodes {
 		return Optional.empty();
 	}
 
-	public static Optional<FieldNode> getFieldFromGetter(ClassNode classNode, MethodNode node) {
+	public static Optional<FieldNode> getOwnedFieldFromGetter(ClassNode owner, MethodNode node) {
+		return getFieldFromGetter(node)
+			.filter(fieldInsnNode -> fieldInsnNode.owner.equals(owner.name))
+			.flatMap(fieldInsnNode -> getField(owner, fieldInsnNode.name, fieldInsnNode.desc));
+	}
+
+	public static Optional<FieldInsnNode> getFieldFromGetter(MethodNode node) {
 		if (!Descriptors.getDescriptor(node).getArgumentDescs().isEmpty()) return Optional.empty();
 		if (node.instructions.size() != 3) return Optional.empty();
 		if (node.instructions.get(0).getOpcode() != ALOAD) return Optional.empty();
@@ -117,11 +123,7 @@ public class AsmUtil implements Opcodes {
 
 		if (node.instructions.get(2).getOpcode() != expectedReturnOpcode) return Optional.empty();
 
-		if (fieldInsnNode.owner.equals(classNode.name)) {
-			return getField(classNode, fieldInsnNode.name, fieldInsnNode.desc);
-		} else {
-			return Optional.empty();
-		}
+		return Optional.of(fieldInsnNode);
 	}
 
 	public static Optional<FieldNode> getFieldFromSetter(ClassNode classNode, MethodNode node) {

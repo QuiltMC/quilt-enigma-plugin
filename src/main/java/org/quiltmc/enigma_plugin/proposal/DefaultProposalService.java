@@ -39,6 +39,7 @@ public class DefaultProposalService extends NameProposerService {
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CONSTRUCTOR_PARAMS, ConstructorParamsNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_GETTER_SETTER, GetterSetterNameProposer::new);
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_DELEGATE_PARAMS, DelegateParametersNameProposer::new);
+		this.addIfEnabled(context, indexer, Arguments.DISABLE_DELEGATING_METHODS, DelegatingMethodNameProposer::new);
 
 		// conflict fixer must be last in order to get context from other dynamic proposers
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CONFLICT_FIXER, ConflictFixProposer::new);
