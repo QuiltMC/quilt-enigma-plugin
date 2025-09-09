@@ -36,6 +36,7 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.ParameterNode;
 import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.index.Index;
+import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Inherit;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Name;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.Descriptors;
@@ -47,6 +48,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+
+import static org.quiltmc.enigma_plugin.util.StringUtil.getObjectTypeOrNull;
 
 /**
  * Index of fields/local variables that are of a rather simple type (as-in easy to guess the variable name) and which
@@ -141,14 +145,10 @@ public class SimpleTypeSingleIndex extends Index {
 
 		var parentEntry = new ClassEntry(node.name);
 
-		this.collectMatchingFields(provider, node).forEach((name, entry) -> {
+		this.collectMatchingFields(provider, node, parentEntry).forEach((name, entry) -> {
 			if (!entry.isNull()) {
-				var fieldEntry = new FieldEntry(parentEntry, entry.node().name, new TypeDescriptor(entry.node().desc));
-				this.fields.put(fieldEntry,
-						AsmUtil.matchAccess(entry.node(), ACC_STATIC, ACC_FINAL)
-								? entry.name().staticName()
-								: entry.name().local()
-				);
+				var fieldEntry = new FieldEntry(entry.parent, entry.node().name, new TypeDescriptor(entry.node().desc));
+				this.fields.put(fieldEntry, name);
 			}
 		});
 
@@ -180,7 +180,7 @@ public class SimpleTypeSingleIndex extends Index {
 
 			this.collectMatchingParameters(method, bannedTypes, parameters).forEach((name, param) -> {
 				if (!param.isNull()) {
-					boolean isStatic = AsmUtil.maskMatch(method.access, ACC_STATIC);
+					boolean isStatic = AsmUtil.matchAccess(method, ACC_STATIC);
 					int index = param.index() + (isStatic ? 0 : 1);
 					var paramEntry = new LocalVariableEntry(methodEntry, index);
 					this.parameters.put(paramEntry, name);
@@ -190,8 +190,7 @@ public class SimpleTypeSingleIndex extends Index {
 		}
 	}
 
-	private Map<String, FieldBuildingEntry> collectMatchingFields(ClassProvider classProvider,
-			ClassNode classNode) {
+	private Map<String, FieldBuildingEntry> collectMatchingFields(ClassProvider classProvider, ClassNode classNode, ClassEntry parent) {
 		var existing = this.fieldCache.get(classNode);
 
 		if (existing != null) return existing;
@@ -203,52 +202,56 @@ public class SimpleTypeSingleIndex extends Index {
 				ClassNode outerClass = classProvider.get(classNode.outerClass);
 
 				if (outerClass != null) {
-					knownFields.putAll(this.collectMatchingFields(classProvider, outerClass));
+					knownFields.putAll(this.collectMatchingFields(classProvider, outerClass, new ClassEntry(outerClass.name)));
 				}
 			}
 
-			if (field.desc.charAt(0) != 'L') continue;
-			String type = field.desc.substring(1, field.desc.length() - 1);
+			String type = getObjectTypeOrNull(field.desc);
+			if (type == null) {
+				continue;
+			}
 
 			var entry = this.getEntry(type);
 			if (entry != null) {
+				Function<Name, String> nameGetter = AsmUtil.matchAccess(field, ACC_STATIC, ACC_FINAL) ? Name::constant : Name::local;
+
 				// Check if there's a field by the default name
-				var existingEntry = knownFields.get(entry.name().local());
+				var existingEntry = knownFields.get(nameGetter.apply(entry.name()));
 
 				if (existingEntry != null) {
 					// If the existing field is of the same type, remove it and skip this one
 					if (existingEntry.entry() == entry) {
-						knownFields.put(entry.name().local(), FieldBuildingEntry.createNull(entry));
+						knownFields.put(nameGetter.apply(entry.name()), FieldBuildingEntry.createNull(entry));
 						continue;
 					}
 
 					// If there's already a field by the default name, find a fallback name
-					Name foundFallback = entry.findFallback(fallback -> !knownFields.containsKey(fallback.local()));
+					Name foundFallback = entry.findFallback(fallback -> !knownFields.containsKey(nameGetter.apply(fallback)));
 
 					if (foundFallback != null) {
-						knownFields.put(foundFallback.local(), new FieldBuildingEntry(field, foundFallback, entry));
+						knownFields.put(nameGetter.apply(foundFallback), new FieldBuildingEntry(parent, field, foundFallback, entry));
 
 						// If the existing entry is exclusive, remove it and if possible replace it with one of its fallbacks
 						if (!existingEntry.isNull() && existingEntry.entry().exclusive()) {
 							Name replacement = existingEntry.entry().findFallback(
-									fallback -> !knownFields.containsKey(fallback.local())
+									fallback -> !knownFields.containsKey(nameGetter.apply(fallback))
 							);
 
-							knownFields.put(entry.name().local(), FieldBuildingEntry.createNull(entry));
+							knownFields.put(nameGetter.apply(entry.name()), FieldBuildingEntry.createNull(entry));
 
 							if (replacement != null) {
-								knownFields.put(replacement.local(),
-										new FieldBuildingEntry(existingEntry.node(), replacement, existingEntry.entry())
+								knownFields.put(nameGetter.apply(replacement),
+										new FieldBuildingEntry(parent, existingEntry.node(), replacement, existingEntry.entry())
 								);
 							}
 						}
 					} else {
 						// If a fallback name couldn't be found, remove the name for the existing field
-						knownFields.put(entry.name().local(), FieldBuildingEntry.createNull(entry));
+						knownFields.put(nameGetter.apply(entry.name()), FieldBuildingEntry.createNull(entry));
 					}
 				} else {
 					// Another field with the name doesn't exist, proceed as usual
-					knownFields.put(entry.name().local(), new FieldBuildingEntry(field, entry.name(), entry));
+					knownFields.put(nameGetter.apply(entry.name()), new FieldBuildingEntry(parent, field, entry.name(), entry));
 				}
 			}
 		}
@@ -268,9 +271,8 @@ public class SimpleTypeSingleIndex extends Index {
 			if (bannedTypes.contains(parameters.get(index).type())) continue;
 
 			ParameterNode node = method.parameters.get(index);
-			String desc = parameters.get(index).getDescriptor();
-			if (desc.charAt(0) != 'L') continue;
-			String type = desc.substring(1, desc.length() - 1);
+			String type = getObjectTypeOrNull(parameters.get(index).getDescriptor());
+			if (type == null) continue;
 
 			var entry = this.getEntry(type);
 			if (entry != null) {
@@ -326,7 +328,7 @@ public class SimpleTypeSingleIndex extends Index {
 			entry = this.registry.getEntry(ancestor.getFullName());
 
 			// Only return if the entry allows inheritance
-			if (entry != null && entry.inherit()) {
+			if (entry != null && entry.inherit() == Inherit.Direct.INSTANCE) {
 				return entry;
 			}
 		}
@@ -334,9 +336,9 @@ public class SimpleTypeSingleIndex extends Index {
 		return null;
 	}
 
-	private record FieldBuildingEntry(FieldNode node, Name name, SimpleTypeFieldNamesRegistry.Entry entry) {
+	private record FieldBuildingEntry(ClassEntry parent, FieldNode node, Name name, SimpleTypeFieldNamesRegistry.Entry entry) {
 		public static FieldBuildingEntry createNull(SimpleTypeFieldNamesRegistry.Entry entry) {
-			return new FieldBuildingEntry(null, null, entry);
+			return new FieldBuildingEntry(null, null, null, entry);
 		}
 
 		public boolean isNull() {
