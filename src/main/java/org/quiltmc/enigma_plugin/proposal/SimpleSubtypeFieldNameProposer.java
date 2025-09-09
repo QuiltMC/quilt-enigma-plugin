@@ -30,6 +30,7 @@ import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleInd
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex.SubtypeEntry;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.quiltmc.enigma_plugin.util.CasingUtil.toScreamingSnakeCase;
 
@@ -73,18 +74,12 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 			EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings,
 			ClassEntry type, FieldEntry field, FieldInfo info
 	) {
-		this.proposeField(remapper, mappings, remapper.getMapping(type).targetName(), field, info);
-	}
-
-	private void proposeField(
-			EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings,
-			String typeName, FieldEntry field, FieldInfo info
-	) {
 		if (!this.hasJarProposal(remapper, field)) {
-			if (typeName != null) {
-				info.entry().renamer().rename(typeName)
-					.map(name -> info.isConstant() ? toScreamingSnakeCase(name) : unCapitalize(name))
-					.ifPresent(name -> this.insertDynamicProposal(mappings, field, name));
+			if (remapper.getMapping(type).targetName() != null) {
+				getSimpleTargetName(remapper, type)
+						.flatMap(info.entry().renamer()::rename)
+						.map(name -> info.isConstant() ? toScreamingSnakeCase(name) : unCapitalize(name))
+						.ifPresent(name -> this.insertDynamicProposal(mappings, field, name));
 			}
 		}
 	}
@@ -93,19 +88,19 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 			EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings,
 			ClassEntry type, LocalVariableEntry param, SubtypeEntry entry
 	) {
-		this.proposeParam(remapper, mappings, remapper.getMapping(type).targetName(), param, entry);
-	}
-
-	private void proposeParam(
-			EntryRemapper remapper, Map<Entry<?>, EntryMapping> mappings,
-			String typeName, LocalVariableEntry param, SubtypeEntry entry
-	) {
 		if (!this.hasJarProposal(remapper, param)) {
-			if (typeName != null) {
-				entry.renamer().rename(typeName)
+			getSimpleTargetName(remapper, type)
+					.flatMap(entry.renamer()::rename)
 					.map(SimpleSubtypeFieldNameProposer::unCapitalize)
 					.ifPresent(name -> this.insertDynamicProposal(mappings, param, name));
-			}
+		}
+	}
+
+	private static Optional<String> getSimpleTargetName(EntryRemapper remapper, ClassEntry type) {
+		if (remapper.getMapping(type).targetName() != null) {
+			return Optional.of(remapper.deobfuscate(type).getSimpleName());
+		} else {
+			return Optional.empty();
 		}
 	}
 }

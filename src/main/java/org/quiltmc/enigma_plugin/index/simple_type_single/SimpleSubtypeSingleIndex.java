@@ -277,6 +277,12 @@ public class SimpleSubtypeSingleIndex extends Index {
 		Optional<String> rename(String original);
 
 		record Truncate(String suffix) implements Renamer {
+			public Truncate {
+				if (suffix.isEmpty()) {
+					throw new IllegalArgumentException("suffix must not be empty");
+				}
+			}
+
 			@Override
 			public Optional<String> rename(String original) {
 				int lenDiff = original.length() - this.suffix.length();

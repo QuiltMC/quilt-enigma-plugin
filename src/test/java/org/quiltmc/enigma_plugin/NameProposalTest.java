@@ -371,7 +371,7 @@ public class NameProposalTest {
 
 		var birdEntityName = "com/a/b/b/a";
 		var birdEntityDesc = toDescriptor(birdEntityName);
-		insertAndDynamicallyPropose(new ClassEntry(birdEntityName), new EntryMapping("BirdEntity"));
+		insertAndDynamicallyPropose(new ClassEntry(birdEntityName), new EntryMapping("com/example/BirdEntity"));
 		assertDynamicProposal("BIRD", field(testClass, "c", birdEntityDesc));
 		assertDynamicProposal("bird", field(testClass, "l", birdEntityDesc));
 		// eatBirdStatic
