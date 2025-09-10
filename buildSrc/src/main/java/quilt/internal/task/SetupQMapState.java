@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 public record SetupQMapState(
 	String qepBranch,
 	boolean qepBranchChanged,
+	// null if qMapRepoDir is not a git repo
 	@Nullable String defaultQMapBranch,
 	boolean qMapOnDefault,
 	boolean qMapMatchesDefault
@@ -40,7 +41,7 @@ public record SetupQMapState(
 				final Path cachePath = params.getQepBranchCache().get().getAsFile().toPath();
 				cachedQepBranch = Files.isRegularFile(cachePath) ? Files.readString(cachePath) : null;
 			} catch (IOException e) {
-				throw new GradleException("Failed to read qep branch cache!", e);
+				throw new GradleException("Failed to read QEP branch cache!", e);
 			}
 
 			final boolean qepBranchChanged = !qepBranch.equals(cachedQepBranch);
