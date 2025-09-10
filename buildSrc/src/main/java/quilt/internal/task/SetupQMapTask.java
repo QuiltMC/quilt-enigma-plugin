@@ -127,7 +127,7 @@ public abstract class SetupQMapTask extends DefaultTask implements ExecAware, Pr
 				Files.write(versionsPath, replaced.getBytes());
 			}
 		} else {
-			throw new GradleException("Cannot find " + ENIGMA_PLUGIN + " version.");
+			throw new GradleException("Cannot find " + ENIGMA_PLUGIN + " version!");
 		}
 	}
 

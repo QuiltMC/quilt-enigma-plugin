@@ -14,7 +14,7 @@ public interface ExecAware {
 	ExecOperations getExecutor();
 
 	default void execGit(Path workingDir, @Nullable Action<ExecSpec> action, Object... args) {
-		this.getExecutor().exec (spec -> {
+		this.getExecutor().exec(spec -> {
 			spec.workingDir(workingDir);
 			spec.executable("git");
 			if (action != null) {
