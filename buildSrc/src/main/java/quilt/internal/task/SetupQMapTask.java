@@ -117,14 +117,17 @@ public abstract class SetupQMapTask extends DefaultTask implements ExecAware, Pr
 		final String versionContents = Files.readString(versionsPath);
 		final Matcher versionMatcher = ENIGMA_VERSION_PATTERN.matcher(versionContents);
 		if (versionMatcher.find()) {
-			final String replaced = replaceRegion(
-				versionContents, this.getProjectVersion().get(),
-				versionMatcher.start(), versionMatcher.end()
-			);
+			final String projectVersion = this.getProjectVersion().get();
+			if (!projectVersion.equals(versionMatcher.group())) {
+				final String replaced = replaceRegion(
+					versionContents, projectVersion,
+					versionMatcher.start(), versionMatcher.end()
+				);
 
-			Files.write(versionsPath, replaced.getBytes());
+				Files.write(versionsPath, replaced.getBytes());
+			}
 		} else {
-			throw new GradleException("Cannot find $enigmaPlugin version.");
+			throw new GradleException("Cannot find " + ENIGMA_PLUGIN + " version.");
 		}
 	}
 
