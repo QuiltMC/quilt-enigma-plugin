@@ -1,5 +1,3 @@
-import quilt.internal.task.SetupQMapTask
-
 buildscript {
 	repositories {
 		mavenCentral()
@@ -21,13 +19,12 @@ version '2.4.0'
 group 'org.quiltmc'
 
 final ENV = System.getenv()
-interface ExecProvider {
-	@javax.inject.Inject
-	ExecOperations getOperations()
-}
-final EXEC = objects.newInstance(ExecProvider).operations
 
 version = version + (ENV.GITHUB_ACTIONS ? '' : '+local')
+
+diffQMap {
+	projectVersion = project.version.toString()
+}
 
 sourceSets {
 	testInputs
@@ -130,10 +127,6 @@ tasks.register('obfuscateTestInputs', proguard.gradle.ProGuardTask) {
 }
 
 tasks.test.dependsOn obfuscateTestInputs, processTestInputsResources
-
-tasks.named(SetupQMapTask.SETUP_Q_MAP_TASK_NAME, SetupQMapTask) {
-	projectVersion = project.version.toString()
-}
 
 license {
 	rule file('codeformat/FABRIC_MODIFIED_HEADER')

@@ -3,39 +3,57 @@ package quilt.internal.plugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.PluginContainer;
+import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin;
 import org.gradle.api.tasks.TaskContainer;
-import org.gradle.api.tasks.TaskProvider;
-import org.gradle.jvm.tasks.Jar;
 import org.jetbrains.annotations.NotNull;
 import quilt.internal.task.DiffQMapTask;
+import quilt.internal.task.SetupQMapState;
 import quilt.internal.task.SetupQMapTask;
+import quilt.internal.util.ProviderAware;
+import quilt.internal.util.GitFetchService;
 
-public abstract class QMapDiffPlugin implements Plugin<Project> {
+public abstract class QMapDiffPlugin implements Plugin<Project>, ProviderAware {
+	public static final String QMAP_FETCH_SERVICE_NAME = "fetch-qmap";
+
 	@Override
 	public void apply(@NotNull Project project) {
+		final ProviderFactory providers = this.getProviders();
+
 		final TaskContainer tasks = project.getTasks();
 		final PluginContainer plugins = project.getPlugins();
 		final DirectoryProperty buildDir = project.getLayout().getBuildDirectory();
 
-		// add jar task
-		plugins.apply(JavaPlugin.class);
-		// adds publishToMavenLocal task
+		final var ext = project.getExtensions().create(DiffQMapExtension.NAME, DiffQMapExtension.class);
+		ext.getQepRepoDir().set(project.getRootDir());
+		ext.getQMapRepoDir().set(buildDir.dir("quilt-mappings"));
+
+		final var qmapFetcher = project.getGradle().getSharedServices().registerIfAbsent(
+			QMAP_FETCH_SERVICE_NAME, GitFetchService.class,
+			spec -> spec.parameters(params -> {
+				final DirectoryProperty repoDir = params.getRepoDir();
+
+				repoDir.set(ext.getQMapRepoDir());
+			})
+		);
+
 		plugins.apply(MavenPublishPlugin.class);
 
-		final var setupQMap = tasks.register(SetupQMapTask.SETUP_Q_MAP_TASK_NAME, SetupQMapTask.class, task -> {
-			final TaskProvider<Jar> jarTask = tasks.named(JavaPlugin.JAR_TASK_NAME, Jar.class);
-			task.dependsOn(jarTask);
-			// if jar did work, current QEP branch must be checked
-			task.getOutputs().upToDateWhen(ignored -> !jarTask.get().getDidWork());
+		final var setupQMap = tasks.register(SetupQMapTask.SETUP_QMAP_TASK_NAME, SetupQMapTask.class, task -> {
+			task.getProjectVersion().set(ext.getProjectVersion());
 
-			task.getQepRepoRootName().set(project.getRootDir().getAbsolutePath());
+			task.getQMapDest().set(ext.getQMapRepoDir());
+
+			task.getSetupState().set(providers.of(SetupQMapState.Source.class, spec -> spec.parameters(params -> {
+				params.getQepRepoDir().set(ext.getQepRepoDir());
+				params.getQepBranchCache().set(task.getQepBranchCache());
+
+				params.getQMapRepoDir().set(ext.getQMapRepoDir());
+				params.getQMapFetcher().set(qmapFetcher);
+			})));
 
 			task.getQepBranchCache().set(buildDir.file("diffQMap-QEP-branch-cache.txt"));
-
-			task.getQMapDest().set(buildDir.dir("quilt-mappings"));
 		});
 
 		tasks.register(DiffQMapTask.DIFF_Q_MAP_TASK_NAME, DiffQMapTask.class, task -> {
