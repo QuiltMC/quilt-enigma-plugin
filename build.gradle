@@ -1,7 +1,5 @@
 import quilt.internal.task.SetupQMapTask
 
-import java.nio.file.Files
-
 buildscript {
 	repositories {
 		mavenCentral()
