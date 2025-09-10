@@ -73,9 +73,20 @@ public abstract class SetupQMapTask extends DefaultTask implements ExecAware, Pr
 			Files.write(this.getQepBranchCache().get().getAsFile().toPath(), state.qepBranch().getBytes());
 		}
 
-		if (Files.isDirectory(qMapDest.resolve(".git"))) {
-			final String defaultQMapBranch = state.defaultQMapBranch();
+		final String defaultQMapBranch = state.defaultQMapBranch();
+		if (defaultQMapBranch == null) {
+			// no qmap repo yet: clone it
 
+			// make sure qMapDest is writable to avoid errors during deletion
+			this.getExecutor().exec(spec -> {
+				spec.executable("chmod");
+				spec.args("-Rf", "+w", qMapDest);
+			});
+
+			Util.clearDirectory(qMapDest);
+
+			this.execGit(qMapDest, "clone", QMAP_REMOTE, qMapDest);
+		} else {
 			final boolean discard = this.getDiscardQMapChanges().getOrElse(false);
 
 			if (!state.qMapOnDefault()) {
@@ -100,18 +111,6 @@ public abstract class SetupQMapTask extends DefaultTask implements ExecAware, Pr
 					this.gitStashPop(qMapDest);
 				}
 			}
-		} else {
-			// no qmap repo yet: clone it
-
-			// make sure qMapDest is writable to avoid errors during deletion
-			this.getExecutor().exec(spec -> {
-				spec.executable("chmod");
-				spec.args("-Rf", "+w", qMapDest);
-			});
-
-			Util.clearDirectory(qMapDest);
-
-			this.execGit(qMapDest, "clone", QMAP_REMOTE, qMapDest);
 		}
 
 		final Path versionsPath = qMapDest.resolve(LIBS_PATH);
