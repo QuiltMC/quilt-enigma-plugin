@@ -142,78 +142,144 @@ static String replaceRegion(String string, String replacement, int start, int en
 final qmapDest = layout.buildDirectory.dir('quilt-mappings')
 tasks.register('setupQMap') {
 	final projectVersion = project.version
+	final qepBranchCacheDest = layout.buildDirectory.file('diffQMap-QEP-branch-cache.txt')
 
 	dependsOn publishToMavenLocal, jar
 
 	inputs.property('projectVersion', projectVersion)
 	outputs.dir(qmapDest)
+	outputs.file(qepBranchCacheDest)
 	outputs.upToDateWhen {
+		// if jar did work, current QEP branch must be checked
 		!jar.didWork
 	}
 
 	final libsPath = 'gradle/libs.versions.toml'
 
-	final execGit = { Action<ExecSpec> action ->
-		final dest = qmapDest.get().asFile
-		dest.mkdirs()
-
+	final execGit = { Object workDir, Action<ExecSpec> action ->
 		EXEC.exec {
-			workingDir dest
+			workingDir workDir
 			executable 'git'
 			action(it)
 		}
 	}
 
-	final qmapNeedsUpdate = {
-		if (jar.didWork) {
-			return true
+	final execGitOutput = { Object workDir, Action<ExecSpec> action ->
+		final output = new ByteArrayOutputStream()
+		execGit(workDir) {
+			it.standardOutput = output
+			action(it)
 		}
+		return output.toString()
+	}
 
-		final dest = qmapDest.get().asFile.toPath()
-		if (!Files.isDirectory(dest.resolve('.git'))) {
-			return true
+	final execQmapGit = { Action<ExecSpec> action ->
+		final dest = qmapDest.get().asFile
+		dest.mkdirs()
+
+		execGit(dest, action)
+	}
+
+	final execQMapGitOutput = { Action<ExecSpec> action ->
+		final dest = qmapDest.get().asFile
+		dest.mkdirs()
+
+		execGitOutput(dest, action)
+	}
+
+	final tryQMapGitStash = {
+		return !execQMapGitOutput {
+			// stash everything excepts libs so when stash is applied it doesn't conflict with or override altered QEP version
+			it.args 'stash', '-m', 'QEP auto-stash', '--', ":!:${libsPath}"
+		}.contains('No local changes to save')
+	}
+
+	final qMapGitStashPop = {
+		execQmapGit {
+			it.args 'stash', 'pop'
 		}
+	}
+
+	final qmapNeedsUpdate = {
+		final dest = qmapDest.get().asFile.toPath()
 
 		if (!Files.isRegularFile(dest.resolve(libsPath))) {
 			return true
 		}
 
-		execGit { it.args 'fetch' }
-
-		final localHash = new ByteArrayOutputStream()
-		execGit {
+		final localHash = execQMapGitOutput {
 			it.args 'rev-parse', 'HEAD'
-			it.standardOutput = localHash
 		}
 
-		final originHash = new ByteArrayOutputStream()
-		execGit {
+		final originHash = execQMapGitOutput {
 			it.args 'rev-parse', 'origin/HEAD'
-			it.standardOutput = originHash
 		}
 
-		return originHash.toString() != localHash.toString()
+		return originHash != localHash
 	}
 
 	doLast {
 		final dest = qmapDest.get().asFile.toPath()
+		final qepBranchCache = qepBranchCacheDest.get().asFile.toPath()
 
-		if (qmapNeedsUpdate()) {
-			if (Files.isDirectory(dest.resolve('.git'))) {
-				execGit {
-					it.args 'reset', '--hard', 'origin/HEAD'
-				}
-			} else {
-				EXEC.exec {
-					executable 'chmod'
-					args '-Rf', '+w', dest
-				}
+		final priorQepBranch = Files.isRegularFile(qepBranchCache) ? Files.readString(qepBranchCache) : null
+		final currentQepBranch = execGitOutput(project.rootDir) {
+			it.args 'rev-parse', '--abbrev-ref', 'HEAD'
+		}
 
-				dest.deleteDir()
+		final sameQepBranch = currentQepBranch == priorQepBranch
+		if (!sameQepBranch) {
+			qepBranchCache.text = currentQepBranch
+		}
 
-				execGit {
-					it.args 'clone', 'https://github.com/QuiltMC/quilt-mappings', dest
-				}
+		execQmapGit { it.args 'fetch' }
+
+		if (Files.isDirectory(dest.resolve('.git'))) {
+			final currentQmapBranch = execQMapGitOutput {
+				it.args 'rev-parse', '--abbrev-ref', 'HEAD'
+			}
+
+			final showOrigin = execQMapGitOutput {
+				it.args 'remote', 'show', 'origin'
+			}
+
+			println (showOrigin)
+
+			final defaultQmapBranchMatcher = showOrigin =~ /(?m)^\s*HEAD branch: (\w+)/
+			if (!defaultQmapBranchMatcher.find()) {
+				throw new GradleException('Could not find default quilt-mappings branch!')
+			}
+
+			final defaultQmapBranch = defaultQmapBranchMatcher.group(1)
+
+			if (currentQmapBranch != defaultQmapBranch) {
+				boolean stashed = false
+				if (sameQepBranch) { stashed = tryQMapGitStash() }
+				else { execQmapGit { it.args 'reset', '--hard', 'HEAD' } }
+
+				execQmapGit { it.args 'checkout', "origin/${defaultQmapBranch}" }
+
+				if (stashed) { qMapGitStashPop() }
+			} else if (!sameQepBranch || qmapNeedsUpdate()) {
+				boolean stashed = sameQepBranch && tryQMapGitStash()
+
+				execQmapGit { it.args 'reset', '--hard', 'origin/HEAD' }
+
+				if (stashed) { qMapGitStashPop() }
+			}
+		} else {
+			// no qmap clone yet, clone it
+
+			// makes sure dest is writable to avoid errors during deletion
+			EXEC.exec {
+				executable 'chmod'
+				args '-Rf', '+w', dest
+			}
+
+			dest.deleteDir()
+
+			execQmapGit {
+				it.args 'clone', 'https://github.com/QuiltMC/quilt-mappings', dest
 			}
 		}
 
