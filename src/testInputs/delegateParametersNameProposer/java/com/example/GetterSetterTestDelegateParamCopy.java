@@ -2,11 +2,11 @@ package com.example;
 
 import java.util.Random;
 
-public class GetterSetterTestCopy {
+public class GetterSetterTestDelegateParamCopy {
 	public int x;
 	public String y;
 
-	public GetterSetterTestCopy(int x, String y) {
+	public GetterSetterTestDelegateParamCopy(int x, String y) {
 		this.x = x;
 		this.y = y;
 	}

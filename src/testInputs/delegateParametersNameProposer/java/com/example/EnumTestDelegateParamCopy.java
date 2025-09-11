@@ -1,6 +1,6 @@
 package com.example;
 
-public enum EnumTestCopy {
+public enum EnumTestDelegateParamCopy {
 	NORTH(true),
 	EAST(false),
 	WEST(false),
@@ -8,7 +8,7 @@ public enum EnumTestCopy {
 
 	private final boolean vertical;
 
-	EnumTestCopy(boolean vertical) {
+	EnumTestDelegateParamCopy(boolean vertical) {
 		this.vertical = vertical;
 	}
 }

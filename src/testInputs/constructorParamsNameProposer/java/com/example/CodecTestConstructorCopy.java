@@ -5,27 +5,27 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import java.util.Optional;
 
-public class CodecTest {
-	public static final Codec<CodecTest> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-			Codec.INT.fieldOf("value").forGetter(CodecTest::getValue),
+public class CodecTestConstructorCopy {
+	public static final Codec<CodecTestConstructorCopy> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+			Codec.INT.fieldOf("value").forGetter(CodecTestConstructorCopy::getValue),
 			Codec.DOUBLE.fieldOf("scale").orElse(1.0).forGetter(test -> test.getScale()),
-			Codec.FLOAT.optionalFieldOf("factor").forGetter(CodecTest::getFactor),
+			Codec.FLOAT.optionalFieldOf("factor").forGetter(CodecTestConstructorCopy::getFactor),
 			Codec.LONG.fieldOf("seed").forGetter(test -> test.seed)
-	).apply(instance, CodecTest::new));
+	).apply(instance, CodecTestConstructorCopy::new));
 
 	private int value;
 	private final double scale;
 	private final Optional<Float> factor;
 	public long seed;
 
-	public CodecTest(int value, double scale, Optional<Float> factor, long seed) {
+	public CodecTestConstructorCopy(int value, double scale, Optional<Float> factor, long seed) {
 		this.value = value;
 		this.scale = scale;
 		this.factor = factor;
 		this.seed = seed;
 	}
 
-	public CodecTest() {
+	public CodecTestConstructorCopy() {
 		this(1, 2.0, Optional.empty(), 0);
 	}
 
