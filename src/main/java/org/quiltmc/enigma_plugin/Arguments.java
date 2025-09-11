@@ -35,7 +35,7 @@ public class Arguments {
 	public static final String DISABLE_MAPPING_MERGE = "disable_mapping_merge";
 	public static final String CUSTOM_CODECS = "custom_codecs";
 	public static final String SIMPLE_TYPE_FIELD_NAMES_PATH = "simple_type_field_names_path";
-	public static final String SIMPLE_TYPE_FIELD_NAMES_TYPE_VERIFICATION = "simple_type_field_names_type_verification";
+	public static final String SIMPLE_TYPE_VERIFICATION_ERROR_LEVEL = "simple_type_verification_error_level";
 	public static final String MERGED_MAPPING_PATH = "merged_mapping_path";
 	public static final String PACKAGE_NAME_OVERRIDES_PATH = "package_name_overrides_path";
 

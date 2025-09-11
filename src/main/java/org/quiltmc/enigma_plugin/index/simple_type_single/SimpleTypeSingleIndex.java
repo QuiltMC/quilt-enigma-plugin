@@ -64,7 +64,7 @@ public class SimpleTypeSingleIndex extends Index {
 
 	private SimpleTypeFieldNamesRegistry registry;
 	private InheritanceIndex inheritance;
-	private TypeVerification typeVerification = TypeVerification.DEFAULT;
+	private VerificationLevel verificationLevel = VerificationLevel.DEFAULT;
 
 	public SimpleTypeSingleIndex() {
 		super(null);
@@ -74,16 +74,16 @@ public class SimpleTypeSingleIndex extends Index {
 	public void withContext(EnigmaServiceContext<JarIndexerService> context) {
 		super.withContext(context);
 
-		this.typeVerification = context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_TYPE_VERIFICATION)
+		this.verificationLevel = context.getSingleArgument(Arguments.SIMPLE_TYPE_VERIFICATION_ERROR_LEVEL)
 			.map(value -> {
 				try {
-					return TypeVerification.valueOf(value);
+					return VerificationLevel.valueOf(value);
 				} catch (IllegalArgumentException e) {
 					throw new IllegalStateException(
 						"Invalid %s value: \"%s\"; must be one of %s".formatted(
-							Arguments.SIMPLE_TYPE_FIELD_NAMES_TYPE_VERIFICATION,
+							Arguments.SIMPLE_TYPE_VERIFICATION_ERROR_LEVEL,
 							value,
-							Arrays.stream(TypeVerification.values())
+							Arrays.stream(VerificationLevel.values())
 								.map(Enum::name)
 								.map(name -> '"' + name + '"')
 								.collect(Collectors.joining(", "))
@@ -92,7 +92,7 @@ public class SimpleTypeSingleIndex extends Index {
 					);
 				}
 			})
-			.orElse(TypeVerification.DEFAULT);
+			.orElse(VerificationLevel.DEFAULT);
 
 		this.loadRegistry(context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
 				.map(context::getPath).orElse(null));
@@ -113,7 +113,7 @@ public class SimpleTypeSingleIndex extends Index {
 		this.registry.read();
 
 		this.unverifiedTypes.clear();
-		if (this.typeVerification != TypeVerification.NONE) {
+		if (this.verificationLevel != VerificationLevel.NONE) {
 			this.registry.streamTypes().forEach(this.unverifiedTypes::add);
 		}
 	}
@@ -148,7 +148,7 @@ public class SimpleTypeSingleIndex extends Index {
 	}
 
 	public void verifyTypes() {
-		if (this.typeVerification != TypeVerification.NONE) {
+		if (this.verificationLevel != VerificationLevel.NONE) {
 			if (!this.unverifiedTypes.isEmpty()) {
 				boolean single = this.unverifiedTypes.size() == 1;
 				StringBuilder message = new StringBuilder("The following simple type field name type");
@@ -161,7 +161,7 @@ public class SimpleTypeSingleIndex extends Index {
 					this.unverifiedTypes.forEach(type -> message.append("\n\t").append(type));
 				}
 
-				if (this.typeVerification == TypeVerification.WARN) {
+				if (this.verificationLevel == VerificationLevel.WARN) {
 					Logger.warn(message);
 				} else {
 					throw new IllegalStateException(message.toString());
@@ -421,9 +421,9 @@ public class SimpleTypeSingleIndex extends Index {
 		}
 	}
 
-	private enum TypeVerification {
+	private enum VerificationLevel {
 		NONE, WARN, THROW;
 
-		static final TypeVerification DEFAULT = WARN;
+		static final VerificationLevel DEFAULT = WARN;
 	}
 }
