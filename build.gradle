@@ -29,10 +29,6 @@ final EXEC = objects.newInstance(ExecProvider).operations
 
 version = version + (ENV.GITHUB_ACTIONS ? '' : '+local')
 
-sourceSets {
-	testInputs
-}
-
 repositories {
 	mavenCentral()
 	maven {
@@ -77,63 +73,36 @@ dependencies {
 	testRuntimeOnly libs.junit.engine
 	testImplementation libs.enigma.swing
 
-	testInputsImplementation libs.dfu
 	enigmaRuntime libs.dfu
 }
 
-static String taskNameFrom(String name) {
-	final length = name.length()
+TaskProvider<Jar> registerTestInputJarTask(String namePrefix, Object... sourcePaths) {
+	return tasks.register("${namePrefix}TestJar", Jar) {
+		group('test-setup')
 
-	if (length == 0) {
-		throw new IllegalArgumentException("name must not be empty!")
-	}
+		from(sourcePaths)
 
-	final builder = new StringBuilder()
-
-	final first = name.charAt(0)
-
-	final underscore = (char) '_'
-	if (first != underscore) {
-		builder.append(Character.toLowerCase(first))
-	}
-
-	for (int i = 1; i < length; i++) {
-		final c = name.charAt(i)
-		if (c == underscore) {
-			if (i < length - 1) {
-				builder.append(Character.toUpperCase(name.charAt(++i)))
-			}
-		} else {
-			builder.append(Character.toLowerCase(c))
-		}
-	}
-
-	return builder.toString()
-}
-
-TaskProvider<ProGuardTask> registerTestJarTasks(String name, String... input) {
-	final taskName = taskNameFrom(name)
-	final testJar = tasks.register("${taskName}TestJar", Jar.class) {
-		group("test-setup")
-		from(sourceSets.testInputs.output) {
-			include input
-		}
-
-		archiveFileName = "${name}.jar"
+		archiveFileName = "${namePrefix}-test.jar"
 		destinationDirectory = project.layout.buildDirectory.dir('test-inputs')
 	}
+}
 
-	final testObf = tasks.register("${taskName}TestObf", ProGuardTask) {
-		group("test-setup")
+TaskProvider<ProGuardTask> registerTestInputObfTask(String namePrefix, TaskProvider<Jar> jarTask, Object libraryJarFiles) {
+	final testObf = tasks.register("${namePrefix}TestObf", ProGuardTask) {
+		group('test-setup')
 
 		final obfDest = project.layout.buildDirectory.dir('test-obf')
 
 		verbose()
-		injars testJar.flatMap { it.archiveFile }
-		outjars obfDest.map { it.file("${name}-obf.jar") }
+		injars jarTask.flatMap { it.archiveFile }
+		// outjars obfDest.map { it.file("${jarName}-obf.jar") }
+		outjars obfDest.zip(jarTask.flatMap(Jar::getArchiveFileName)) { dest, jarName ->
+			dest.file("${jarName.substring(0, jarName.length() - 4)}-obf.jar")
+		}
 
 		libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
-		libraryjars sourceSets.testInputs.compileClasspath
+		// libraryjars sourceSet.compileClasspath
+		libraryjars libraryJarFiles
 
 		dontshrink()
 		dontoptimize()
@@ -148,7 +117,7 @@ TaskProvider<ProGuardTask> registerTestJarTasks(String name, String... input) {
 		keepattributes 'Deprecated'
 		keepattributes 'Signature'
 		keepattributes 'Record'
-		printmapping obfDest.map { it.file("${name}-obf.txt") }
+		printmapping obfDest.map { it.file("${namePrefix}-obf.txt") }
 	}
 
 	test.dependsOn(testObf)
@@ -156,39 +125,43 @@ TaskProvider<ProGuardTask> registerTestJarTasks(String name, String... input) {
 	return testObf
 }
 
-final rootInputPackage = 'com/example'
+final completeTestInputSources = project.files()
+final completeTestInputClasspath = project.files()
 
-final completeTestObf = registerTestJarTasks("complete", "${rootInputPackage}/**/*.class")
+file('src/testInputs/').listFiles().each { dir ->
+	if (dir.directory) {
+		sourceSets {
+			"${dir.name}" {
+				java {
+					srcDirs dir.toPath().resolve('java')
+				}
+			}
+		}
 
-file("src/testInputs/java/${rootInputPackage}").listFiles().each {
-	String input
-	String name
-	if (it.directory) {
-		name = it.name
-		input = "${rootInputPackage}/${name}/**/*.class"
-	} else if (it.name.endsWith('.java')) {
-		name = it.name.substring(0, it.name.length() - '.java'.length())
-		input = "${rootInputPackage}/${name}*.class"
-	} else {
-		return
+		final SourceSet sourceSet = sourceSets."${dir.name}"
+
+		dependencies {
+			"${dir.name}Implementation"(libs.dfu)
+		}
+
+		final testJar = registerTestInputJarTask(dir.name, sourceSet.output)
+		completeTestInputSources.from(sourceSet.output)
+
+		registerTestInputObfTask(dir.name, testJar, sourceSet.compileClasspath)
+		completeTestInputClasspath.from(sourceSet.compileClasspath)
 	}
-
-	registerTestJarTasks(name, input)
 }
 
-registerTestJarTasks(
-	"DELEGATE_PARAMETERS",
-	"${rootInputPackage}/DelegateParametersTest*.class",
-	"${rootInputPackage}/GetterSetterTest.class",
-	"${rootInputPackage}/field_names/EnumTest.class",
-)
+
+final completeTestJar = registerTestInputJarTask('complete', completeTestInputSources)
+final completeTestObf = registerTestInputObfTask('complete', completeTestJar, completeTestInputClasspath)
 
 tasks.register('testEnigma', JavaExec) {
-	final completeObf = completeTestObf.map { it.outJarFileCollection.getSingleFile() }
+	final completeObf = completeTestObf.map(ProGuardTask::getOutJarFileCollection).map(FileCollection::getSingleFile)
 	final mappings = file('testMappings/')
-	dependsOn processTestInputsResources
+	final profile = file('test_enigma/profile.json')
 
-	inputs.file(completeObf)
+	inputs.files(completeObf, profile)
 	outputs.dir(mappings)
 
 	mainClass = "org.quiltmc.enigma.gui.Main"
@@ -198,7 +171,7 @@ tasks.register('testEnigma', JavaExec) {
 		args(
 			'-jar', completeObf.get(),
 			'-mappings', mappings.getAbsolutePath(),
-			'-profile', new File(processTestInputsResources.destinationDir.absolutePath, 'profile.json'),
+			'-profile', profile,
 			'--development'
 		)
 		mappings.mkdirs()

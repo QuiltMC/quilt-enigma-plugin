@@ -42,7 +42,7 @@ public final class TestUtil {
 		throw new UnsupportedOperationException();
 	}
 
-	private static final Path DEFAULT_PROFILE = Path.of("build/resources/testInputs/profile.json");
+	private static final Path DEFAULT_PROFILE = Path.of("test_enigma/profile.json");
 
 	public static Path obfJarPathOf(String name) {
 		return Path.of("").toAbsolutePath().resolve("build/test-obf/%s.jar".formatted(name));
