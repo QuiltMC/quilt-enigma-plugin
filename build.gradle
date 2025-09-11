@@ -117,7 +117,7 @@ TaskProvider<ProGuardTask> registerTestInputObfTask(String namePrefix, TaskProvi
 		keepattributes 'Deprecated'
 		keepattributes 'Signature'
 		keepattributes 'Record'
-		printmapping obfDest.map { it.file("${namePrefix}-obf.txt") }
+		printmapping obfDest.map { it.file("${namePrefix}-test-obf.txt") }
 	}
 
 	test.dependsOn(testObf)
