@@ -95,13 +95,11 @@ TaskProvider<ProGuardTask> registerTestInputObfTask(String namePrefix, TaskProvi
 
 		verbose()
 		injars jarTask.flatMap { it.archiveFile }
-		// outjars obfDest.map { it.file("${jarName}-obf.jar") }
 		outjars obfDest.zip(jarTask.flatMap(Jar::getArchiveFileName)) { dest, jarName ->
 			dest.file("${jarName.substring(0, jarName.length() - 4)}-obf.jar")
 		}
 
 		libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
-		// libraryjars sourceSet.compileClasspath
 		libraryjars libraryJarFiles
 
 		dontshrink()
@@ -151,7 +149,6 @@ file('src/testInputs/').listFiles().each { dir ->
 		completeTestInputClasspath.from(sourceSet.compileClasspath)
 	}
 }
-
 
 final completeTestJar = registerTestInputJarTask('complete', completeTestInputSources)
 final completeTestObf = registerTestInputObfTask('complete', completeTestJar, completeTestInputClasspath)
