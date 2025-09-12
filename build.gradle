@@ -174,9 +174,7 @@ tasks.register('testEnigma', JavaExec) {
 	final completeObf = completeTestObf.map(ProGuardTask::getOutJarFileCollection).map(FileCollection::getSingleFile)
 	final mappings = file('testMappings/')
 
-	final profile = tasks.named('processCommonTestInputsResources', ProcessResources).map {
-		it.destinationDir.toPath().resolve('default_profile.json')
-	}
+	final profile = file('enigma_test/profile.json')
 
 	inputs.files(completeObf, profile)
 	outputs.dir(mappings)
@@ -188,7 +186,7 @@ tasks.register('testEnigma', JavaExec) {
 		args(
 			'-jar', completeObf.get(),
 			'-mappings', mappings.getAbsolutePath(),
-			'-profile', profile.get(),
+			'-profile', profile,
 			'--development'
 		)
 		mappings.mkdirs()
