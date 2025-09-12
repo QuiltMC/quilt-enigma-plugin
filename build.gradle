@@ -157,7 +157,7 @@ file('src/testInputs/').listFiles().each { dir ->
 		final testJar = registerTestInputJarTask(dir.name, sourceSet.output)
 		completeTestInputSources.from(sourceSet.output)
 
-		registerTestInputObfTask(dir.name, testJar, sourceSet.compileClasspath)
+		final testObf = registerTestInputObfTask(dir.name, testJar, sourceSet.compileClasspath)
 		completeTestInputClasspath.from(sourceSet.compileClasspath)
 	}
 }
@@ -310,6 +310,7 @@ java {
 
 test {
 	useJUnitPlatform()
+	dependsOn processCommonTestInputsResources
 }
 
 publishing {
