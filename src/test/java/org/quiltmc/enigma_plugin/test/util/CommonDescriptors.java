@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package org.quiltmc.enigma_plugin.util;
+package org.quiltmc.enigma_plugin.test.util;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.javaLangDescOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.javaLangDescOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.typeDescOf;
 
 public interface CommonDescriptors {
 	/**

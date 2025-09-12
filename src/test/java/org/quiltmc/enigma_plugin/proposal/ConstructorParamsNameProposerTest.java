@@ -19,21 +19,25 @@ package org.quiltmc.enigma_plugin.proposal;
 import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
-import org.quiltmc.enigma_plugin.util.CommonDescriptors;
-import org.quiltmc.enigma_plugin.util.ProposalAsserter;
-import org.quiltmc.enigma_plugin.util.TestUtil;
+import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 
-import java.nio.file.Path;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.localOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
+public class ConstructorParamsNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
+	@Override
+	public Class<? extends NameProposer> getTarget() {
+		return ConstructorParamsNameProposer.class;
+	}
 
-public class ConstructorParamsNameProposerTest implements CommonDescriptors {
-	private static final Path JAR = TestUtil.obfJarPathOf("CodecTest-obf");
+	@Override
+	public String getTargetId() {
+		return ConstructorParamsNameProposer.ID;
+	}
 
 	@Test
 	public void testConstructorParameterNames() {
-		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConstructorParamsNameProposer.ID);
+		final var asserter = this.createAsserter();
 
 		final var codecTest = new ClassEntry("com/a/a");
 		final MethodEntry constructor = methodOf(codecTest, "<init>", V, I, D, OPT, J);

@@ -18,21 +18,25 @@ package org.quiltmc.enigma_plugin.proposal;
 
 import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
-import org.quiltmc.enigma_plugin.util.CommonDescriptors;
-import org.quiltmc.enigma_plugin.util.ProposalAsserter;
-import org.quiltmc.enigma_plugin.util.TestUtil;
+import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 
-import java.nio.file.Path;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
+public class CodecNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
+	@Override
+	public Class<? extends NameProposer> getTarget() {
+		return CodecNameProposer.class;
+	}
 
-public class CodecNameProposerTest implements CommonDescriptors {
-	private static final Path JAR = TestUtil.obfJarPathOf("CodecTest-obf");
+	@Override
+	public String getTargetId() {
+		return CodecNameProposer.ID;
+	}
 
 	@Test
 	public void testCodecNames() {
-		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), CodecNameProposer.ID);
+		final var asserter = this.createAsserter();
 
 		final var codecTest = new ClassEntry("com/a/a");
 

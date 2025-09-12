@@ -21,24 +21,29 @@ import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma.util.validation.ValidationContext;
-import org.quiltmc.enigma_plugin.util.CommonDescriptors;
-import org.quiltmc.enigma_plugin.util.ProposalAsserter;
-import org.quiltmc.enigma_plugin.util.TestUtil;
+import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 
-import java.nio.file.Path;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.typeDescOf;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.localOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
-
-public class DelegateParametersNameProposerTest implements CommonDescriptors {
-	private static final Path JAR = TestUtil.obfJarPathOf("DELEGATE_PARAMETERS-obf");
+public class DelegateParametersNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
 	private static final String DELEGATE_PARAMETERS_TEST_NAME = "a/a/a";
 	private static final String TEST_1 = typeDescOf(DELEGATE_PARAMETERS_TEST_NAME + "$a");
 
+	@Override
+	public Class<? extends NameProposer> getTarget() {
+		return DelegateParametersNameProposer.class;
+	}
+
+	@Override
+	public String getTargetId() {
+		return DelegateParametersNameProposer.ID;
+	}
+
 	@Test
 	public void testDelegateParameterNames() {
-		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), DelegateParametersNameProposer.ID);
+		final var asserter = this.createAsserter();
 
 		final var delegateParametersTest = new ClassEntry(DELEGATE_PARAMETERS_TEST_NAME);
 

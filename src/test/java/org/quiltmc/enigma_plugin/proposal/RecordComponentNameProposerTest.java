@@ -18,21 +18,25 @@ package org.quiltmc.enigma_plugin.proposal;
 
 import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
-import org.quiltmc.enigma_plugin.util.CommonDescriptors;
-import org.quiltmc.enigma_plugin.util.ProposalAsserter;
-import org.quiltmc.enigma_plugin.util.TestUtil;
+import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 
-import java.nio.file.Path;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
+public class RecordComponentNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
+	@Override
+	public Class<? extends NameProposer> getTarget() {
+		return RecordComponentNameProposer.class;
+	}
 
-public class RecordComponentNameProposerTest implements CommonDescriptors {
-	private static final Path JAR = TestUtil.obfJarPathOf("RecordNamingTest-obf");
+	@Override
+	public String getTargetId() {
+		return RecordComponentNameProposer.ID;
+	}
 
 	@Test
 	public void testRecordNames() {
-		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), RecordComponentNameProposer.ID);
+		final var asserter = this.createAsserter();
 
 		final var recordNamingTest = new ClassEntry("a/a/a");
 
@@ -54,18 +58,10 @@ public class RecordComponentNameProposerTest implements CommonDescriptors {
 		// factor override
 		asserter.assertNotProposed(methodOf(inner1, "b", D));
 		asserter.assertProposal("value", methodOf(inner1, "c", I));
-	}
 
-	@Test
-	public void testCodecEntryRecordNames() {
-		final ProposalAsserter asserter = new ProposalAsserter(
-				TestUtil.setupEnigma(TestUtil.obfJarPathOf("CodecTest-obf")),
-				RecordComponentNameProposer.ID
-		);
+		final var codecTestCopy = new ClassEntry("com/a/a$a");
 
-		final var codecTestExampleRecord = new ClassEntry("com/a/a$a");
-
-		asserter.assertProposal("value", fieldOf(codecTestExampleRecord, "b", I));
-		asserter.assertProposal("value", methodOf(codecTestExampleRecord, "a", I));
+		asserter.assertProposal("value", fieldOf(codecTestCopy, "b", I));
+		asserter.assertProposal("value", methodOf(codecTestCopy, "a", I));
 	}
 }

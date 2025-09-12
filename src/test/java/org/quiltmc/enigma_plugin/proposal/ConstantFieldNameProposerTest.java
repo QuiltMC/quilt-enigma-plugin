@@ -18,23 +18,27 @@ package org.quiltmc.enigma_plugin.proposal;
 
 import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
-import org.quiltmc.enigma_plugin.util.ProposalAsserter;
-import org.quiltmc.enigma_plugin.util.TestUtil;
 
-import java.nio.file.Path;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.typeDescOf;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
-
-public class ConstantFieldNameProposerTest {
-	private static final Path JAR = TestUtil.obfJarPathOf("field_names-obf");
-
+public class ConstantFieldNameProposerTest implements ConventionalNameProposerTest {
 	private static final String ENUM_TEST_NAME = "a/a/a/e";
 	private static final String ENUM_2_TEST_NAME = "a/a/a/d";
 
+	@Override
+	public Class<? extends NameProposer> getTarget() {
+		return ConstantFieldNameProposer.class;
+	}
+
+	@Override
+	public String getTargetId() {
+		return ConstantFieldNameProposer.ID;
+	}
+
 	@Test
 	public void testConstantFieldNames() {
-		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConstantFieldNameProposer.ID);
+		final var asserter = this.createAsserter();
 
 		final var classTest = new ClassEntry("a/a/a/c");
 		final String something = typeDescOf("a/a/a/f");

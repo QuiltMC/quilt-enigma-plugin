@@ -22,26 +22,31 @@ import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
-import org.quiltmc.enigma_plugin.util.CommonDescriptors;
-import org.quiltmc.enigma_plugin.util.ProposalAsserter;
-import org.quiltmc.enigma_plugin.util.TestUtil;
+import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
+import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
 
-import java.nio.file.Path;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.typeDescOf;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.localOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
-
-public class ConflictFixProposerTest implements CommonDescriptors {
-	private static final Path JAR = TestUtil.obfJarPathOf("conflicts-obf");
-
+public class ConflictFixProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
 	private static final String IDENTIFIABLE = typeDescOf("a/a/a/b");
 	private static final String IDENTIFIED = typeDescOf("a/a/a/c");
 
+	@Override
+	public Class<? extends NameProposer> getTarget() {
+		return ConflictFixProposer.class;
+	}
+
+	@Override
+	public String getTargetId() {
+		return ConflictFixProposer.ID;
+	}
+
 	@Test
 	public void testSimpleTypeNameConflictFix() {
-		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConflictFixProposer.ID);
+		final var asserter = this.createAsserter();
 
 		// tests the conflict fixer via introducing a conflict manually
 
@@ -69,7 +74,7 @@ public class ConflictFixProposerTest implements CommonDescriptors {
 
 	@Test
 	public void testSimpleTypeNameConflictFixNoFallback() {
-		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), ConflictFixProposer.ID);
+		final ProposalAsserter asserter = this.createAsserter();
 
 		final var conflictTest = new ClassEntry("a/a/a/a");
 		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, IDENTIFIED);

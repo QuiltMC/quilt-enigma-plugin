@@ -21,22 +21,26 @@ import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma.util.validation.ValidationContext;
-import org.quiltmc.enigma_plugin.util.CommonDescriptors;
-import org.quiltmc.enigma_plugin.util.ProposalAsserter;
-import org.quiltmc.enigma_plugin.util.TestUtil;
+import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 
-import java.nio.file.Path;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.localOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
+public class GetterSetterNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
+	@Override
+	public Class<? extends NameProposer> getTarget() {
+		return GetterSetterNameProposer.class;
+	}
 
-public class GetterSetterNameProposerTest implements CommonDescriptors {
-	private static final Path JAR = TestUtil.obfJarPathOf("GetterSetterTest-obf");
+	@Override
+	public String getTargetId() {
+		return GetterSetterNameProposer.ID;
+	}
 
 	@Test
 	public void testGetterSetterNames() {
-		final var asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), GetterSetterNameProposer.ID);
+		final var asserter = this.createAsserter();
 
 		final var getterSetterTest = new ClassEntry("a/a/a");
 

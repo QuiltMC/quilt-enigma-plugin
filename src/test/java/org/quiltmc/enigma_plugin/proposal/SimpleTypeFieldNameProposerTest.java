@@ -19,19 +19,15 @@ package org.quiltmc.enigma_plugin.proposal;
 import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
-import org.quiltmc.enigma_plugin.util.CommonDescriptors;
-import org.quiltmc.enigma_plugin.util.ProposalAsserter;
-import org.quiltmc.enigma_plugin.util.TestUtil;
+import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
+import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
 
-import java.nio.file.Path;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
+import static org.quiltmc.enigma_plugin.test.util.TestUtil.typeDescOf;
 
-import static org.quiltmc.enigma_plugin.util.TestUtil.fieldOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.localOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.methodOf;
-import static org.quiltmc.enigma_plugin.util.TestUtil.typeDescOf;
-
-public class SimpleTypeFieldNameProposerTest implements CommonDescriptors {
-	private static final Path JAR = TestUtil.obfJarPathOf("simple_type_names-obf");
+public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
 
 	private static final String VALUE_D_NAME = "a/a/a/a/j";
 
@@ -49,9 +45,19 @@ public class SimpleTypeFieldNameProposerTest implements CommonDescriptors {
 	private static final String VALUE_E = typeDescOf("a/a/a/a/l");
 	private static final String VALUE_EE = typeDescOf("a/a/a/a/m");
 
+	@Override
+	public Class<? extends NameProposer> getTarget() {
+		return SimpleTypeFieldNameProposer.class;
+	}
+
+	@Override
+	public String getTargetId() {
+		return SimpleTypeFieldNameProposer.ID;
+	}
+
 	@Test
 	public void testSimpleTypeSingleNames() {
-		final ProposalAsserter asserter = new ProposalAsserter(TestUtil.setupEnigma(JAR), SimpleTypeFieldNameProposer.ID);
+		final ProposalAsserter asserter = this.createAsserter();
 
 		final var simpleTypeNamesTest = new ClassEntry("a/a/a/a");
 

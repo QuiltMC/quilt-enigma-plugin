@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.quiltmc.enigma_plugin.util;
+package org.quiltmc.enigma_plugin.test.util;
 
 import org.junit.jupiter.api.Assertions;
 import org.quiltmc.enigma.api.Enigma;
@@ -33,19 +33,51 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
+import org.quiltmc.enigma_plugin.proposal.ConventionalNameProposerTest;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
 public final class TestUtil {
+	private static final String TEST_OBF_SUFFIX = "-test-obf";
+
 	private TestUtil() {
 		throw new UnsupportedOperationException();
 	}
 
 	private static final Path DEFAULT_PROFILE = Path.of("test_enigma/profile.json");
 
-	public static Path obfJarPathOf(String name) {
-		return Path.of("").toAbsolutePath().resolve("build/test-obf/%s.jar".formatted(name));
+	/**
+	 * @param namePrefix the name of the obf jar, excluding the {@value #TEST_OBF_SUFFIX} suffix shared by all obf jars
+	 *
+	 * @return the path to the obfuscated test input jar
+	 *
+	 * @see ConventionalNameProposerTest
+	 */
+	public static Path obfJarPathOf(String namePrefix) {
+		return Path.of("").toAbsolutePath().resolve(("build/test-obf/%s" + TEST_OBF_SUFFIX + ".jar").formatted(namePrefix));
+	}
+
+	public static String unCapitalize(String string) {
+		if (string.isEmpty()) {
+			return string;
+		}
+
+		final char first = string.charAt(0);
+		final char firstCap = Character.toUpperCase(first);
+
+		if (first == firstCap) {
+			return string;
+		} else {
+			final var builder = new StringBuilder();
+			builder.append(firstCap);
+
+			for (int i = 1; i < string.length(); i++) {
+				builder.append(string.charAt(i));
+			}
+
+			return builder.toString();
+		}
 	}
 
 	/**

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.quiltmc.enigma_plugin.util;
+package org.quiltmc.enigma_plugin.test.util;
 
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;

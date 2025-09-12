@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.quiltmc.enigma_plugin;
+package org.quiltmc.enigma_plugin.proposal;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,6 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma.util.validation.PrintNotifier;
 import org.quiltmc.enigma.util.validation.ValidationContext;
-import org.quiltmc.enigma_plugin.proposal.MappingMergePackageProposer;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -46,7 +45,7 @@ import java.util.regex.Pattern;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class MergedMappingTest {
+public class MappingMergeNameProposerTest {
 	private static final Path exampleJar = getResource("/merged_mapping_test/input.jar");
 	private static final Path exampleMappings = getResource("/merged_mapping_test/example_mappings.mapping");
 	private static final Path emptyOverrides = getResource("/merged_mapping_test/example_mappings_empty.json");
@@ -109,7 +108,7 @@ public class MergedMappingTest {
 		var profile = EnigmaProfile.parse(new StringReader(profileString));
 
 		var enigma = Enigma.builder().setProfile(profile).build();
-		project = enigma.openJar(MergedMappingTest.exampleJar, new ClasspathClassProvider(), ProgressListener.createEmpty());
+		project = enigma.openJar(MappingMergeNameProposerTest.exampleJar, new ClasspathClassProvider(), ProgressListener.createEmpty());
 	}
 
 	@Test
@@ -237,9 +236,9 @@ public class MergedMappingTest {
 	}
 
 	static void setupForOverrideValidation(Path overridesPath) throws MappingParseException, IOException {
-		setupEnigma(MergedMappingTest.overrideRenamingMappings, overridesPath);
+		setupEnigma(MappingMergeNameProposerTest.overrideRenamingMappings, overridesPath);
 		// manually trigger dynamic proposal so validation is run
-		project.setMappings(project.getEnigma().readMappings(MergedMappingTest.overrideRenamingMappings).get(), ProgressListener.createEmpty());
+		project.setMappings(project.getEnigma().readMappings(MappingMergeNameProposerTest.overrideRenamingMappings).get(), ProgressListener.createEmpty());
 	}
 
 	private static void assertMapping(Entry<?> entry, String name, TokenType type) {
@@ -254,7 +253,7 @@ public class MergedMappingTest {
 
 	public static Path getResource(String name) {
 		try {
-			return Path.of(MergedMappingTest.class.getResource(name).toURI());
+			return Path.of(MappingMergeNameProposerTest.class.getResource(name).toURI());
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
