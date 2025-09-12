@@ -21,6 +21,9 @@ import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
+import org.quiltmc.enigma_plugin.test.util.TestUtil;
+
+import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
@@ -28,22 +31,24 @@ import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.typeDescOf;
 
 public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
+	private static final Path ENIGMA_PROFILE = TestUtil.enigmaProfileOf("simple_type_field_names/profile");
 
-	private static final String VALUE_D_NAME = "a/a/a/a/j";
+	private static final String SIMPLE_TYPES_NAMES_TEST_NAME = "a/a/a";
+	private static final String VALUE_D_NAME = "a/a/a/j";
 
-	private static final String CONFIG = typeDescOf("a/a/a/a/a");
-	private static final String POS = typeDescOf("a/a/a/a/b");
-	private static final String POSITION = typeDescOf("a/a/a/a/c");
-	private static final String RANDOM_POSITION = typeDescOf("a/a/a/a/d");
-	private static final String STATE_A = typeDescOf("a/a/a/a/e");
-	private static final String STATE_B = typeDescOf("a/a/a/a/f");
-	private static final String VALUE_A = typeDescOf("a/a/a/a/g");
-	private static final String VALUE_B = typeDescOf("a/a/a/a/h");
-	private static final String VALUE_C = typeDescOf("a/a/a/a/i");
+	private static final String CONFIG = typeDescOf("a/a/a/a");
+	private static final String POS = typeDescOf("a/a/a/b");
+	private static final String POSITION = typeDescOf("a/a/a/c");
+	private static final String RANDOM_POSITION = typeDescOf("a/a/a/d");
+	private static final String STATE_A = typeDescOf("a/a/a/e");
+	private static final String STATE_B = typeDescOf("a/a/a/f");
+	private static final String VALUE_A = typeDescOf("a/a/a/g");
+	private static final String VALUE_B = typeDescOf("a/a/a/h");
+	private static final String VALUE_C = typeDescOf("a/a/a/i");
 	private static final String VALUE_D = typeDescOf(VALUE_D_NAME);
-	private static final String VALUE_DD = typeDescOf("a/a/a/a/k");
-	private static final String VALUE_E = typeDescOf("a/a/a/a/l");
-	private static final String VALUE_EE = typeDescOf("a/a/a/a/m");
+	private static final String VALUE_DD = typeDescOf("a/a/a/k");
+	private static final String VALUE_E = typeDescOf("a/a/a/l");
+	private static final String VALUE_EE = typeDescOf("a/a/a/m");
 
 	@Override
 	public Class<? extends NameProposer> getTarget() {
@@ -55,11 +60,16 @@ public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposer
 		return SimpleTypeFieldNameProposer.ID;
 	}
 
+	@Override
+	public Path getEnigmaProfile() {
+		return ENIGMA_PROFILE;
+	}
+
 	@Test
 	public void testSimpleTypeSingleNames() {
 		final ProposalAsserter asserter = this.createAsserter();
 
-		final var simpleTypeNamesTest = new ClassEntry("a/a/a/a");
+		final var simpleTypeNamesTest = new ClassEntry(SIMPLE_TYPES_NAMES_TEST_NAME);
 
 		final var fields = new ClassEntry(simpleTypeNamesTest, "a");
 		final ClassEntry duplicate = new ClassEntry(fields, "a");

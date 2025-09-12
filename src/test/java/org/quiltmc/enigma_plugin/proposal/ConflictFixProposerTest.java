@@ -24,6 +24,9 @@ import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntr
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
+import org.quiltmc.enigma_plugin.test.util.TestUtil;
+
+import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
@@ -31,8 +34,12 @@ import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.typeDescOf;
 
 public class ConflictFixProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
-	private static final String IDENTIFIABLE = typeDescOf("a/a/a/b");
-	private static final String IDENTIFIED = typeDescOf("a/a/a/c");
+	private static final Path ENIGMA_PROFILE = TestUtil.enigmaProfileOf("conflict_fix/profile");
+
+	private static final String CONFLICT_TEST_NAME = "a/a/a";
+
+	private static final String IDENTIFIABLE = typeDescOf("a/a/b");
+	private static final String IDENTIFIED = typeDescOf("a/a/c");
 
 	@Override
 	public Class<? extends NameProposer> getTarget() {
@@ -44,14 +51,18 @@ public class ConflictFixProposerTest implements ConventionalNameProposerTest, Co
 		return ConflictFixProposer.ID;
 	}
 
+	@Override
+	public Path getEnigmaProfile() {
+		return ENIGMA_PROFILE;
+	}
+
 	@Test
 	public void testSimpleTypeNameConflictFix() {
 		final var asserter = this.createAsserter();
 
 		// tests the conflict fixer via introducing a conflict manually
 
-		final var conflictTest = new ClassEntry("a/a/a/a");
-		// typeDesc: Identifiable
+		final var conflictTest = new ClassEntry(CONFLICT_TEST_NAME);
 		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, IDENTIFIABLE);
 
 		final String simpleName = "idAble";
@@ -76,7 +87,7 @@ public class ConflictFixProposerTest implements ConventionalNameProposerTest, Co
 	public void testSimpleTypeNameConflictFixNoFallback() {
 		final ProposalAsserter asserter = this.createAsserter();
 
-		final var conflictTest = new ClassEntry("a/a/a/a");
+		final var conflictTest = new ClassEntry(CONFLICT_TEST_NAME);
 		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, IDENTIFIED);
 
 		final String simpleName = "identified";

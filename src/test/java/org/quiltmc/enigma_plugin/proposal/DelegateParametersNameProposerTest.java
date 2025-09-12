@@ -29,6 +29,9 @@ import static org.quiltmc.enigma_plugin.test.util.TestUtil.typeDescOf;
 
 public class DelegateParametersNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
 	private static final String DELEGATE_PARAMETERS_TEST_NAME = "a/a/a";
+	private static final String GETTER_SETTER_TEST_COPY_NAME = "a/a/c";
+	private static final String ENUM_TEST_COPY_NAME = "a/a/b";
+
 	private static final String TEST_1 = typeDescOf(DELEGATE_PARAMETERS_TEST_NAME + "$a");
 
 	@Override
@@ -101,12 +104,12 @@ public class DelegateParametersNameProposerTest implements ConventionalNamePropo
 		asserter.assertDynamicProposal("j", localOf(createIJ, 1));
 
 		// Ensure names are also loaded from external classes
-		final ClassEntry getterSetterTest = new ClassEntry("a/a/b");
+		final ClassEntry getterSetterTest = new ClassEntry(GETTER_SETTER_TEST_COPY_NAME);
 		// method name: foo
 		asserter.assertDynamicProposal("bound", localOf(methodOf(getterSetterTest, "b", V, I), 1));
 
 		// Names shouldn't be proposed for synthetic parameters (like Enum constructor name and ordinal)
-		final var enumTest = new ClassEntry("a/a/a/a");
+		final var enumTest = new ClassEntry(ENUM_TEST_COPY_NAME);
 		final MethodEntry constructor = methodOf(enumTest, "<init>", V, STR, I, Z);
 
 		asserter.assertNotProposed(localOf(constructor, 1));

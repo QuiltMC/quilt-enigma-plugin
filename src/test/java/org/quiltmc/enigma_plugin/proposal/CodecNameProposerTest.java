@@ -24,6 +24,8 @@ import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 
 public class CodecNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
+	private static final String CODEC_TEST_NAME = "com/a/a";
+
 	@Override
 	public Class<? extends NameProposer> getTarget() {
 		return CodecNameProposer.class;
@@ -38,7 +40,7 @@ public class CodecNameProposerTest implements ConventionalNameProposerTest, Comm
 	public void testCodecNames() {
 		final var asserter = this.createAsserter();
 
-		final var codecTest = new ClassEntry("com/a/a");
+		final var codecTest = new ClassEntry(CODEC_TEST_NAME);
 
 		asserter.assertProposal("value", fieldOf(codecTest, "c", I));
 		asserter.assertProposal("getValue", methodOf(codecTest, "a", I));

@@ -20,12 +20,19 @@ public interface ConventionalNameProposerTest {
 		return TestUtil.obfJarPathOf(TestUtil.unCapitalize(this.getTarget().getSimpleName()));
 	}
 
+	default Path getEnigmaProfile() {
+		return TestUtil.DEFAULT_ENIGMA_PROFILE;
+	}
+
 	/**
 	 * @return a new {@link ProposalAsserter} whose {@link ProposalAsserter#remapper() remapper} maps this test's
 	 * {@linkplain #getObfJar() obf jar} and whose {@link ProposalAsserter#proposerId() proposerId} is this test's
 	 * {@linkplain #getTargetId() target id}
 	 */
 	default ProposalAsserter createAsserter() {
-		return new ProposalAsserter(TestUtil.setupEnigma(this.getObfJar()), this.getTargetId());
+		return new ProposalAsserter(
+				TestUtil.setupEnigma(this.getObfJar(), this.getEnigmaProfile()),
+				this.getTargetId()
+		);
 	}
 }

@@ -24,6 +24,9 @@ import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 
 public class RecordComponentNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
+	private static final String RECORD_NAMING_TEST_NAME = "com/a/b";
+	private static final String CODEC_TEST_COPY_RECORD_NAME = "com/a/a$a";
+
 	@Override
 	public Class<? extends NameProposer> getTarget() {
 		return RecordComponentNameProposer.class;
@@ -38,7 +41,7 @@ public class RecordComponentNameProposerTest implements ConventionalNameProposer
 	public void testRecordNames() {
 		final var asserter = this.createAsserter();
 
-		final var recordNamingTest = new ClassEntry("a/a/a");
+		final var recordNamingTest = new ClassEntry(RECORD_NAMING_TEST_NAME);
 
 		asserter.assertProposal("value", fieldOf(recordNamingTest, "b", I));
 		asserter.assertProposal("value", methodOf(recordNamingTest, "a", I));
@@ -59,9 +62,9 @@ public class RecordComponentNameProposerTest implements ConventionalNameProposer
 		asserter.assertNotProposed(methodOf(inner1, "b", D));
 		asserter.assertProposal("value", methodOf(inner1, "c", I));
 
-		final var codecTestCopy = new ClassEntry("com/a/a$a");
+		final var codecTestCopyRecord = new ClassEntry(CODEC_TEST_COPY_RECORD_NAME);
 
-		asserter.assertProposal("value", fieldOf(codecTestCopy, "b", I));
-		asserter.assertProposal("value", methodOf(codecTestCopy, "a", I));
+		asserter.assertProposal("value", fieldOf(codecTestCopyRecord, "b", I));
+		asserter.assertProposal("value", methodOf(codecTestCopyRecord, "a", I));
 	}
 }

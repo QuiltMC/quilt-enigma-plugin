@@ -23,8 +23,12 @@ import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.typeDescOf;
 
 public class ConstantFieldNameProposerTest implements ConventionalNameProposerTest {
-	private static final String ENUM_TEST_NAME = "a/a/a/e";
-	private static final String ENUM_2_TEST_NAME = "a/a/a/d";
+	private static final String CLASS_TEST_NAME = "a/a/c";
+	private static final String CLASS_2_TEST_NAME = "a/a/a";
+	private static final String CLASS_3_TEST_NAME = "a/a/b";
+	private static final String SOMETHING_NAME = "a/a/f";
+	private static final String ENUM_TEST_NAME = "a/a/e";
+	private static final String ENUM_2_TEST_NAME = "a/a/d";
 
 	@Override
 	public Class<? extends NameProposer> getTarget() {
@@ -40,8 +44,8 @@ public class ConstantFieldNameProposerTest implements ConventionalNameProposerTe
 	public void testConstantFieldNames() {
 		final var asserter = this.createAsserter();
 
-		final var classTest = new ClassEntry("a/a/a/c");
-		final String something = typeDescOf("a/a/a/f");
+		final var classTest = new ClassEntry(CLASS_TEST_NAME);
+		final String something = typeDescOf(SOMETHING_NAME);
 
 		asserter.assertProposal("FOO", fieldOf(classTest, "a", something));
 		asserter.assertProposal("BAR_FOO", fieldOf(classTest, "b", something));
@@ -53,7 +57,7 @@ public class ConstantFieldNameProposerTest implements ConventionalNameProposerTe
 		asserter.assertProposal("TWO", fieldOf(classTest, "h", something));
 		asserter.assertProposal("THREE", fieldOf(classTest, "i", something));
 
-		final var class2Test = new ClassEntry("a/a/a/a");
+		final var class2Test = new ClassEntry(CLASS_2_TEST_NAME);
 
 		asserter.assertProposal("FOO", fieldOf(class2Test, "a", something));
 		asserter.assertProposal("BAR_FOO", fieldOf(class2Test, "b", something));
@@ -61,7 +65,7 @@ public class ConstantFieldNameProposerTest implements ConventionalNameProposerTe
 		asserter.assertProposal("NORTH", fieldOf(class2Test, "d", something));
 		asserter.assertProposal("EAST", fieldOf(class2Test, "e", something));
 
-		final var class3Test = new ClassEntry("a/a/a/b");
+		final var class3Test = new ClassEntry(CLASS_3_TEST_NAME);
 
 		asserter.assertProposal("FOO", fieldOf(class3Test, "a", something));
 		asserter.assertProposal("BAR_FOO", fieldOf(class3Test, "b", something));

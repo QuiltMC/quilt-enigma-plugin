@@ -25,6 +25,8 @@ import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 
 public class ConstructorParamsNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
+	private static final String CONSTRUCTOR_PARAMS_TEST_NAME = "com/a/a";
+
 	@Override
 	public Class<? extends NameProposer> getTarget() {
 		return ConstructorParamsNameProposer.class;
@@ -39,8 +41,8 @@ public class ConstructorParamsNameProposerTest implements ConventionalNamePropos
 	public void testConstructorParameterNames() {
 		final var asserter = this.createAsserter();
 
-		final var codecTest = new ClassEntry("com/a/a");
-		final MethodEntry constructor = methodOf(codecTest, "<init>", V, I, D, OPT, J);
+		final var constructorParamsTest = new ClassEntry(CONSTRUCTOR_PARAMS_TEST_NAME);
+		final MethodEntry constructor = methodOf(constructorParamsTest, "<init>", V, I, D, OPT, J);
 
 		asserter.assertDynamicProposal("value", localOf(constructor, 1));
 		asserter.assertDynamicProposal("scale", localOf(constructor, 2));

@@ -21,6 +21,7 @@ import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.EnigmaProfile;
 import org.quiltmc.enigma.api.EnigmaProject;
 import org.quiltmc.enigma.api.ProgressListener;
+import org.quiltmc.enigma.api.analysis.index.jar.EntryIndex;
 import org.quiltmc.enigma.api.class_provider.ClasspathClassProvider;
 import org.quiltmc.enigma.api.source.TokenType;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
@@ -45,7 +46,15 @@ public final class TestUtil {
 		throw new UnsupportedOperationException();
 	}
 
-	private static final Path DEFAULT_PROFILE = Path.of("test_enigma/profile.json");
+	public static final Path DEFAULT_ENIGMA_PROFILE = enigmaProfileOf("default_profile");
+
+	/**
+	 * @param subPath the path from {@code test_enigma/} to the profile, excluding the {@code .json} suffix
+	 * @return the path to the enigma profile
+	 */
+	public static Path enigmaProfileOf(String subPath) {
+		return Path.of("test_enigma/%s.json".formatted(subPath));
+	}
 
 	/**
 	 * @param namePrefix the name of the obf jar, excluding the {@value #TEST_OBF_SUFFIX} suffix shared by all obf jars
@@ -81,10 +90,10 @@ public final class TestUtil {
 	}
 
 	/**
-	 * Sets up Enigma with the {@link #DEFAULT_PROFILE}.
+	 * Sets up Enigma with the {@link #DEFAULT_ENIGMA_PROFILE}.
 	 */
 	public static EntryRemapper setupEnigma(Path jar) {
-		return setupEnigma(jar, DEFAULT_PROFILE);
+		return setupEnigma(jar, DEFAULT_ENIGMA_PROFILE);
 	}
 
 	public static EntryRemapper setupEnigma(Path jar, Path profile) {
@@ -113,33 +122,42 @@ public final class TestUtil {
 	}
 
 	public static void assertProposal(String name, Entry<?> entry, EntryRemapper remapper) {
-		EntryMapping mapping = remapper.getMapping(entry);
+		EntryMapping mapping = getRequiredEntryMapping(entry, remapper);
 		Assertions.assertNotNull(mapping);
 		Assertions.assertEquals(name, mapping.targetName());
 		Assertions.assertEquals(TokenType.JAR_PROPOSED, mapping.tokenType());
 	}
 
 	public static void assertDynamicProposal(String name, Entry<?> entry, EntryRemapper remapper) {
-		EntryMapping mapping = remapper.getMapping(entry);
+		EntryMapping mapping = getRequiredEntryMapping(entry, remapper);
 		Assertions.assertNotNull(mapping);
 		Assertions.assertEquals(name, mapping.targetName());
 		Assertions.assertEquals(TokenType.DYNAMIC_PROPOSED, mapping.tokenType());
 	}
 
 	public static void assertNotProposed(Entry<?> entry, EntryRemapper remapper) {
-		EntryMapping mapping = remapper.getMapping(entry);
+		EntryMapping mapping = getRequiredEntryMapping(entry, remapper);
 		Assertions.assertNotNull(mapping);
 		Assertions.assertEquals(EntryMapping.OBFUSCATED, mapping);
 	}
 
 	public static void assertNotProposedBy(Entry<?> entry, String unexpectedSourceProposerId, EntryRemapper remapper) {
-		EntryMapping mapping = remapper.getMapping(entry);
+		EntryMapping mapping = getRequiredEntryMapping(entry, remapper);
 		Assertions.assertNotNull(mapping);
 		if (mapping.sourcePluginId() != null) {
 			Assertions.assertNotEquals(QuiltEnigmaPlugin.NAME_PROPOSAL_SERVICE_ID + "/" + unexpectedSourceProposerId, mapping.sourcePluginId());
 		} else {
 			Assertions.assertEquals(EntryMapping.OBFUSCATED, mapping);
 		}
+	}
+
+	public static EntryMapping getRequiredEntryMapping(Entry<?> entry, EntryRemapper remapper) {
+		return remapper.getMapping(requireEntry(entry, remapper.getJarIndex().getIndex(EntryIndex.class)));
+	}
+
+	public static <E extends Entry<?>> E requireEntry(E entry, EntryIndex index) {
+		Assertions.assertNotNull(index.getEntryAccess(entry), () -> "Entry not indexed: " + entry.getFullName());
+		return entry;
 	}
 
 	public static FieldEntry fieldOf(ClassEntry parent, String name, String desc) {

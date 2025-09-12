@@ -28,6 +28,8 @@ import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 
 public class GetterSetterNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
+	private static final String GETTER_SETTER_TEST_NAME = "a/a/a";
+
 	@Override
 	public Class<? extends NameProposer> getTarget() {
 		return GetterSetterNameProposer.class;
@@ -42,7 +44,7 @@ public class GetterSetterNameProposerTest implements ConventionalNameProposerTes
 	public void testGetterSetterNames() {
 		final var asserter = this.createAsserter();
 
-		final var getterSetterTest = new ClassEntry("a/a/a");
+		final var getterSetterTest = new ClassEntry(GETTER_SETTER_TEST_NAME);
 
 		final var context = new ValidationContext(null);
 		asserter.remapper().putMapping(context, fieldOf(getterSetterTest, "a", "I"), new EntryMapping("silliness"));

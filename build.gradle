@@ -156,7 +156,7 @@ final completeTestObf = registerTestInputObfTask('complete', completeTestJar, co
 tasks.register('testEnigma', JavaExec) {
 	final completeObf = completeTestObf.map(ProGuardTask::getOutJarFileCollection).map(FileCollection::getSingleFile)
 	final mappings = file('testMappings/')
-	final profile = file('test_enigma/profile.json')
+	final profile = file('test_enigma/default_profile.json')
 
 	inputs.files(completeObf, profile)
 	outputs.dir(mappings)

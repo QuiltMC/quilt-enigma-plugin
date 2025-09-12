@@ -1,31 +1,18 @@
 {
-    $schema: "../src/main/resources/simple_type_field_names_schema.json",
+    $schema: "../../src/main/resources/simple_type_field_names_schema.json",
 
-    "com/a/a/a": "config",
-
-    // for conflict fix test
-    "com/a/n": { // Identifiable
-        local_name: "idAble",
-        exclusive: true,
-        fallback: [
-            "identifiable"
-        ]
-    },
-    "com/a/o": { // Identified
-        "local_name": "identified",
-        exclusive: true
-    },
+    "a/a/a/a": "config",
 
     // Position
-    "com/a/a/b": "pos", // Pos
-    "com/a/a/c": { // Position
+    "a/a/a/b": "pos", // Pos
+    "a/a/a/c": { // Position
         local_name: "pos",
         exclusive: true,
         fallback: [
             "position"
         ]
     },
-    "com/a/a/d": { // RandomPosition
+    "a/a/a/d": { // RandomPosition
         local_name: "pos",
         exclusive: true,
         fallback: [
@@ -35,7 +22,7 @@
     },
 
     // State
-    "com/a/a/e": { // StateA
+    "a/a/a/e": { // StateA
         local_name: "state",
         static_name: "STATIC_STATE",
         exclusive: true,
@@ -46,7 +33,7 @@
             }
         ]
     },
-    "com/a/a/f": { // StateB
+    "a/a/a/f": { // StateB
         local_name: "state",
         static_name: "STATIC_STATE",
         exclusive: true,
@@ -59,33 +46,33 @@
     },
 
     // Value
-    "com/a/a/g": { // ValueA
+    "a/a/a/g": { // ValueA
         local_name: "value",
         exclusive: true,
         fallback: [
             "valueA"
         ]
     },
-    "com/a/a/h": { // ValueB
+    "a/a/a/h": { // ValueB
         local_name: "value",
         exclusive: true,
         fallback: [
             "valueB"
         ]
     },
-    "com/a/a/i": { // ValueC
+    "a/a/a/i": { // ValueC
         local_name: "value",
         exclusive: true,
         fallback: [
             "valueC"
         ]
     },
-    "com/a/a/j": { // ValueD
+    "a/a/a/j": { // ValueD
         local_name: "valueD",
         exclusive: true,
         inherit: true
     },
-    "com/a/a/l": { // ValueE
+    "a/a/a/l": { // ValueE
         local_name: "valueE",
         exclusive: true
     }
