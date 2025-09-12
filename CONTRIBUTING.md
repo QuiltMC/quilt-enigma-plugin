@@ -37,7 +37,14 @@ Finally, in each test method, use `createAsserter()` to create a `ProposalAssert
 Use the asserter to assert the presence/absence of mappings, and use its `remapper()` if you need to manually
 insert mappings in your test.
 
+### Test Enigma profile
+
+Most tests use the default enigma profile in `src/commonTestInputs/resources/`.  
+If you need a custom profile, put it in your test input source set's `resources/` directory and name it `profile.json`.  
+`ConventionalNameProposerTest::createAsserter()` will automatically use this profile if it's present. 
+
 ### Descriptors, entries, and keeping track of obfuscated names
+
 When asserting mappings, you'll need to create obfuscated `Entry`s representing the obfuscated name of the
 class/member you're checking.  
 `TestUtil` has factory methods to streamline this process, and `CommonDescriptors` has reusable descriptors to pass to them.  
