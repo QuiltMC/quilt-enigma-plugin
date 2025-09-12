@@ -39,14 +39,17 @@ import org.quiltmc.enigma_plugin.index.Index;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Name;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.Descriptors;
+import org.tinylog.Logger;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Index of fields/local variables that are of a rather simple type (as-in easy to guess the variable name) and which
@@ -57,9 +60,11 @@ public class SimpleTypeSingleIndex extends Index {
 	private final Map<LocalVariableEntry, List<String>> parameterFallbacks = new HashMap<>();
 	private final Map<FieldEntry, String> fields = new HashMap<>();
 	private final Map<ClassNode, Map<String, FieldBuildingEntry>> fieldCache = new HashMap<>();
-	private SimpleTypeFieldNamesRegistry registry;
+	private final Set<String> unverifiedTypes = new HashSet<>();
 
+	private SimpleTypeFieldNamesRegistry registry;
 	private InheritanceIndex inheritance;
+	private VerificationLevel verificationLevel = VerificationLevel.DEFAULT;
 
 	public SimpleTypeSingleIndex() {
 		super(null);
@@ -68,6 +73,26 @@ public class SimpleTypeSingleIndex extends Index {
 	@Override
 	public void withContext(EnigmaServiceContext<JarIndexerService> context) {
 		super.withContext(context);
+
+		this.verificationLevel = context.getSingleArgument(Arguments.SIMPLE_TYPE_VERIFICATION_ERROR_LEVEL)
+			.map(value -> {
+				try {
+					return VerificationLevel.valueOf(value);
+				} catch (IllegalArgumentException e) {
+					throw new IllegalStateException(
+						"Invalid %s value: \"%s\"; must be one of %s".formatted(
+							Arguments.SIMPLE_TYPE_VERIFICATION_ERROR_LEVEL,
+							value,
+							Arrays.stream(VerificationLevel.values())
+								.map(Enum::name)
+								.map(name -> '"' + name + '"')
+								.collect(Collectors.joining(", "))
+						),
+						e
+					);
+				}
+			})
+			.orElse(VerificationLevel.DEFAULT);
 
 		this.loadRegistry(context.getSingleArgument(Arguments.SIMPLE_TYPE_FIELD_NAMES_PATH)
 				.map(context::getPath).orElse(null));
@@ -86,6 +111,11 @@ public class SimpleTypeSingleIndex extends Index {
 
 		this.registry = new SimpleTypeFieldNamesRegistry(path);
 		this.registry.read();
+
+		this.unverifiedTypes.clear();
+		if (this.verificationLevel != VerificationLevel.NONE) {
+			this.registry.streamTypes().forEach(this.unverifiedTypes::add);
+		}
 	}
 
 	@Override
@@ -117,6 +147,29 @@ public class SimpleTypeSingleIndex extends Index {
 		return this.parameters.keySet();
 	}
 
+	public void verifyTypes() {
+		if (this.verificationLevel != VerificationLevel.NONE) {
+			if (!this.unverifiedTypes.isEmpty()) {
+				boolean single = this.unverifiedTypes.size() == 1;
+				StringBuilder message = new StringBuilder("The following simple type field name type");
+				message.append(single ? " is" : "s are");
+				message.append(" missing:");
+
+				if (single) {
+					message.append(' ').append(this.unverifiedTypes.iterator().next());
+				} else {
+					this.unverifiedTypes.forEach(type -> message.append("\n\t").append(type));
+				}
+
+				if (this.verificationLevel == VerificationLevel.WARN) {
+					Logger.warn(message);
+				} else {
+					throw new IllegalStateException(message.toString());
+				}
+			}
+		}
+	}
+
 	@TestOnly
 	public List<LocalVariableEntry> getParamsOf(MethodEntry methodEntry) {
 		var params = new ArrayList<LocalVariableEntry>();
@@ -140,6 +193,8 @@ public class SimpleTypeSingleIndex extends Index {
 		if (!this.isEnabled()) return;
 
 		var parentEntry = new ClassEntry(node.name);
+
+		this.unverifiedTypes.remove(node.name);
 
 		this.collectMatchingFields(provider, node).forEach((name, entry) -> {
 			if (!entry.isNull()) {
@@ -207,8 +262,8 @@ public class SimpleTypeSingleIndex extends Index {
 				}
 			}
 
-			if (field.desc.charAt(0) != 'L') continue;
-			String type = field.desc.substring(1, field.desc.length() - 1);
+			String type = this.verifyTypeOrNull(field.desc);
+			if (type == null) continue;
 
 			var entry = this.getEntry(type);
 			if (entry != null) {
@@ -268,9 +323,8 @@ public class SimpleTypeSingleIndex extends Index {
 			if (bannedTypes.contains(parameters.get(index).type())) continue;
 
 			ParameterNode node = method.parameters.get(index);
-			String desc = parameters.get(index).getDescriptor();
-			if (desc.charAt(0) != 'L') continue;
-			String type = desc.substring(1, desc.length() - 1);
+			String type = this.verifyTypeOrNull(parameters.get(index).getDescriptor());
+			if (type == null) continue;
 
 			var entry = this.getEntry(type);
 			if (entry != null) {
@@ -334,6 +388,19 @@ public class SimpleTypeSingleIndex extends Index {
 		return null;
 	}
 
+	@Nullable
+	private String verifyTypeOrNull(String descriptor) {
+		if (descriptor.charAt(0) != 'L') {
+			return null;
+		}
+
+		String type = descriptor.substring(1, descriptor.length() - 1);
+
+		this.unverifiedTypes.remove(type);
+
+		return type;
+	}
+
 	private record FieldBuildingEntry(FieldNode node, Name name, SimpleTypeFieldNamesRegistry.Entry entry) {
 		public static FieldBuildingEntry createNull(SimpleTypeFieldNamesRegistry.Entry entry) {
 			return new FieldBuildingEntry(null, null, entry);
@@ -352,5 +419,11 @@ public class SimpleTypeSingleIndex extends Index {
 		public boolean isNull() {
 			return this.node == null;
 		}
+	}
+
+	private enum VerificationLevel {
+		NONE, WARN, THROW;
+
+		static final VerificationLevel DEFAULT = WARN;
 	}
 }
