@@ -25,20 +25,36 @@ import java.nio.file.Path;
 /**
  * A name proposer test whose test input source set is named conventionally.<br>
  * That is, it has the name of the {@linkplain #getTarget() target class} converted to {@code lowerCamelCase}.
- *
- * @see TestUtil#obfJarPathOf(String)
  */
 public interface ConventionalNameProposerTest {
+	/**
+	 * The name of custom enigma profile files.
+	 */
+	String PROFILE_JSON = "profile.json";
+
+	/**
+	 * @return the class of the name proposer being tested
+	 */
 	Class<? extends NameProposer> getTarget();
 
+	/**
+	 * @return the id of the name proposer being tested
+	 */
 	String getTargetId();
 
+	/**
+	 * @return the obfuscated input jar for the proposer being tested
+	 */
 	default Path getObfJar() {
 		return TestUtil.obfJarPathOf(this.getUnCapitalizedTarget());
 	}
 
+	/**
+	 * @return this test's enigma profile; defaults to {@link TestUtil#DEFAULT_ENIGMA_PROFILE} if a custom
+	 * {@value #PROFILE_JSON} isn't found in test input resources
+	 */
 	default Path getEnigmaProfile() {
-		final Path customProfile = TestUtil.BUILD_RESOURCES.resolve(this.getUnCapitalizedTarget() + "/profile.json");
+		final Path customProfile = TestUtil.BUILD_RESOURCES.resolve(this.getUnCapitalizedTarget() + "/" + PROFILE_JSON);
 		return Files.isRegularFile(customProfile)
 				? customProfile
 				: TestUtil.DEFAULT_ENIGMA_PROFILE;
@@ -46,8 +62,8 @@ public interface ConventionalNameProposerTest {
 
 	/**
 	 * @return a new {@link ProposalAsserter} whose {@link ProposalAsserter#remapper() remapper} maps this test's
-	 * {@linkplain #getObfJar() obf jar} and whose {@link ProposalAsserter#proposerId() proposerId} is this test's
-	 * {@linkplain #getTargetId() target id}
+	 * {@linkplain #getObfJar() obf jar} using its {@linkplain #getEnigmaProfile() enigma profile} and whose
+	 * {@link ProposalAsserter#proposerId() proposer id} is this test's {@linkplain #getTargetId() target id}
 	 */
 	default ProposalAsserter createAsserter() {
 		return new ProposalAsserter(
