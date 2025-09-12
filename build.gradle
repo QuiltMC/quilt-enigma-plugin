@@ -128,8 +128,8 @@ TaskProvider<ProGuardTask> registerTestInputObfTask(String namePrefix, TaskProvi
 }
 
 final completeTestInputSources = project.files()
+final completeTestInputSourcesExclude = project.files()
 final completeTestInputClasspath = project.files()
-final completeTestInputExcluded = project.files()
 
 file('src/testInputs/').listFiles().each { dir ->
 	if (dir.directory) {
@@ -143,7 +143,7 @@ file('src/testInputs/').listFiles().each { dir ->
 					final resourcesDir = dir.toPath().resolve('resources')
 					srcDirs resourcesDir
 
-					completeTestInputExcluded.from(resourcesDir)
+					completeTestInputSourcesExclude.from(resourcesDir)
 				}
 			}
 		}
@@ -162,7 +162,9 @@ file('src/testInputs/').listFiles().each { dir ->
 	}
 }
 
-final completeTestJar = registerTestInputJarTask('complete', completeTestInputSources - completeTestInputExcluded)
+final completeTestJar = registerTestInputJarTask('complete', completeTestInputSources.filter { file ->
+	!completeTestInputSourcesExclude.contains(file)
+})
 completeTestJar.configure {
 	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
