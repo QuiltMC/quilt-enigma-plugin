@@ -23,8 +23,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * A name proposer test whose obfuscated test input jar is named conventionally.<br>
- * That is, it's name is prefixed with the name of the {@linkplain #getTarget() target class} converted to {@code lowerCamelCase}.
+ * A name proposer test whose test input source set is named conventionally.<br>
+ * That is, it has the name of the {@linkplain #getTarget() target class} converted to {@code lowerCamelCase}.
  *
  * @see TestUtil#obfJarPathOf(String)
  */
