@@ -53,7 +53,7 @@ public final class TestUtil {
 	 * @return the path to the enigma profile
 	 */
 	public static Path enigmaProfileOf(String subPath) {
-		return Path.of("test_enigma/%s.json".formatted(subPath));
+		return Path.of("").toAbsolutePath().resolve("test_enigma/%s.json".formatted(subPath));
 	}
 
 	/**
