@@ -24,9 +24,6 @@ import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntr
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
-import org.quiltmc.enigma_plugin.test.util.TestUtil;
-
-import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
@@ -34,8 +31,6 @@ import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.typeDescOf;
 
 public class ConflictFixProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
-	private static final Path ENIGMA_PROFILE = TestUtil.enigmaProfileOf("conflict_fix/profile");
-
 	private static final String CONFLICT_TEST_NAME = "a/a/a";
 
 	private static final String IDENTIFIABLE = typeDescOf("a/a/b");
@@ -49,11 +44,6 @@ public class ConflictFixProposerTest implements ConventionalNameProposerTest, Co
 	@Override
 	public String getTargetId() {
 		return ConflictFixProposer.ID;
-	}
-
-	@Override
-	public Path getEnigmaProfile() {
-		return ENIGMA_PROFILE;
 	}
 
 	@Test

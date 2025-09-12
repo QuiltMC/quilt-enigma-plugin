@@ -56,6 +56,10 @@ repositories {
 	}
 }
 
+sourceSets {
+	commonTestInputs
+}
+
 configurations {
 	enigmaRuntime
 }
@@ -125,6 +129,7 @@ TaskProvider<ProGuardTask> registerTestInputObfTask(String namePrefix, TaskProvi
 
 final completeTestInputSources = project.files()
 final completeTestInputClasspath = project.files()
+final completeTestInputExcluded = project.files()
 
 file('src/testInputs/').listFiles().each { dir ->
 	if (dir.directory) {
@@ -132,6 +137,13 @@ file('src/testInputs/').listFiles().each { dir ->
 			"${dir.name}" {
 				java {
 					srcDirs dir.toPath().resolve('java')
+				}
+
+				resources {
+					final resourcesDir = dir.toPath().resolve('resources')
+					srcDirs resourcesDir
+
+					completeTestInputExcluded.from(resourcesDir)
 				}
 			}
 		}
@@ -150,13 +162,19 @@ file('src/testInputs/').listFiles().each { dir ->
 	}
 }
 
-final completeTestJar = registerTestInputJarTask('complete', completeTestInputSources)
+final completeTestJar = registerTestInputJarTask('complete', completeTestInputSources - completeTestInputExcluded)
+completeTestJar.configure {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
 final completeTestObf = registerTestInputObfTask('complete', completeTestJar, completeTestInputClasspath)
 
 tasks.register('testEnigma', JavaExec) {
 	final completeObf = completeTestObf.map(ProGuardTask::getOutJarFileCollection).map(FileCollection::getSingleFile)
 	final mappings = file('testMappings/')
-	final profile = file('test_enigma/default_profile.json')
+
+	final profile = tasks.named('processCommonTestInputsResources', ProcessResources).map {
+		it.destinationDir.toPath().resolve('default_profile.json')
+	}
 
 	inputs.files(completeObf, profile)
 	outputs.dir(mappings)
@@ -168,7 +186,7 @@ tasks.register('testEnigma', JavaExec) {
 		args(
 			'-jar', completeObf.get(),
 			'-mappings', mappings.getAbsolutePath(),
-			'-profile', profile,
+			'-profile', profile.get(),
 			'--development'
 		)
 		mappings.mkdirs()

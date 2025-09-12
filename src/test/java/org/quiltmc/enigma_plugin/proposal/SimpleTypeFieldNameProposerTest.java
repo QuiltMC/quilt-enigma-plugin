@@ -21,9 +21,6 @@ import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
-import org.quiltmc.enigma_plugin.test.util.TestUtil;
-
-import java.nio.file.Path;
 
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
@@ -31,8 +28,6 @@ import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.typeDescOf;
 
 public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposerTest, CommonDescriptors {
-	private static final Path ENIGMA_PROFILE = TestUtil.enigmaProfileOf("simple_type_field_names/profile");
-
 	private static final String SIMPLE_TYPES_NAMES_TEST_NAME = "a/a/a";
 	private static final String VALUE_D_NAME = "a/a/a/j";
 
@@ -58,11 +53,6 @@ public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposer
 	@Override
 	public String getTargetId() {
 		return SimpleTypeFieldNameProposer.ID;
-	}
-
-	@Override
-	public Path getEnigmaProfile() {
-		return ENIGMA_PROFILE;
 	}
 
 	@Test

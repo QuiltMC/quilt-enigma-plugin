@@ -19,11 +19,12 @@ package org.quiltmc.enigma_plugin.proposal;
 import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
 import org.quiltmc.enigma_plugin.test.util.TestUtil;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
  * A name proposer test whose obfuscated test input jar is named conventionally.<br>
- * That is, it's name is prefixed with the name of the {@linkplain #getTarget()} class converted to {@code lowerCamelCase}.
+ * That is, it's name is prefixed with the name of the {@linkplain #getTarget() target class} converted to {@code lowerCamelCase}.
  *
  * @see TestUtil#obfJarPathOf(String)
  */
@@ -33,11 +34,7 @@ public interface ConventionalNameProposerTest {
 	String getTargetId();
 
 	default Path getObfJar() {
-		return TestUtil.obfJarPathOf(TestUtil.unCapitalize(this.getTarget().getSimpleName()));
-	}
-
-	default Path getEnigmaProfile() {
-		return TestUtil.DEFAULT_ENIGMA_PROFILE;
+		return TestUtil.obfJarPathOf(this.getUnCapitalizedTarget());
 	}
 
 	/**
@@ -46,9 +43,18 @@ public interface ConventionalNameProposerTest {
 	 * {@linkplain #getTargetId() target id}
 	 */
 	default ProposalAsserter createAsserter() {
+		final Path customProfile = TestUtil.BUILD_RESOURCES.resolve(this.getUnCapitalizedTarget() + "/profile.json");
+		final Path profile = Files.isRegularFile(customProfile)
+				? customProfile
+				: TestUtil.DEFAULT_ENIGMA_PROFILE;
+
 		return new ProposalAsserter(
-				TestUtil.setupEnigma(this.getObfJar(), this.getEnigmaProfile()),
+				TestUtil.setupEnigma(this.getObfJar(), profile),
 				this.getTargetId()
 		);
+	}
+
+	private String getUnCapitalizedTarget() {
+		return TestUtil.unCapitalize(this.getTarget().getSimpleName());
 	}
 }

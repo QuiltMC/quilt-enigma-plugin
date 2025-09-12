@@ -46,15 +46,10 @@ public final class TestUtil {
 		throw new UnsupportedOperationException();
 	}
 
-	public static final Path DEFAULT_ENIGMA_PROFILE = enigmaProfileOf("default_profile");
-
-	/**
-	 * @param subPath the path from {@code test_enigma/} to the profile, excluding the {@code .json} suffix
-	 * @return the path to the enigma profile
-	 */
-	public static Path enigmaProfileOf(String subPath) {
-		return Path.of("").toAbsolutePath().resolve("test_enigma/%s.json".formatted(subPath));
-	}
+	public static final Path ROOT = Path.of("").toAbsolutePath();
+	public static final Path BUILD = ROOT.resolve("build");
+	public static final Path BUILD_RESOURCES = BUILD.resolve("resources");
+	public static final Path DEFAULT_ENIGMA_PROFILE = BUILD_RESOURCES.resolve("commonTestInputs/default_profile.json");
 
 	/**
 	 * @param namePrefix the name of the obf jar, excluding the {@value #TEST_OBF_SUFFIX} suffix shared by all obf jars
@@ -64,7 +59,7 @@ public final class TestUtil {
 	 * @see ConventionalNameProposerTest
 	 */
 	public static Path obfJarPathOf(String namePrefix) {
-		return Path.of("").toAbsolutePath().resolve(("build/test-obf/%s" + TEST_OBF_SUFFIX + ".jar").formatted(namePrefix));
+		return BUILD.resolve(("test-obf/%s" + TEST_OBF_SUFFIX + ".jar").formatted(namePrefix));
 	}
 
 	public static String unCapitalize(String string) {
@@ -87,13 +82,6 @@ public final class TestUtil {
 
 			return builder.toString();
 		}
-	}
-
-	/**
-	 * Sets up Enigma with the {@link #DEFAULT_ENIGMA_PROFILE}.
-	 */
-	public static EntryRemapper setupEnigma(Path jar) {
-		return setupEnigma(jar, DEFAULT_ENIGMA_PROFILE);
 	}
 
 	public static EntryRemapper setupEnigma(Path jar, Path profile) {
