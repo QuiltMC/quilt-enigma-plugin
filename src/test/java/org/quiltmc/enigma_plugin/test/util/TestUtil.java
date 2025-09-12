@@ -68,13 +68,13 @@ public final class TestUtil {
 		}
 
 		final char first = string.charAt(0);
-		final char firstCap = Character.toUpperCase(first);
+		final char firstLower = Character.toLowerCase(first);
 
-		if (first == firstCap) {
+		if (first == firstLower) {
 			return string;
 		} else {
 			final var builder = new StringBuilder();
-			builder.append(firstCap);
+			builder.append(firstLower);
 
 			for (int i = 1; i < string.length(); i++) {
 				builder.append(string.charAt(i));
