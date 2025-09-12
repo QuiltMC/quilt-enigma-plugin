@@ -37,19 +37,21 @@ public interface ConventionalNameProposerTest {
 		return TestUtil.obfJarPathOf(this.getUnCapitalizedTarget());
 	}
 
+	default Path getEnigmaProfile() {
+		final Path customProfile = TestUtil.BUILD_RESOURCES.resolve(this.getUnCapitalizedTarget() + "/profile.json");
+		return Files.isRegularFile(customProfile)
+				? customProfile
+				: TestUtil.DEFAULT_ENIGMA_PROFILE;
+	}
+
 	/**
 	 * @return a new {@link ProposalAsserter} whose {@link ProposalAsserter#remapper() remapper} maps this test's
 	 * {@linkplain #getObfJar() obf jar} and whose {@link ProposalAsserter#proposerId() proposerId} is this test's
 	 * {@linkplain #getTargetId() target id}
 	 */
 	default ProposalAsserter createAsserter() {
-		final Path customProfile = TestUtil.BUILD_RESOURCES.resolve(this.getUnCapitalizedTarget() + "/profile.json");
-		final Path profile = Files.isRegularFile(customProfile)
-				? customProfile
-				: TestUtil.DEFAULT_ENIGMA_PROFILE;
-
 		return new ProposalAsserter(
-				TestUtil.setupEnigma(this.getObfJar(), profile),
+				TestUtil.setupEnigma(this.getObfJar(), this.getEnigmaProfile()),
 				this.getTargetId()
 		);
 	}
