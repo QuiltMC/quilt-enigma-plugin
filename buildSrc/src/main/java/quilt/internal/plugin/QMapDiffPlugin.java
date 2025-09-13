@@ -25,7 +25,7 @@ public abstract class QMapDiffPlugin implements Plugin<Project>, ProviderAware {
 		final PluginContainer plugins = project.getPlugins();
 		final DirectoryProperty buildDir = project.getLayout().getBuildDirectory();
 
-		final var ext = project.getExtensions().create(DiffQMapExtension.NAME, DiffQMapExtension.class);
+		final var ext = project.getExtensions().create(QMapDiffExtension.NAME, QMapDiffExtension.class);
 		ext.getQepRepoDir().set(project.getRootDir());
 		ext.getQMapRepoDir().set(buildDir.dir("quilt-mappings"));
 

@@ -22,7 +22,7 @@ final ENV = System.getenv()
 
 version = version + (ENV.GITHUB_ACTIONS ? '' : '+local')
 
-diffQMap {
+qMapDiff {
 	projectVersion = project.version.toString()
 }
 
