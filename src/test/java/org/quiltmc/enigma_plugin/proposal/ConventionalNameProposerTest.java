@@ -61,9 +61,9 @@ public interface ConventionalNameProposerTest {
 	}
 
 	/**
-	 * @return a new {@link ProposalAsserter} whose {@link ProposalAsserter#remapper() remapper} maps this test's
+	 * @return a new {@link ProposalAsserter} whose {@linkplain ProposalAsserter#remapper() remapper} maps this test's
 	 * {@linkplain #getObfJar() obf jar} using its {@linkplain #getEnigmaProfile() enigma profile} and whose
-	 * {@link ProposalAsserter#proposerId() proposer id} is this test's {@linkplain #getTargetId() target id}
+	 * {@linkplain ProposalAsserter#proposerId() proposer id} is this test's {@linkplain #getTargetId() target id}
 	 */
 	default ProposalAsserter createAsserter() {
 		return new ProposalAsserter(
