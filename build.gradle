@@ -1,5 +1,5 @@
 import java.nio.file.Files
-import java.util.regex.Pattern
+import proguard.gradle.ProGuardTask
 
 buildscript {
 	repositories {
@@ -29,10 +29,6 @@ final EXEC = objects.newInstance(ExecProvider).operations
 
 version = version + (ENV.GITHUB_ACTIONS ? '' : '+local')
 
-sourceSets {
-	testInputs
-}
-
 repositories {
 	mavenCentral()
 	maven {
@@ -60,6 +56,10 @@ repositories {
 	}
 }
 
+sourceSets {
+	commonTestInputs
+}
+
 configurations {
 	enigmaRuntime
 }
@@ -77,59 +77,121 @@ dependencies {
 	testRuntimeOnly libs.junit.engine
 	testImplementation libs.enigma.swing
 
-	testInputsImplementation libs.dfu
 	enigmaRuntime libs.dfu
 }
 
-var obfJar = file('build/obf/obf.jar')
-var mappings = file('testMappings/')
-var profile = file('build/resources/testInputs/profile.json')
+TaskProvider<Jar> registerTestInputJarTask(String namePrefix, Object... sourcePaths) {
+	return tasks.register("${namePrefix}TestJar", Jar) {
+		group('test-setup')
 
-tasks.register('testEnigma', JavaExec) {
-	dependsOn "obfuscateTestInputs", "processTestInputsResources"
-	mainClass = "org.quiltmc.enigma.gui.Main"
-	classpath = files(configurations.enigmaRuntime) + sourceSets.test.runtimeClasspath
+		from(sourcePaths)
 
-	args('-jar', obfJar, '-mappings', mappings.getAbsolutePath(), '-profile', profile.getAbsolutePath(), '--development')
-	doFirst {
-		mappings.mkdirs()
+		archiveFileName = "${namePrefix}-test.jar"
+		destinationDirectory = project.layout.buildDirectory.dir('test-inputs')
 	}
 }
 
-tasks.register('testInputsJar', Jar) {
-	from sourceSets.testInputs.output
+TaskProvider<ProGuardTask> registerTestInputObfTask(String namePrefix, TaskProvider<Jar> jarTask, Object libraryJarFiles) {
+	final testObf = tasks.register("${namePrefix}TestObf", ProGuardTask) {
+		group('test-setup')
 
-	archiveFileName = "input.jar"
-	destinationDirectory = file("build/obf")
-}
+		final obfDest = project.layout.buildDirectory.dir('test-obf')
 
-tasks.register('obfuscateTestInputs', proguard.gradle.ProGuardTask) {
-	dependsOn testInputsJar
+		verbose()
+		injars jarTask.flatMap { it.archiveFile }
+		outjars obfDest.zip(jarTask.flatMap(Jar::getArchiveFileName)) { dest, jarName ->
+			dest.file("${jarName.substring(0, jarName.length() - 4)}-obf.jar")
+		}
 
-	verbose
-	injars testInputsJar
-	outjars obfJar
+		libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+		libraryjars libraryJarFiles
 
-	libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
-	libraryjars sourceSets.testInputs.compileClasspath
-
-	dontshrink()
-	dontoptimize()
-	keepclasseswithmembers 'public class * {\
+		dontshrink()
+		dontoptimize()
+		keepclasseswithmembers 'public class * {\
 \t\tpublic static void main(java.lang.String[]);\
 \t}'
-	keepattributes 'SourceFile'
-	keepattributes '*Annotation*'
-	keepattributes 'InnerClasses'
-	keepattributes 'NestMembers'
-	keepattributes 'EnclosingMethod'
-	keepattributes 'Deprecated'
-	keepattributes 'Signature'
-	keepattributes 'Record'
-	printmapping 'build/obf/obf.txt'
+		keepattributes 'SourceFile'
+		keepattributes '*Annotation*'
+		keepattributes 'InnerClasses'
+		keepattributes 'NestMembers'
+		keepattributes 'EnclosingMethod'
+		keepattributes 'Deprecated'
+		keepattributes 'Signature'
+		keepattributes 'Record'
+		printmapping obfDest.map { it.file("${namePrefix}-test-obf.txt") }
+	}
+
+	test.dependsOn(testObf)
+
+	return testObf
 }
 
-tasks.test.dependsOn obfuscateTestInputs, processTestInputsResources
+final completeTestInputSources = project.files()
+final completeTestInputSourcesExclude = project.files()
+final completeTestInputClasspath = project.files()
+
+file('src/testInputs/').listFiles().each { dir ->
+	if (dir.directory) {
+		sourceSets {
+			"${dir.name}" {
+				java {
+					srcDirs dir.toPath().resolve('java')
+				}
+
+				resources {
+					final resourcesDir = dir.toPath().resolve('resources')
+					srcDirs resourcesDir
+
+					completeTestInputSourcesExclude.from(resourcesDir)
+				}
+			}
+		}
+
+		final SourceSet sourceSet = sourceSets."${dir.name}"
+
+		dependencies {
+			"${dir.name}Implementation"(libs.dfu)
+		}
+
+		final testJar = registerTestInputJarTask(dir.name, sourceSet.output)
+		completeTestInputSources.from(sourceSet.output)
+
+		final testObf = registerTestInputObfTask(dir.name, testJar, sourceSet.compileClasspath)
+		completeTestInputClasspath.from(sourceSet.compileClasspath)
+	}
+}
+
+final completeTestJar = registerTestInputJarTask('complete', completeTestInputSources.filter { file ->
+	!completeTestInputSourcesExclude.contains(file)
+})
+completeTestJar.configure {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+final completeTestObf = registerTestInputObfTask('complete', completeTestJar, completeTestInputClasspath)
+
+tasks.register('testEnigma', JavaExec) {
+	final completeObf = completeTestObf.map(ProGuardTask::getOutJarFileCollection).map(FileCollection::getSingleFile)
+	final mappings = file('testMappings/')
+
+	final profile = file('enigma_test/profile.json')
+
+	inputs.files(completeObf, profile)
+	outputs.dir(mappings)
+
+	mainClass = "org.quiltmc.enigma.gui.Main"
+	classpath = files(configurations.enigmaRuntime) + sourceSets.test.runtimeClasspath
+
+	doFirst {
+		args(
+			'-jar', completeObf.get(),
+			'-mappings', mappings.getAbsolutePath(),
+			'-profile', profile,
+			'--development'
+		)
+		mappings.mkdirs()
+	}
+}
 
 static void replaceRegion(File file, String replacement, int start, int end) {
 	file.text = replaceRegion(file.text, replacement, start, end)
@@ -248,6 +310,7 @@ java {
 
 test {
 	useJUnitPlatform()
+	dependsOn processCommonTestInputsResources
 }
 
 publishing {

@@ -1,0 +1,16 @@
+{
+    $schema: "../../src/main/resources/simple_type_field_names_schema.json",
+
+    // for conflict fix test
+    "a/a/b": { // Identifiable
+        local_name: "idAble",
+        exclusive: true,
+        fallback: [
+            "identifiable"
+        ]
+    },
+    "a/a/c": { // Identified
+        "local_name": "identified",
+        exclusive: true
+    }
+}
