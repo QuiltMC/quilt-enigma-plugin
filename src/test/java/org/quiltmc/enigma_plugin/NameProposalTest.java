@@ -35,7 +35,9 @@ import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntr
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma.util.validation.ValidationContext;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 
 public class NameProposalTest {
@@ -45,6 +47,10 @@ public class NameProposalTest {
 
 	@BeforeAll
 	public static void setupEnigma() throws IOException {
+		PrintStream originalErr = System.err;
+		ByteArrayOutputStream testErr = new ByteArrayOutputStream();
+		System.setErr(new PrintStream(testErr));
+
 		var profile = EnigmaProfile.read(PROFILE);
 		var enigma = Enigma.builder().setProfile(profile).build();
 
@@ -53,6 +59,11 @@ public class NameProposalTest {
 
 		// Manually fire dynamic proposals
 		remapper.insertDynamicallyProposedMappings(null, null, null);
+
+		// simple_type_field_names_type_verification warning
+		Assertions.assertTrue(testErr.toString().contains("[WARN]: The following simple type field name type is missing: not/present"));
+
+		System.setErr(originalErr);
 	}
 
 	public static void assertProposal(String name, Entry<?> entry) {
