@@ -75,5 +75,6 @@
     "a/a/a/l": { // ValueE
         local_name: "valueE",
         exclusive: true
-    }
+    },
+    "not/present": "missing"
 }

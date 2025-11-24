@@ -16,11 +16,15 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
@@ -148,5 +152,22 @@ public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposer
 
 		// method name: value
 		asserter.assertProposal("valueD", localOf(methodOf(valueD, "a", V, VALUE_DD), 0));
+	}
+
+	@Test
+	void testTypeVerification() {
+		PrintStream originalErr = System.err;
+
+		try {
+			ByteArrayOutputStream testErr = new ByteArrayOutputStream();
+			System.setErr(new PrintStream(testErr));
+
+			this.createAsserter();
+
+			// simple_type_field_names_type_verification warning
+			Assertions.assertTrue(testErr.toString().contains("[WARN]: The following simple type field name type is missing: not/present"));
+		} finally {
+			System.setErr(originalErr);
+		}
 	}
 }

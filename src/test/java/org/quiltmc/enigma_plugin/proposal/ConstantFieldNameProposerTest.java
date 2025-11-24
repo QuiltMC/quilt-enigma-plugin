@@ -56,6 +56,8 @@ public class ConstantFieldNameProposerTest implements ConventionalNameProposerTe
 		asserter.assertProposal("ONE", fieldOf(classTest, "g", something));
 		asserter.assertProposal("TWO", fieldOf(classTest, "h", something));
 		asserter.assertProposal("THREE", fieldOf(classTest, "i", something));
+		// don't propose 123ABC for INVALID
+		asserter.assertNotProposed(fieldOf(classTest, "j", something));
 
 		final var class2Test = new ClassEntry(CLASS_2_TEST_NAME);
 
