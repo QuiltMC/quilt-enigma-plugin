@@ -124,10 +124,6 @@ public class SimpleTypeSingleIndex extends Index {
 		return this.registry != null;
 	}
 
-	private void dropCache() {
-		this.fieldCache.clear();
-	}
-
 	public @Nullable String getField(FieldEntry fieldEntry) {
 		return this.fields.get(fieldEntry);
 	}
@@ -173,7 +169,7 @@ public class SimpleTypeSingleIndex extends Index {
 
 	@Override
 	public void onIndexingEnded() {
-		this.dropCache();
+		this.fieldCache.clear();
 	}
 
 	@Override

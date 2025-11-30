@@ -96,10 +96,6 @@ public class SimpleSubtypeSingleIndex extends Index {
 		return this.registry != null;
 	}
 
-	private void dropCache() {
-		this.fieldCacheByParent.clear();
-	}
-
 	public void forEachField(MemberAction<FieldEntry, FieldInfo> action) {
 		this.fieldsByType.forEach((type, fields) -> {
 			fields.forEach((field, info) -> action.run(type, field, info));
@@ -122,7 +118,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 
 	@Override
 	public void onIndexingEnded() {
-		this.dropCache();
+		this.fieldCacheByParent.clear();
 	}
 
 	@Override
