@@ -52,7 +52,7 @@ import java.util.stream.Stream;
 
 import static org.quiltmc.enigma_plugin.util.StringUtil.getObjectTypeOrNull;
 import static org.quiltmc.enigma_plugin.util.StringUtil.isValidJavaIdentifier;
-// TODO reduce some methods' visibility
+
 /**
  * Index of fields/local variables that whose names can be derived from their types and which
  * are entirely unique within their context (no other fields/local vars in the same scope have the same type).
@@ -82,7 +82,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 		this.inheritance = jarIndex.getIndex(InheritanceIndex.class);
 	}
 
-	public void loadRegistry(Path path) {
+	private void loadRegistry(Path path) {
 		if (path == null) {
 			this.registry = null;
 			return;
@@ -98,7 +98,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 		return this.registry != null;
 	}
 
-	public void dropCache() {
+	private void dropCache() {
 		this.fieldCacheByParent.clear();
 	}
 

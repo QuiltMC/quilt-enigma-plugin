@@ -107,7 +107,7 @@ public class SimpleTypeSingleIndex extends Index {
 		this.inheritance = jarIndex.getIndex(InheritanceIndex.class);
 	}
 
-	public void loadRegistry(Path path) {
+	private void loadRegistry(Path path) {
 		if (path == null) {
 			this.registry = null;
 			return;
@@ -127,7 +127,7 @@ public class SimpleTypeSingleIndex extends Index {
 		return this.registry != null;
 	}
 
-	public void dropCache() {
+	private void dropCache() {
 		this.fieldCache.clear();
 	}
 
@@ -174,6 +174,7 @@ public class SimpleTypeSingleIndex extends Index {
 		}
 	}
 
+	// TODO remove
 	@TestOnly
 	public List<LocalVariableEntry> getParamsOf(MethodEntry methodEntry) {
 		var params = new ArrayList<LocalVariableEntry>();
@@ -402,21 +403,21 @@ public class SimpleTypeSingleIndex extends Index {
 	}
 
 	private record FieldBuildingEntry(ClassEntry parent, FieldNode node, Name name, SimpleTypeFieldNamesRegistry.Entry entry) {
-		public static FieldBuildingEntry createNull(SimpleTypeFieldNamesRegistry.Entry entry) {
+		static FieldBuildingEntry createNull(SimpleTypeFieldNamesRegistry.Entry entry) {
 			return new FieldBuildingEntry(null, null, null, entry);
 		}
 
-		public boolean isNull() {
+		boolean isNull() {
 			return this.node == null;
 		}
 	}
 
 	private record ParameterBuildingEntry(ParameterNode node, int index, SimpleTypeFieldNamesRegistry.Entry entry) {
-		public static ParameterBuildingEntry createNull(SimpleTypeFieldNamesRegistry.Entry entry) {
+		static ParameterBuildingEntry createNull(SimpleTypeFieldNamesRegistry.Entry entry) {
 			return new ParameterBuildingEntry(null, -1, entry);
 		}
 
-		public boolean isNull() {
+		boolean isNull() {
 			return this.node == null;
 		}
 	}
