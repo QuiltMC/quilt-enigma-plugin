@@ -22,6 +22,7 @@ import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.util.validation.ValidationContext;
 import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
 
@@ -46,6 +47,7 @@ public class ConflictFixProposerTest implements ConventionalNameProposerTest, Co
 		return ConflictFixProposer.ID;
 	}
 
+	// tests fixing conflict between ConstructorParamsNameProposer and SimpleTypeFieldNameProposer with simple type fallback
 	@Test
 	public void testSimpleTypeNameConflictFix() {
 		final var asserter = this.createAsserter();
@@ -55,9 +57,9 @@ public class ConflictFixProposerTest implements ConventionalNameProposerTest, Co
 		final var conflictTest = new ClassEntry(CONFLICT_TEST_NAME);
 		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, IDENTIFIABLE);
 
-		final String simpleName = "idAble";
 		final LocalVariableEntry param2 = localOf(constructor, 2);
 
+		final String simpleName = "idAble";
 		// param 2 is initially 'idAble'
 		asserter.assertProposal(simpleName, param2);
 
@@ -73,6 +75,7 @@ public class ConflictFixProposerTest implements ConventionalNameProposerTest, Co
 		asserter.assertDynamicProposal("identifiable", param2);
 	}
 
+	// tests fixing conflict between ConstructorParamsNameProposer and SimpleTypeFieldNameProposer with no simple type fallback
 	@Test
 	public void testSimpleTypeNameConflictFixNoFallback() {
 		final ProposalAsserter asserter = this.createAsserter();
@@ -80,9 +83,9 @@ public class ConflictFixProposerTest implements ConventionalNameProposerTest, Co
 		final var conflictTest = new ClassEntry(CONFLICT_TEST_NAME);
 		final MethodEntry constructor = methodOf(conflictTest, "<init>", V, I, IDENTIFIED);
 
-		final String simpleName = "identified";
 		final LocalVariableEntry param2 = localOf(constructor, 2);
 
+		final String simpleName = "identified";
 		// param 2 is initially 'identified'
 		asserter.assertProposal(simpleName, param2);
 
@@ -95,6 +98,38 @@ public class ConflictFixProposerTest implements ConventionalNameProposerTest, Co
 		asserter.remapper().insertDynamicallyProposedMappings(backingField, EntryMapping.OBFUSCATED, mapping);
 
 		asserter.assertDynamicProposal(simpleName, localOf(constructor, 1));
+		// conflicting name removed by conflict fix
 		asserter.assertNotProposed(param2);
+	}
+
+	// tests fixing conflict between DelegateParametersProposer and SimpleTypeFieldNameProposer (with no simple type fallback)
+	// conflict is amongst params of a named method
+	// this tests deobf entries are not used for mapping lookups
+	@Test
+	public void testSimpleTypeNameConflictFixDeobfMethod() {
+		final var asserter = this.createAsserter();
+
+		final var conflictTest = new ClassEntry(CONFLICT_TEST_NAME);
+		final MethodEntry delegateParamsSource = methodOf(conflictTest, "a", V, I, IDENTIFIED);
+		final MethodEntry delegateParams = methodOf(conflictTest, "b", V, I, IDENTIFIED);
+
+		final LocalVariableEntry delegateParam2 = localOf(delegateParams, 1);
+
+		final String simpleName = "identified";
+		// param 2 is initially 'identified'
+		asserter.assertProposal(simpleName, delegateParam2);
+
+		final var context = new ValidationContext(null);
+		// name the method with delegate params to make sure conflict fixing works for deobf methods
+		asserter.remapper().putMapping(context, delegateParams, new EntryMapping("delegateParams"));
+		// override simple type name for the second param source so the first param can receive the simple type name
+		asserter.remapper().putMapping(context, localOf(delegateParamsSource, 1), new EntryMapping("noConflict"));
+		// name the first param source the simple type name, creating a conflict in the delegate params
+		asserter.remapper().putMapping(context, localOf(delegateParamsSource, 0), new EntryMapping(simpleName));
+
+		// first delegate param proposed by DelegateParametersNameProposer
+		asserter.assertDynamicProposal(simpleName, localOf(delegateParams, 0));
+		// conflicting name removed by conflict fix
+		asserter.assertNotProposed(delegateParam2);
 	}
 }
