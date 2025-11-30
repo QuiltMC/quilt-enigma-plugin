@@ -174,20 +174,6 @@ public class SimpleTypeSingleIndex extends Index {
 		}
 	}
 
-	// TODO remove
-	@TestOnly
-	public List<LocalVariableEntry> getParamsOf(MethodEntry methodEntry) {
-		var params = new ArrayList<LocalVariableEntry>();
-
-		this.parameters.forEach((param, name) -> {
-			if (param.getParent() != null && param.getParent().equals(methodEntry)) {
-				params.add(param);
-			}
-		});
-
-		return params;
-	}
-
 	@Override
 	public void onIndexingEnded() {
 		this.dropCache();
