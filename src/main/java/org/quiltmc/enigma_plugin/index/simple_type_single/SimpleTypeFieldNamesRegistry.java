@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.quiltmc.enigma_plugin.util.StringUtil.isValidJavaIdentifier;
 
@@ -60,6 +61,10 @@ public class SimpleTypeFieldNamesRegistry {
 
 	public @Nullable Entry getEntry(String type) {
 		return this.entries.get(type);
+	}
+
+	public Stream<String> streamTypes() {
+		return this.entries.keySet().stream();
 	}
 
 	public void read() {

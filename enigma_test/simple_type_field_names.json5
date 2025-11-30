@@ -1,0 +1,110 @@
+{
+    $schema: "../src/main/resources/simple_type_field_names_schema.json",
+
+    "com/a/c/a": "config",
+
+    // for conflict fix test
+    "com/a/n": { // Identifiable
+        local_name: "idAble",
+        exclusive: true,
+        fallback: [
+            "identifiable"
+        ]
+    },
+    "com/a/o": { // Identified
+        "local_name": "identified",
+        exclusive: true
+    },
+
+    // Position
+    "com/a/c/b": "pos", // Pos
+    "com/a/c/c": { // Position
+        local_name: "pos",
+        exclusive: true,
+        fallback: [
+            "position"
+        ]
+    },
+    "com/a/c/d": { // RandomPosition
+        local_name: "pos",
+        exclusive: true,
+        fallback: [
+            "position",
+            "randomPosition"
+        ]
+    },
+
+    // State
+    "com/a/c/e": { // StateA
+        local_name: "state",
+        static_name: "STATIC_STATE",
+        exclusive: true,
+        fallback: [
+            {
+                local_name: "stateA",
+                static_name: "STATIC_STATE_A"
+            }
+        ]
+    },
+    "com/a/c/f": { // StateB
+        local_name: "state",
+        static_name: "STATIC_STATE",
+        exclusive: true,
+        fallback: [
+            {
+                local_name: "stateB",
+                static_name: "STATIC_STATE_B"
+            },
+        ]
+    },
+
+    // Value
+    "com/a/c/g": { // ValueA
+        local_name: "value",
+        exclusive: true,
+        fallback: [
+            "valueA"
+        ]
+    },
+    "com/a/c/h": { // ValueB
+        local_name: "value",
+        exclusive: true,
+        fallback: [
+            "valueB"
+        ]
+    },
+    "com/a/c/i": { // ValueC
+        local_name: "value",
+        exclusive: true,
+        fallback: [
+            "valueC"
+        ]
+    },
+    "com/a/c/j": { // ValueD
+        local_name: "valueD",
+        exclusive: true,
+        inherit: true
+    },
+    "com/a/c/l": { // ValueE
+        local_name: "valueE",
+        exclusive: true
+    },
+
+    "com/a/b/b": { // Entity
+        local_name: "entity",
+        inherit: {
+            type: "TRUNCATED_SUBTYPE_NAME",
+            suffix: "Entity"
+        }
+    },
+    "com/a/a/a": { // BlockEntityRenderer
+        local_name: "blockEntityRenderer",
+        inherit: {
+            type: "TRANSFORMED_SUBTYPE_NAME",
+            "pattern": "(.+)BlockEntityRenderer",
+            "replacement": "$1Renderer"
+        }
+    },
+
+    "not/present": "missing"
+}
