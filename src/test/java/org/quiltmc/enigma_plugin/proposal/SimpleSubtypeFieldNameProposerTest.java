@@ -62,9 +62,9 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		return SimpleSubtypeFieldNameProposer.ID;
 	}
 
-	// TODO split up
+	// make sure simple type name is set up for Entity
 	@Test
-	void testSimpleSubtypes() {
+	void truncatedSubtypeSupertype() {
 		final ProposalAsserter asserter = this.createAsserter();
 
 		final var testClass = new ClassEntry(SIMPLE_SUBTYPE_NAMES_TEST_NAME);
@@ -76,8 +76,20 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		asserter.assertProposal("entity", localOf(methodOf(testClass, "a", V, ENTITY), 0));
 		// eat
 		asserter.assertProposal("entity", localOf(methodOf(testClass, "b", V, ENTITY), 1));
+	}
 
-		insertAndDynamicallyPropose(new ClassEntry(ENTITY_NON_SUFFIXED_NAME), new EntryMapping("EntityNonSuffixed"), asserter.remapper());
+	@Test
+	void testTruncatedSubtypeNames() {
+		final ProposalAsserter asserter = this.createAsserter();
+
+		final var testClass = new ClassEntry(SIMPLE_SUBTYPE_NAMES_TEST_NAME);
+
+		insertAndDynamicallyPropose(
+				new ClassEntry(ENTITY_NON_SUFFIXED_NAME),
+				new EntryMapping("EntityNonSuffixed"),
+				asserter.remapper()
+		);
+
 		// NON_SUFFIXED
 		asserter.assertNotProposed(fieldOf(testClass, "d", ENTITY_NON_SUFFIXED));
 		// nonSuffixed
@@ -98,13 +110,26 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		// eatLiving
 		asserter.assertNotProposed(localOf(methodOf(testClass, "b", Z, LIVING_ENTITY), 1));
 
-		insertAndDynamicallyPropose(new ClassEntry(BIRD_ENTITY_NAME), new EntryMapping("com/example/BirdEntity"), asserter.remapper());
+		insertAndDynamicallyPropose(
+				new ClassEntry(BIRD_ENTITY_NAME),
+				new EntryMapping("com/example/BirdEntity"),
+				asserter.remapper()
+		);
+
 		asserter.assertDynamicProposal("BIRD", fieldOf(testClass, "c", BIRD_ENTITY));
 		asserter.assertDynamicProposal("bird", fieldOf(testClass, "l", BIRD_ENTITY));
 		// eatBirdStatic
 		asserter.assertDynamicProposal("bird", localOf(methodOf(testClass, "a", I, I, BIRD_ENTITY), 1));
 		// eatBird
 		asserter.assertDynamicProposal("bird", localOf(methodOf(testClass, "b", I, I, BIRD_ENTITY), 2));
+	}
+
+	// make sure simple type name is set up for BlockEntityRenderer
+	@Test
+	void transformedSubtypeSupertype() {
+		final ProposalAsserter asserter = this.createAsserter();
+
+		final var testClass = new ClassEntry(SIMPLE_SUBTYPE_NAMES_TEST_NAME);
 
 		// simple type names, not dynamic subtype names
 		asserter.assertProposal("BLOCK_ENTITY_RENDERER", fieldOf(testClass, "e", BLOCK_ENTITY_RENDERER));
@@ -113,8 +138,20 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		asserter.assertProposal("blockEntityRenderer", localOf(methodOf(testClass, "a", V, BLOCK_ENTITY_RENDERER), 0));
 		// render
 		asserter.assertProposal("blockEntityRenderer", localOf(methodOf(testClass, "b", V, BLOCK_ENTITY_RENDERER), 1));
+	}
 
-		insertAndDynamicallyPropose(new ClassEntry(DISPLAY_BLOCK_ENTITY_RENDERER_NAME), new EntryMapping("DisplayBlockEntityRenderer"), asserter.remapper());
+	@Test
+	void testTransformedSubtypeNames() {
+		final ProposalAsserter asserter = this.createAsserter();
+
+		final var testClass = new ClassEntry(SIMPLE_SUBTYPE_NAMES_TEST_NAME);
+
+		insertAndDynamicallyPropose(
+				new ClassEntry(DISPLAY_BLOCK_ENTITY_RENDERER_NAME),
+				new EntryMapping("DisplayBlockEntityRenderer"),
+				asserter.remapper()
+		);
+
 		asserter.assertDynamicProposal("DISPLAY_RENDERER", fieldOf(testClass, "f", DISPLAY_BLOCK_ENTITY_RENDERER));
 		asserter.assertDynamicProposal("displayRenderer", fieldOf(testClass, "o", DISPLAY_BLOCK_ENTITY_RENDERER));
 		// renderStatic
@@ -122,15 +159,32 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		// render
 		asserter.assertDynamicProposal("displayRenderer", localOf(methodOf(testClass, "b", V, DISPLAY_BLOCK_ENTITY_RENDERER), 1));
 
-		insertAndDynamicallyPropose(new ClassEntry(PAINTING_BLOCK_ENTITY_RENDERER_NAME), new EntryMapping("PaintingBlockEntityRenderer"), asserter.remapper());
+		insertAndDynamicallyPropose(
+				new ClassEntry(PAINTING_BLOCK_ENTITY_RENDERER_NAME),
+				new EntryMapping("PaintingBlockEntityRenderer"),
+				asserter.remapper()
+		);
+
 		asserter.assertDynamicProposal("PAINTING_RENDERER", fieldOf(testClass, "g", PAINTING_BLOCK_ENTITY_RENDERER));
 		asserter.assertDynamicProposal("paintingRenderer", fieldOf(testClass, "p", PAINTING_BLOCK_ENTITY_RENDERER));
 		// renderStatic
 		asserter.assertDynamicProposal("paintingRenderer", localOf(methodOf(testClass, "a", V, PAINTING_BLOCK_ENTITY_RENDERER), 0));
 		// render
 		asserter.assertDynamicProposal("paintingRenderer", localOf(methodOf(testClass, "b", V, PAINTING_BLOCK_ENTITY_RENDERER), 1));
+	}
 
-		insertAndDynamicallyPropose(new ClassEntry(DUPLICATE_BLOCK_ENTITY_RENDERER_NAME), new EntryMapping("DuplicateBlockEntityRenderer"), asserter.remapper());
+	@Test
+	void testNoDuplicates() {
+		final ProposalAsserter asserter = this.createAsserter();
+
+		final var testClass = new ClassEntry(SIMPLE_SUBTYPE_NAMES_TEST_NAME);
+
+		insertAndDynamicallyPropose(
+				new ClassEntry(DUPLICATE_BLOCK_ENTITY_RENDERER_NAME),
+				new EntryMapping("DuplicateBlockEntityRenderer"),
+				asserter.remapper()
+		);
+
 		// DUPLICATE_1
 		asserter.assertNotProposed(fieldOf(testClass, "h", DUPLICATE_BLOCK_ENTITY_RENDERER));
 		// DUPLICATE_2
@@ -140,11 +194,17 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		// duplicate2
 		asserter.assertNotProposed(fieldOf(testClass, "r", DUPLICATE_BLOCK_ENTITY_RENDERER));
 
-		final MethodEntry renderStaticDuplicateMethod = methodOf(testClass, "a", V, DUPLICATE_BLOCK_ENTITY_RENDERER, DUPLICATE_BLOCK_ENTITY_RENDERER);
+		final MethodEntry renderStaticDuplicateMethod = methodOf(
+				testClass, "a", V,
+				DUPLICATE_BLOCK_ENTITY_RENDERER, DUPLICATE_BLOCK_ENTITY_RENDERER
+		);
 		asserter.assertNotProposed(localOf(renderStaticDuplicateMethod, 0));
 		asserter.assertNotProposed(localOf(renderStaticDuplicateMethod, 1));
 
-		final MethodEntry renderDuplicateMethod = methodOf(testClass, "b", V, DUPLICATE_BLOCK_ENTITY_RENDERER, DUPLICATE_BLOCK_ENTITY_RENDERER);
+		final MethodEntry renderDuplicateMethod = methodOf(
+				testClass, "b", V,
+				DUPLICATE_BLOCK_ENTITY_RENDERER, DUPLICATE_BLOCK_ENTITY_RENDERER
+		);
 		asserter.assertNotProposed(localOf(renderDuplicateMethod, 1));
 		asserter.assertNotProposed(localOf(renderDuplicateMethod, 2));
 	}
