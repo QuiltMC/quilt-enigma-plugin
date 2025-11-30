@@ -88,9 +88,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 			return;
 		}
 
-		// TODO share instance with simple types
-		this.registry = new SimpleTypeFieldNamesRegistry(path);
-		this.registry.read();
+		this.registry = SimpleTypeFieldNamesRegistry.readFrom(path);
 	}
 
 	@Override

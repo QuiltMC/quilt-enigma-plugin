@@ -28,7 +28,6 @@ import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.TestOnly;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -43,7 +42,6 @@ import org.quiltmc.enigma_plugin.util.Descriptors;
 import org.tinylog.Logger;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -113,8 +111,7 @@ public class SimpleTypeSingleIndex extends Index {
 			return;
 		}
 
-		this.registry = new SimpleTypeFieldNamesRegistry(path);
-		this.registry.read();
+		this.registry = SimpleTypeFieldNamesRegistry.readFrom(path);
 
 		this.unverifiedTypes.clear();
 		if (this.verificationLevel != VerificationLevel.NONE) {

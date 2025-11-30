@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +39,20 @@ import java.util.stream.Stream;
 
 import static org.quiltmc.enigma_plugin.util.StringUtil.isValidJavaIdentifier;
 
-public class SimpleTypeFieldNamesRegistry {
+public final class SimpleTypeFieldNamesRegistry {
 	private static final String INVALID_LOCAL_NAME_FOR_TYPE_TEMPLATE = "Invalid local name \"%s\" for type \"%s\"";
+
+	// this would ideally have weak value references, but we don't have guava's MapMaker/Cache,
+	// and in practice it only stores one path and references its registry are never released
+	private static final Map<Path, SimpleTypeFieldNamesRegistry> READ_CACHE = new HashMap<>(1);
+
+	public static SimpleTypeFieldNamesRegistry readFrom(Path path) {
+		return READ_CACHE.computeIfAbsent(path, newPath -> {
+			final SimpleTypeFieldNamesRegistry registry = new SimpleTypeFieldNamesRegistry(newPath);
+			registry.read();
+			return registry;
+		});
+	}
 
 	private static void skipToObjectEnd(JsonReader reader) throws IOException {
 		while (reader.hasNext()) {
@@ -55,7 +68,7 @@ public class SimpleTypeFieldNamesRegistry {
 	 */
 	private final Map<String, Entry> entries = new LinkedHashMap<>();
 
-	public SimpleTypeFieldNamesRegistry(Path path) {
+	private SimpleTypeFieldNamesRegistry(Path path) {
 		this.path = path;
 	}
 
@@ -67,7 +80,7 @@ public class SimpleTypeFieldNamesRegistry {
 		return this.entries.keySet().stream();
 	}
 
-	public void read() {
+	private void read() {
 		try (var reader = JsonReader.json5(this.path)) {
 			if (reader.peek() != JsonToken.BEGIN_OBJECT) {
 				return;
