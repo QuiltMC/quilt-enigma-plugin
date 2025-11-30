@@ -166,9 +166,8 @@ public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposer
 		final PrintStream originalErr = System.err;
 
 		try {
-			final ByteArrayOutputStream testErr = new ByteArrayOutputStream();
-			final PrintStream printStream = new PrintStream(testErr);
-			System.setErr(printStream);
+			final var testErr = new ByteArrayOutputStream();
+			System.setErr(new PrintStream(testErr));
 
 			this.createAsserter();
 

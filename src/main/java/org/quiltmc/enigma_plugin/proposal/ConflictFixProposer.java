@@ -28,12 +28,10 @@ import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-
-import static java.util.stream.Collectors.toMap;
 
 public class ConflictFixProposer extends NameProposer {
 	public static final String ID = "conflict_fix";
@@ -89,7 +87,7 @@ public class ConflictFixProposer extends NameProposer {
 	private Optional<LocalVariableEntry> getConflictingParam(Map<Entry<?>, EntryMapping> mappings, EntryRemapper remapper, LocalVariableEntry entry, @Nullable String name) {
 		MethodEntry method = entry.getParent();
 		if (method != null) {
-			var args = method.getParameters(remapper.getJarIndex().getIndex(EntryIndex.class));
+			List<LocalVariableEntry> args = method.getParameters(remapper.getJarIndex().getIndex(EntryIndex.class));
 
 			for (final LocalVariableEntry arg : args) {
 				// check newly proposed mappings for a name
@@ -109,6 +107,5 @@ public class ConflictFixProposer extends NameProposer {
 	}
 
 	@Override
-	public void insertProposedNames(Enigma enigma, JarIndex index, Map<Entry<?>, EntryMapping> mappings) {
-	}
+	public void insertProposedNames(Enigma enigma, JarIndex index, Map<Entry<?>, EntryMapping> mappings) { }
 }
