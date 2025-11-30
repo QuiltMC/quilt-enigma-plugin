@@ -18,6 +18,7 @@ package org.quiltmc.enigma_plugin.proposal;
 
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
@@ -155,21 +156,35 @@ public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposer
 		asserter.assertProposal("valueD", localOf(methodOf(valueD, "a", V, VALUE_DD), 0));
 	}
 
-	// @Test
-	@RepeatedTest(10)
-	void testTypeVerification() {
-		PrintStream originalErr = System.err;
+	/**
+	 * When making changes to this test's log capturing, be sure to test it with {@link RepeatedTest @RepeatedTest(1000)}
+	 * to make sure the log capturing isn't flaky.
+	 */
+	@Test
+	@SuppressWarnings("BusyWait")
+	void testTypeVerification() throws InterruptedException {
+		final PrintStream originalErr = System.err;
 
 		try {
-			ByteArrayOutputStream testErr = new ByteArrayOutputStream();
+			final ByteArrayOutputStream testErr = new ByteArrayOutputStream();
 			final PrintStream printStream = new PrintStream(testErr);
 			System.setErr(printStream);
 
 			this.createAsserter();
 
+			// HACK: tiny logger doesn't always print immediately
+			// poll the print stream for output to prevent flaky test failures
+			// in testing with 1000 runs, it never took more than 2 polls per run
+			int remainingPolls = 10;
+			while (testErr.size() == 0) {
+				if (remainingPolls-- == 0) {
+					throw new AssertionFailedError("no error printed after 10 checks!");
+				}
+
+				Thread.sleep(10);
+			}
+
 			// simple_type_field_names_type_verification warning
-			// TODO this check is flaky when running the full test suite
-			//  the string is sometimes empty and the message appears in console after the test fails
 			assertContains(
 					testErr.toString(),
 					"[WARN]: The following simple type field name type is missing: not/present"
