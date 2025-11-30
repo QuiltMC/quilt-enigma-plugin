@@ -52,7 +52,7 @@ import java.util.stream.Stream;
 
 import static org.quiltmc.enigma_plugin.util.StringUtil.getObjectTypeOrNull;
 import static org.quiltmc.enigma_plugin.util.StringUtil.isValidJavaIdentifier;
-
+// TODO reduce some methods' visibility
 /**
  * Index of fields/local variables that whose names can be derived from their types and which
  * are entirely unique within their context (no other fields/local vars in the same scope have the same type).
@@ -88,6 +88,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 			return;
 		}
 
+		// TODO share instance with simple types
 		this.registry = new SimpleTypeFieldNamesRegistry(path);
 		this.registry.read();
 	}
@@ -149,7 +150,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 			for (var param : parameters) {
 				types.compute(param.type(), (t, old) -> {
 					if (old == null) {
-						return 0;
+						return 1;
 					} else {
 						return old + 1;
 					}
@@ -157,7 +158,7 @@ public class SimpleSubtypeSingleIndex extends Index {
 			}
 
 			// Don't propose names for types appearing more than once
-			var bannedTypes = types.entrySet().stream()
+			final Set<Type> bannedTypes = types.entrySet().stream()
 					.filter(entry -> entry.getValue() > 1)
 					.map(Map.Entry::getKey)
 					.collect(Collectors.toSet());
