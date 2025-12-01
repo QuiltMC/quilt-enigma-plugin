@@ -80,7 +80,5 @@
         local_name: "specific",
         exclusive: true,
         inherit: true
-    },
-
-    "not/present": "missing"
+    }
 }

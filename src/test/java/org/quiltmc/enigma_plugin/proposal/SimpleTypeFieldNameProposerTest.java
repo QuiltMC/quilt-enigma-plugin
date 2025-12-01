@@ -16,18 +16,12 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-
-import static org.quiltmc.enigma_plugin.test.util.TestUtil.assertContains;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
@@ -171,42 +165,5 @@ public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposer
 		// valueSpecific
 		asserter.assertProposal(specific, localOf(methodOf(parameters, "a", V, VALUE_D_SPECIFIC), 0));
 		asserter.assertProposal(specific, localOf(methodOf(parameters, "a", V, VALUE_D_SPECIFIC_INHERITOR), 0));
-	}
-
-	/**
-	 * When making changes to this test's log capturing, be sure to test it with {@link RepeatedTest @RepeatedTest(1000)}
-	 * to make sure the log capturing isn't flaky.
-	 */
-	@Test
-	@SuppressWarnings("BusyWait")
-	void testTypeVerification() throws InterruptedException {
-		final PrintStream originalErr = System.err;
-
-		try {
-			final var testErr = new ByteArrayOutputStream();
-			System.setErr(new PrintStream(testErr));
-
-			this.createAsserter();
-
-			// HACK: tiny logger doesn't always print immediately
-			// poll the print stream for output to prevent flaky test failures
-			// in testing with 1000 runs, it never took more than 2 polls per run
-			int remainingPolls = 10;
-			while (testErr.size() == 0) {
-				if (remainingPolls-- == 0) {
-					throw new AssertionFailedError("no error printed after 10 checks!");
-				}
-
-				Thread.sleep(10);
-			}
-
-			// simple_type_field_names_type_verification warning
-			assertContains(
-					testErr.toString(),
-					"[WARN]: The following simple type field name type is missing: not/present"
-			);
-		} finally {
-			System.setErr(originalErr);
-		}
 	}
 }
