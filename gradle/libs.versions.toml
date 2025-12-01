@@ -1,5 +1,5 @@
 [versions]
-enigma = "2.6.1"
+enigma = "2.7.1"
 
 asm = "9.7.1"
 quilt_json_parser = "0.3.0"

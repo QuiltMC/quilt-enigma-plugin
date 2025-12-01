@@ -16,11 +16,14 @@
 
 package org.quiltmc.enigma_plugin;
 
+import org.jetbrains.annotations.NotNull;
+import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.EnigmaPlugin;
 import org.quiltmc.enigma.api.EnigmaPluginContext;
 import org.quiltmc.enigma.api.service.JarIndexerService;
 import org.quiltmc.enigma.api.service.NameProposalService;
 import org.quiltmc.enigma.api.service.ObfuscationTestService;
+import org.quiltmc.enigma.util.Version;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.quiltmc.enigma_plugin.obfuscation.NameObfuscationTestService;
 import org.quiltmc.enigma_plugin.proposal.DefaultProposalService;
@@ -43,5 +46,16 @@ public class QuiltEnigmaPlugin implements EnigmaPlugin {
 		ctx.registerService(NameProposalService.TYPE, ctx1 -> new FallbackProposalService(indexer, ctx1));
 		ctx.registerService(NameProposalService.TYPE, ctx1 -> new UncheckedProposalService(indexer, ctx1));
 		ctx.registerService(ObfuscationTestService.TYPE, NameObfuscationTestService::new);
+	}
+
+	@Override
+	public boolean supportsEnigmaVersion(@NotNull Version enigmaVersion) {
+		return Enigma.MAJOR_VERSION == enigmaVersion.major()
+				&& Enigma.MINOR_VERSION == enigmaVersion.minor();
+	}
+
+	@Override
+	public String getName() {
+		return "Quilt Enigma Plugin";
 	}
 }
