@@ -1,0 +1,29 @@
+{
+  "services" : {
+    "name_proposal": [
+      {
+        "id": "enigma:specialized_method_name_proposer"
+      },
+      {
+        "id": "quiltmc:name_proposal",
+        "args": {
+          "disable_constant_fields": "false",
+          "disable_records": "false",
+          "disable_codecs": "false"
+        }
+      }
+    ],
+    "jar_indexer": [
+      {
+        "id": "quiltmc:jar_index",
+        "args": {
+          "disable_constant_fields": "false",
+          "disable_records": "false",
+          "disable_codecs": "false",
+          "simple_type_field_names_path": "./simple_type_field_names.json5",
+          "simple_type_verification_error_level": "THROW"
+        }
+      }
+    ]
+  }
+}

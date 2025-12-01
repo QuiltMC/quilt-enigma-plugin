@@ -1,0 +1,7 @@
+{
+    $schema: "../../../../src/main/resources/simple_type_field_names_schema.json",
+
+    "a/a/a": "present",
+
+    "not/present": "missing"
+}
