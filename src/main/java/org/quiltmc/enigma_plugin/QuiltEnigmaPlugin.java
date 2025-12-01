@@ -16,7 +16,7 @@
 
 package org.quiltmc.enigma_plugin;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.EnigmaPlugin;
 import org.quiltmc.enigma.api.EnigmaPluginContext;
@@ -49,7 +49,7 @@ public class QuiltEnigmaPlugin implements EnigmaPlugin {
 	}
 
 	@Override
-	public boolean supportsEnigmaVersion(@NotNull Version enigmaVersion) {
+	public boolean supportsEnigmaVersion(@NonNull Version enigmaVersion) {
 		return Enigma.MAJOR_VERSION == enigmaVersion.major()
 				&& Enigma.MINOR_VERSION == enigmaVersion.minor();
 	}

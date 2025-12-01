@@ -5,6 +5,7 @@ asm = "9.9"
 quilt_json_parser = "0.3.1"
 tinylog = "2.7.0"
 annotations = "23.0.0"
+jspecify = "1.0.0"
 gson = "2.13.2"
 
 junit = "6.0.1"
@@ -23,6 +24,7 @@ asm_util = { module = "org.ow2.asm:asm-util", version.ref = "asm" }
 quilt_json5 = { module = "org.quiltmc.parsers:json", version.ref = "quilt_json_parser" }
 tinylog = { module = "org.tinylog:tinylog-api", version.ref = "tinylog" }
 annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
+jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 
 junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }

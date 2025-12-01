@@ -70,6 +70,7 @@ dependencies {
 	implementation libs.quilt.json5
 	implementation libs.tinylog
 	implementation libs.annotations
+	implementation libs.jspecify
 	implementation libs.gson
 
 	testImplementation libs.junit
