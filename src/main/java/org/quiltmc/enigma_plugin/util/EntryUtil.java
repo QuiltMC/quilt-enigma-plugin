@@ -17,6 +17,7 @@
 package org.quiltmc.enigma_plugin.util;
 
 import org.jetbrains.annotations.Nullable;
+import org.quiltmc.enigma.api.analysis.index.jar.InheritanceIndex;
 import org.quiltmc.enigma.api.source.TokenType;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
@@ -24,6 +25,9 @@ import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.Entry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
+
+import java.util.Collection;
+import java.util.stream.Stream;
 
 public final class EntryUtil {
 	private EntryUtil() {
@@ -60,5 +64,18 @@ public final class EntryUtil {
 		} else {
 			return null;
 		}
+	}
+
+	// InheritanceIndex::getAncestors returns an unordered set
+	/**
+	 * @return a breadth-first stream of the passed {@code classEntry}'s ancestors;
+	 * order within one level of depth is not guaranteed
+	 */
+	public static Stream<ClassEntry> streamAncestors(ClassEntry classEntry, InheritanceIndex inheritance) {
+		final Collection<ClassEntry> parents = inheritance.getParents(classEntry);
+		return Stream.concat(
+			parents.stream(),
+			parents.stream().flatMap(parent -> streamAncestors(parent, inheritance))
+		);
 	}
 }

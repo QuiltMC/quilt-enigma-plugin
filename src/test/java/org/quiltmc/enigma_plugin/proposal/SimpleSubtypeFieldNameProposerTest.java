@@ -36,6 +36,10 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 	private static final String ENTITY_NON_SUFFIXED_NAME = "a/a/b/c";
 	private static final String LIVING_ENTITY_NAME = "a/a/b/d";
 	private static final String BIRD_ENTITY_NAME = "a/a/b/a";
+	private static final String WHILE_ENTITY_NAME = "a/a/b/e";
+	private static final String SPECIFIC_ENTITY_NAME = "a/a/b/a/c";
+	private static final String ENTITY_MARKER_NAME = "a/a/b/a/a";
+	private static final String ENTITY_SPECIFIC_ENTITY_NAME = "a/a/b/a/b";
 
 	private static final String BLOCK_ENTITY_RENDERER_NAME = "a/a/a/a";
 	private static final String DISPLAY_BLOCK_ENTITY_RENDERER_NAME = "a/a/a/b";
@@ -46,6 +50,10 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 	private static final String ENTITY_NON_SUFFIXED = typeDescOf(ENTITY_NON_SUFFIXED_NAME);
 	private static final String LIVING_ENTITY = typeDescOf(LIVING_ENTITY_NAME);
 	private static final String BIRD_ENTITY = typeDescOf(BIRD_ENTITY_NAME);
+	private static final String WHILE_ENTITY = typeDescOf(WHILE_ENTITY_NAME);
+	private static final String SPECIFIC_ENTITY = typeDescOf(SPECIFIC_ENTITY_NAME);
+	private static final String ENTITY_MARKER = typeDescOf(ENTITY_MARKER_NAME);
+	private static final String ENTITY_SPECIFIC_ENTITY = typeDescOf(ENTITY_SPECIFIC_ENTITY_NAME);
 
 	private static final String BLOCK_ENTITY_RENDERER = typeDescOf(BLOCK_ENTITY_RENDERER_NAME);
 	private static final String DISPLAY_BLOCK_ENTITY_RENDERER = typeDescOf(DISPLAY_BLOCK_ENTITY_RENDERER_NAME);
@@ -71,7 +79,7 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 
 		// simple type names, not dynamic subtype names
 		asserter.assertProposal("ENTITY", fieldOf(testClass, "a", ENTITY));
-		asserter.assertProposal("entity", fieldOf(testClass, "j", ENTITY));
+		asserter.assertProposal("entity", fieldOf(testClass, "k", ENTITY));
 		// eatStatic
 		asserter.assertProposal("entity", localOf(methodOf(testClass, "a", V, ENTITY), 0));
 		// eat
@@ -93,7 +101,7 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		// NON_SUFFIXED
 		asserter.assertNotProposed(fieldOf(testClass, "d", ENTITY_NON_SUFFIXED));
 		// nonSuffixed
-		asserter.assertNotProposed(fieldOf(testClass, "m", ENTITY_NON_SUFFIXED));
+		asserter.assertNotProposed(fieldOf(testClass, "n", ENTITY_NON_SUFFIXED));
 		// eatNonSuffixedStatic
 		asserter.assertNotProposed(localOf(methodOf(testClass, "a", OBJ, ENTITY_NON_SUFFIXED, OBJ), 0));
 		// eatNonSuffixed
@@ -104,7 +112,7 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		// LIVING_ENTITY
 		asserter.assertNotProposed(fieldOf(testClass, "b", LIVING_ENTITY));
 		// livingEntity
-		asserter.assertNotProposed(fieldOf(testClass, "k", LIVING_ENTITY));
+		asserter.assertNotProposed(fieldOf(testClass, "l", LIVING_ENTITY));
 		// eatLivingStatic
 		asserter.assertNotProposed(localOf(methodOf(testClass, "a", Z, LIVING_ENTITY), 0));
 		// eatLiving
@@ -117,11 +125,30 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		);
 
 		asserter.assertDynamicProposal("BIRD", fieldOf(testClass, "c", BIRD_ENTITY));
-		asserter.assertDynamicProposal("bird", fieldOf(testClass, "l", BIRD_ENTITY));
+		asserter.assertDynamicProposal("bird", fieldOf(testClass, "m", BIRD_ENTITY));
 		// eatBirdStatic
 		asserter.assertDynamicProposal("bird", localOf(methodOf(testClass, "a", I, I, BIRD_ENTITY), 1));
 		// eatBird
 		asserter.assertDynamicProposal("bird", localOf(methodOf(testClass, "b", I, I, BIRD_ENTITY), 2));
+	}
+
+	@Test
+	void testNoInvalidSubtypeNames() {
+		final ProposalAsserter asserter = this.createAsserter();
+
+		final var testClass = new ClassEntry(SIMPLE_SUBTYPE_NAMES_TEST_NAME);
+
+		insertAndDynamicallyPropose(
+				new ClassEntry(WHILE_ENTITY_NAME),
+				new EntryMapping("com/example/WhileEntity"),
+				asserter.remapper()
+		);
+
+		// "WHILE" proposed despite its lowercase form being invalid
+		asserter.assertDynamicProposal("WHILE", fieldOf(testClass, "j", WHILE_ENTITY));
+		// "while" not proposed for notWhile field or param because it's a keyword
+		asserter.assertNotProposed(fieldOf(testClass, "t", WHILE_ENTITY));
+		asserter.assertNotProposed(methodOf(testClass, "a", V, WHILE_ENTITY));
 	}
 
 	// make sure simple type name is set up for BlockEntityRenderer
@@ -133,7 +160,7 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 
 		// simple type names, not dynamic subtype names
 		asserter.assertProposal("BLOCK_ENTITY_RENDERER", fieldOf(testClass, "e", BLOCK_ENTITY_RENDERER));
-		asserter.assertProposal("blockEntityRenderer", fieldOf(testClass, "n", BLOCK_ENTITY_RENDERER));
+		asserter.assertProposal("blockEntityRenderer", fieldOf(testClass, "o", BLOCK_ENTITY_RENDERER));
 		// renderStatic
 		asserter.assertProposal("blockEntityRenderer", localOf(methodOf(testClass, "a", V, BLOCK_ENTITY_RENDERER), 0));
 		// render
@@ -153,7 +180,7 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		);
 
 		asserter.assertDynamicProposal("DISPLAY_RENDERER", fieldOf(testClass, "f", DISPLAY_BLOCK_ENTITY_RENDERER));
-		asserter.assertDynamicProposal("displayRenderer", fieldOf(testClass, "o", DISPLAY_BLOCK_ENTITY_RENDERER));
+		asserter.assertDynamicProposal("displayRenderer", fieldOf(testClass, "p", DISPLAY_BLOCK_ENTITY_RENDERER));
 		// renderStatic
 		asserter.assertDynamicProposal("displayRenderer", localOf(methodOf(testClass, "a", V, DISPLAY_BLOCK_ENTITY_RENDERER), 0));
 		// render
@@ -166,7 +193,7 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		);
 
 		asserter.assertDynamicProposal("PAINTING_RENDERER", fieldOf(testClass, "g", PAINTING_BLOCK_ENTITY_RENDERER));
-		asserter.assertDynamicProposal("paintingRenderer", fieldOf(testClass, "p", PAINTING_BLOCK_ENTITY_RENDERER));
+		asserter.assertDynamicProposal("paintingRenderer", fieldOf(testClass, "q", PAINTING_BLOCK_ENTITY_RENDERER));
 		// renderStatic
 		asserter.assertDynamicProposal("paintingRenderer", localOf(methodOf(testClass, "a", V, PAINTING_BLOCK_ENTITY_RENDERER), 0));
 		// render
@@ -190,9 +217,9 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		// DUPLICATE_2
 		asserter.assertNotProposed(fieldOf(testClass, "i", DUPLICATE_BLOCK_ENTITY_RENDERER));
 		// duplicate1
-		asserter.assertNotProposed(fieldOf(testClass, "q", DUPLICATE_BLOCK_ENTITY_RENDERER));
-		// duplicate2
 		asserter.assertNotProposed(fieldOf(testClass, "r", DUPLICATE_BLOCK_ENTITY_RENDERER));
+		// duplicate2
+		asserter.assertNotProposed(fieldOf(testClass, "s", DUPLICATE_BLOCK_ENTITY_RENDERER));
 
 		final MethodEntry renderStaticDuplicateMethod = methodOf(
 				testClass, "a", V,
@@ -207,5 +234,40 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		);
 		asserter.assertNotProposed(localOf(renderDuplicateMethod, 1));
 		asserter.assertNotProposed(localOf(renderDuplicateMethod, 2));
+	}
+
+	@Test
+	void testSubSubtypeNames() {
+		final ProposalAsserter asserter = this.createAsserter();
+
+		final var testClass = new ClassEntry(SIMPLE_SUBTYPE_NAMES_TEST_NAME);
+
+		insertAndDynamicallyPropose(
+				new ClassEntry(SPECIFIC_ENTITY_NAME),
+				new EntryMapping("SpecificEntity"),
+				asserter.remapper()
+		);
+
+		insertAndDynamicallyPropose(
+				new ClassEntry(ENTITY_MARKER_NAME),
+				new EntryMapping("EntityMarker"),
+				asserter.remapper()
+		);
+
+		insertAndDynamicallyPropose(
+				new ClassEntry(ENTITY_SPECIFIC_ENTITY_NAME),
+				new EntryMapping("EntitySpecificEntity"),
+				asserter.remapper()
+		);
+
+		// method: eatSpecificEntity
+		// named simple type name despite being a matching subtype of Entity
+		// non-sub-types take priority
+		asserter.assertProposal("specificEntity", localOf(methodOf(testClass, "a", V, SPECIFIC_ENTITY), 1));
+		// method: eatMarker
+		asserter.assertDynamicProposal("marker", localOf(methodOf(testClass, "a", V, ENTITY_MARKER), 1));
+		// method: eatEntitySpecificEntity
+		// named by SpecificEntity's subtype pattern, not Entity's, because SpecificEntity is a closer supertype
+		asserter.assertDynamicProposal("specificEntity", localOf(methodOf(testClass, "a", V, ENTITY_SPECIFIC_ENTITY), 1));
 	}
 }

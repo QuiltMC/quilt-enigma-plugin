@@ -37,6 +37,7 @@ import org.quiltmc.enigma_plugin.index.Index;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Inherit;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.Descriptors;
+import org.quiltmc.enigma_plugin.util.EntryUtil;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -51,7 +52,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.quiltmc.enigma_plugin.util.StringUtil.getObjectTypeOrNull;
-import static org.quiltmc.enigma_plugin.util.StringUtil.isValidJavaIdentifier;
 
 /**
  * Index of fields/local variables that whose names can be derived from their types and which
@@ -249,19 +249,23 @@ public class SimpleSubtypeSingleIndex extends Index {
 		}
 
 		// Check all parent classes for an entry. This goes in order of super/interface, supersuper/interfacesuper, etc
-		for (ClassEntry ancestor : this.inheritance.getAncestors(new ClassEntry(type))) {
-			var entry = this.registry.getEntry(ancestor.getFullName());
+		final ClassEntry typeEntry = new ClassEntry(type);
+		return EntryUtil.streamAncestors(typeEntry, this.inheritance)
+			.flatMap(ancestor -> {
+				var entry = this.registry.getEntry(ancestor.getFullName());
 
-			if (entry != null) {
-				if (entry.inherit() instanceof Inherit.TruncatedSubtypeName truncated) {
-					return new SubtypeEntry(entry.type(), new Renamer.Truncate(truncated.suffix()));
-				} else if (entry.inherit() instanceof Inherit.TransformedSubtypeName transformed) {
-					return new SubtypeEntry(entry.type(), new Renamer.Transform(transformed.pattern(), transformed.replacement()));
+				if (entry != null) {
+					if (entry.inherit() instanceof Inherit.TruncatedSubtypeName truncated) {
+						return Stream.of(new SubtypeEntry(entry.type(), new Renamer.Truncate(truncated.suffix())));
+					} else if (entry.inherit() instanceof Inherit.TransformedSubtypeName transformed) {
+						return Stream.of(new SubtypeEntry(entry.type(), new Renamer.Transform(transformed.pattern(), transformed.replacement())));
+					}
 				}
-			}
-		}
 
-		return null;
+				return Stream.empty();
+			})
+			.findFirst()
+			.orElse(null);
 	}
 
 	public record FieldInfo(SubtypeEntry entry, boolean isConstant) { }
@@ -280,25 +284,20 @@ public class SimpleSubtypeSingleIndex extends Index {
 
 			@Override
 			public Optional<String> rename(String original) {
-				int lenDiff = original.length() - this.suffix.length();
-				if (lenDiff > 0 && original.endsWith(this.suffix)) {
-					return Optional.of(original.substring(0, lenDiff));
-				} else {
-					return Optional.empty();
-				}
+				final int lengthDiff = original.length() - this.suffix.length();
+				return lengthDiff > 0 && original.endsWith(this.suffix)
+						? Optional.of(original.substring(0, lengthDiff))
+						: Optional.empty();
 			}
 		}
 
 		record Transform(Pattern pattern, String replacement) implements Renamer {
 			@Override
 			public Optional<String> rename(String original) {
-				Matcher matcher = this.pattern.matcher(original);
-				if (matcher.matches()) {
-					final String transformed = matcher.replaceFirst(this.replacement);
-					return isValidJavaIdentifier(transformed) ? Optional.of(transformed) : Optional.empty();
-				} else {
-					return Optional.empty();
-				}
+				final Matcher matcher = this.pattern.matcher(original);
+				return matcher.matches()
+						? Optional.of(matcher.replaceFirst(this.replacement))
+						: Optional.empty();
 			}
 		}
 	}

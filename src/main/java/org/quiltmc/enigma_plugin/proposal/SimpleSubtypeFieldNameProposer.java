@@ -28,6 +28,7 @@ import org.quiltmc.enigma_plugin.index.JarIndexer;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex.FieldInfo;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex.SubtypeEntry;
+import org.quiltmc.enigma_plugin.util.StringUtil;
 
 import java.util.Map;
 import java.util.Optional;
@@ -39,7 +40,7 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 	private final SimpleSubtypeSingleIndex index;
 
 	private static String unCapitalize(String string) {
-		var builder = new StringBuilder();
+		final var builder = new StringBuilder();
 		builder.append(Character.toLowerCase(string.charAt(0)));
 		for (int i = 1; i < string.length(); i++) {
 			builder.append(string.charAt(i));
@@ -79,6 +80,7 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 				getSimpleTargetName(remapper, type)
 						.flatMap(info.entry().renamer()::rename)
 						.map(name -> info.isConstant() ? toScreamingSnakeCase(name) : unCapitalize(name))
+						.filter(StringUtil::isValidJavaIdentifier)
 						.ifPresent(name -> this.insertDynamicProposal(mappings, field, name));
 			}
 		}
@@ -92,6 +94,7 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 			getSimpleTargetName(remapper, type)
 					.flatMap(entry.renamer()::rename)
 					.map(SimpleSubtypeFieldNameProposer::unCapitalize)
+					.filter(StringUtil::isValidJavaIdentifier)
 					.ifPresent(name -> this.insertDynamicProposal(mappings, param, name));
 		}
 	}

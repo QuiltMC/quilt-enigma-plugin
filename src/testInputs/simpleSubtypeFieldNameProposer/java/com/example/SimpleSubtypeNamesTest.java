@@ -8,6 +8,10 @@ import com.example.entity.BirdEntity;
 import com.example.entity.Entity;
 import com.example.entity.EntityNonSuffixed;
 import com.example.entity.LivingEntity;
+import com.example.entity.WhileEntity;
+import com.example.entity.specific.EntityMarker;
+import com.example.entity.specific.EntitySpecificEntity;
+import com.example.entity.specific.SpecificEntity;
 
 public class SimpleSubtypeNamesTest {
 	static final Entity ENTITY = new Entity();
@@ -21,6 +25,9 @@ public class SimpleSubtypeNamesTest {
 
 	static final DuplicateBlockEntityRenderer DUPLICATE_1 = new DuplicateBlockEntityRenderer();
 	static final DuplicateBlockEntityRenderer DUPLICATE_2 = new DuplicateBlockEntityRenderer();
+
+	// validly named despite its lowercase name being invalid
+	static final WhileEntity WHILE = new WhileEntity();
 
 	static void eatStatic(Entity entity) { }
 
@@ -56,6 +63,9 @@ public class SimpleSubtypeNamesTest {
 	DuplicateBlockEntityRenderer duplicate1 = new DuplicateBlockEntityRenderer();
 	DuplicateBlockEntityRenderer duplicate2 = new DuplicateBlockEntityRenderer();
 
+	// not invalidly named while keyword
+	WhileEntity notWhile = new WhileEntity();
+
 	void eat(Entity entity) { }
 
 	boolean eatLiving(LivingEntity living) {
@@ -69,6 +79,18 @@ public class SimpleSubtypeNamesTest {
 	Object eatNonSuffixed(EntityNonSuffixed nonSuffixed, Object arg) {
 		return arg;
 	}
+
+	// get simple non-sub-type name
+	void eatSpecificEntity(SpecificEntity specificEntity) { }
+
+	// named by SpecificEntity subtype, not from Entity subtype
+	void eatMarker(EntityMarker marker) { }
+
+	// named by SpecificEntity subtype despite have Entity subtype's suffix
+	void eatEntitySpecificEntity(EntitySpecificEntity specificEntity) { }
+
+	// not invalidly named while keyword
+	void eatWhile(WhileEntity notWhile) { }
 
 	void render(BlockEntityRenderer blockEntityRenderer) { }
 

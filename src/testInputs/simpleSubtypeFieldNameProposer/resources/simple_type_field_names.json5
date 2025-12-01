@@ -15,5 +15,13 @@
             "pattern": "(.+)BlockEntityRenderer",
             "replacement": "$1Renderer"
         }
+    },
+    "a/a/b/a/c": { // SpecificEntity
+        local_name: "specificEntity",
+        inherit: {
+            type: "TRANSFORMED_SUBTYPE_NAME",
+            "pattern": "Entity(.+)",
+            "replacement": "$1"
+        }
     }
 }
