@@ -33,6 +33,7 @@ public class Arguments {
 	public static final String DISABLE_DELEGATE_PARAMS = "disable_delegate_params";
 	public static final String DISABLE_CONFLICT_FIXER = "disable_conflict_fixer";
 	public static final String DISABLE_MAPPING_MERGE = "disable_mapping_merge";
+	public static final String DISABLE_LAMBDA_PARAMS = "disable_lambda_params";
 	public static final String CUSTOM_CODECS = "custom_codecs";
 	public static final String SIMPLE_TYPE_FIELD_NAMES_PATH = "simple_type_field_names_path";
 	public static final String SIMPLE_TYPE_VERIFICATION_ERROR_LEVEL = "simple_type_verification_error_level";
