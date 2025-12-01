@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class SimpleTypeFieldNamesRegistry {
 	private final Path path;
@@ -46,6 +47,10 @@ public class SimpleTypeFieldNamesRegistry {
 		return this.entries.get(type);
 	}
 
+	public Stream<String> streamTypes() {
+		return this.entries.keySet().stream();
+	}
+
 	public void read() {
 		try (var reader = JsonReader.json5(this.path)) {
 			if (reader.peek() != JsonToken.BEGIN_OBJECT) {
@@ -56,6 +61,11 @@ public class SimpleTypeFieldNamesRegistry {
 
 			while (reader.hasNext()) {
 				String type = reader.nextName();
+
+				if (type.equals("$schema")) {
+					reader.skipValue();
+					continue;
+				}
 
 				if (this.entries.containsKey(type)) {
 					throw new IllegalArgumentException("Duplicate type " + type);

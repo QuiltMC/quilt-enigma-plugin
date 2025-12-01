@@ -1,0 +1,93 @@
+{
+    $schema: "../src/main/resources/simple_type_field_names_schema.json",
+
+    "com/a/a/a": "config",
+
+    // for conflict fix test
+    "com/a/n": { // Identifiable
+        local_name: "idAble",
+        exclusive: true,
+        fallback: [
+            "identifiable"
+        ]
+    },
+    "com/a/o": { // Identified
+        "local_name": "identified",
+        exclusive: true
+    },
+
+    // Position
+    "com/a/a/b": "pos", // Pos
+    "com/a/a/c": { // Position
+        local_name: "pos",
+        exclusive: true,
+        fallback: [
+            "position"
+        ]
+    },
+    "com/a/a/d": { // RandomPosition
+        local_name: "pos",
+        exclusive: true,
+        fallback: [
+            "position",
+            "randomPosition"
+        ]
+    },
+
+    // State
+    "com/a/a/e": { // StateA
+        local_name: "state",
+        static_name: "STATIC_STATE",
+        exclusive: true,
+        fallback: [
+            {
+                local_name: "stateA",
+                static_name: "STATIC_STATE_A"
+            }
+        ]
+    },
+    "com/a/a/f": { // StateB
+        local_name: "state",
+        static_name: "STATIC_STATE",
+        exclusive: true,
+        fallback: [
+            {
+                local_name: "stateB",
+                static_name: "STATIC_STATE_B"
+            },
+        ]
+    },
+
+    // Value
+    "com/a/a/g": { // ValueA
+        local_name: "value",
+        exclusive: true,
+        fallback: [
+            "valueA"
+        ]
+    },
+    "com/a/a/h": { // ValueB
+        local_name: "value",
+        exclusive: true,
+        fallback: [
+            "valueB"
+        ]
+    },
+    "com/a/a/i": { // ValueC
+        local_name: "value",
+        exclusive: true,
+        fallback: [
+            "valueC"
+        ]
+    },
+    "com/a/a/j": { // ValueD
+        local_name: "valueD",
+        exclusive: true,
+        inherit: true
+    },
+    "com/a/a/l": { // ValueE
+        local_name: "valueE",
+        exclusive: true
+    },
+    "not/present": "missing"
+}
