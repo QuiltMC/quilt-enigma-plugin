@@ -48,8 +48,10 @@ public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposer
 	private static final String VALUE_C = typeDescOf("a/a/a/i");
 	private static final String VALUE_D = typeDescOf(VALUE_D_NAME);
 	private static final String VALUE_DD = typeDescOf("a/a/a/k");
-	private static final String VALUE_E = typeDescOf("a/a/a/l");
-	private static final String VALUE_EE = typeDescOf("a/a/a/m");
+	private static final String VALUE_E = typeDescOf("a/a/a/n");
+	private static final String VALUE_EE = typeDescOf("a/a/a/o");
+	private static final String VALUE_D_SPECIFIC = typeDescOf("a/a/a/l");
+	private static final String VALUE_D_SPECIFIC_INHERITOR = typeDescOf("a/a/a/m");
 
 	@Override
 	public Class<? extends NameProposer> getTarget() {
@@ -154,6 +156,21 @@ public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposer
 
 		// method name: value
 		asserter.assertProposal("valueD", localOf(methodOf(valueD, "a", V, VALUE_DD), 0));
+	}
+
+	@Test
+	void testInheritanceOverride() {
+		final ProposalAsserter asserter = this.createAsserter();
+
+		final var testClass = new ClassEntry(SIMPLE_TYPES_NAMES_TEST_NAME);
+
+		final var parameters = new ClassEntry(testClass, "b");
+
+		final String specific = "specific";
+		// should have ValueDSpecific's type name, not inherited ValueD type name
+		// valueSpecific
+		asserter.assertProposal(specific, localOf(methodOf(parameters, "a", V, VALUE_D_SPECIFIC), 0));
+		asserter.assertProposal(specific, localOf(methodOf(parameters, "a", V, VALUE_D_SPECIFIC_INHERITOR), 0));
 	}
 
 	/**

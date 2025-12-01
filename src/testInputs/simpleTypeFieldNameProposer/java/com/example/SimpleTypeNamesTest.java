@@ -11,6 +11,8 @@ import com.example.named.ValueB;
 import com.example.named.ValueC;
 import com.example.named.ValueD;
 import com.example.named.ValueDD;
+import com.example.named.ValueDSpecific;
+import com.example.named.ValueDSpecificInheritor;
 import com.example.named.ValueE;
 import com.example.named.ValueEE;
 
@@ -85,5 +87,9 @@ public class SimpleTypeNamesTest {
 
 		public static void value(ValueEE valueD) {
 		}
+
+		public static void valueSpecific(ValueDSpecific specific) { }
+
+		public static void valueSpecificInheritor(ValueDSpecificInheritor specific) { }
 	}
 }

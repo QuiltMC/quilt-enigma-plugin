@@ -72,9 +72,15 @@
         exclusive: true,
         inherit: true
     },
-    "a/a/a/l": { // ValueE
+    "a/a/a/n": { // ValueE
         local_name: "valueE",
         exclusive: true
     },
+    "a/a/a/l": { // ValueDSpecific
+        local_name: "specific",
+        exclusive: true,
+        inherit: true
+    },
+
     "not/present": "missing"
 }

@@ -39,6 +39,7 @@ import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRe
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Name;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.Descriptors;
+import org.quiltmc.enigma_plugin.util.EntryUtil;
 import org.tinylog.Logger;
 
 import java.nio.file.Path;
@@ -47,6 +48,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -357,16 +359,15 @@ public class SimpleTypeSingleIndex extends Index {
 		}
 
 		// Check all parent classes for an entry. This goes in order of super/interface, supersuper/interfacesuper, etc
-		for (ClassEntry ancestor : this.inheritance.getAncestors(new ClassEntry(type))) {
-			entry = this.registry.getEntry(ancestor.getFullName());
-
-			// Only return if the entry allows inheritance
-			if (entry != null && entry.inherit() == Inherit.Direct.INSTANCE) {
-				return entry;
-			}
-		}
-
-		return null;
+		return EntryUtil.streamAncestors(new ClassEntry(type), this.inheritance)
+			.flatMap(ancestor -> Optional
+				.ofNullable(this.registry.getEntry(ancestor.getFullName()))
+				// Only return if the entry allows inheritance
+				.filter(ancestorEntry -> ancestorEntry.inherit() == Inherit.Direct.INSTANCE)
+				.stream()
+			)
+			.findFirst()
+			.orElse(null);
 	}
 
 	@Nullable
