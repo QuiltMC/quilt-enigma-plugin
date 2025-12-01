@@ -20,11 +20,11 @@ import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
+import org.quiltmc.enigma.util.validation.ValidationContext;
 import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
 
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
-import static org.quiltmc.enigma_plugin.test.util.TestUtil.insertAndDynamicallyPropose;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.methodOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.typeDescOf;
@@ -92,10 +92,11 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 
 		final var testClass = new ClassEntry(SIMPLE_SUBTYPE_NAMES_TEST_NAME);
 
-		insertAndDynamicallyPropose(
-				new ClassEntry(ENTITY_NON_SUFFIXED_NAME),
-				new EntryMapping("EntityNonSuffixed"),
-				asserter.remapper()
+		final var context = new ValidationContext(null);
+
+		asserter.remapper().putMapping(
+				context, new ClassEntry(ENTITY_NON_SUFFIXED_NAME),
+				new EntryMapping("EntityNonSuffixed")
 		);
 
 		// NON_SUFFIXED
@@ -107,7 +108,7 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		// eatNonSuffixed
 		asserter.assertNotProposed(localOf(methodOf(testClass, "b", OBJ, ENTITY_NON_SUFFIXED, OBJ), 1));
 
-		insertAndDynamicallyPropose(new ClassEntry(LIVING_ENTITY_NAME), new EntryMapping("LivingEntity"), asserter.remapper());
+		asserter.remapper().putMapping(context, new ClassEntry(LIVING_ENTITY_NAME), new EntryMapping("LivingEntity"));
 		// don't propose names for non-concrete classes
 		// LIVING_ENTITY
 		asserter.assertNotProposed(fieldOf(testClass, "b", LIVING_ENTITY));
@@ -118,10 +119,9 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		// eatLiving
 		asserter.assertNotProposed(localOf(methodOf(testClass, "b", Z, LIVING_ENTITY), 1));
 
-		insertAndDynamicallyPropose(
-				new ClassEntry(BIRD_ENTITY_NAME),
-				new EntryMapping("com/example/BirdEntity"),
-				asserter.remapper()
+		asserter.remapper().putMapping(
+				context, new ClassEntry(BIRD_ENTITY_NAME),
+				new EntryMapping("com/example/BirdEntity")
 		);
 
 		asserter.assertDynamicProposal("BIRD", fieldOf(testClass, "c", BIRD_ENTITY));
@@ -138,10 +138,11 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 
 		final var testClass = new ClassEntry(SIMPLE_SUBTYPE_NAMES_TEST_NAME);
 
-		insertAndDynamicallyPropose(
-				new ClassEntry(WHILE_ENTITY_NAME),
-				new EntryMapping("com/example/WhileEntity"),
-				asserter.remapper()
+		final var context = new ValidationContext(null);
+
+		asserter.remapper().putMapping(
+				context, new ClassEntry(WHILE_ENTITY_NAME),
+				new EntryMapping("com/example/WhileEntity")
 		);
 
 		// "WHILE" proposed despite its lowercase form being invalid
@@ -173,10 +174,11 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 
 		final var testClass = new ClassEntry(SIMPLE_SUBTYPE_NAMES_TEST_NAME);
 
-		insertAndDynamicallyPropose(
-				new ClassEntry(DISPLAY_BLOCK_ENTITY_RENDERER_NAME),
-				new EntryMapping("DisplayBlockEntityRenderer"),
-				asserter.remapper()
+		final var context = new ValidationContext(null);
+
+		asserter.remapper().putMapping(
+				context, new ClassEntry(DISPLAY_BLOCK_ENTITY_RENDERER_NAME),
+				new EntryMapping("DisplayBlockEntityRenderer")
 		);
 
 		asserter.assertDynamicProposal("DISPLAY_RENDERER", fieldOf(testClass, "f", DISPLAY_BLOCK_ENTITY_RENDERER));
@@ -186,10 +188,9 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 		// render
 		asserter.assertDynamicProposal("displayRenderer", localOf(methodOf(testClass, "b", V, DISPLAY_BLOCK_ENTITY_RENDERER), 1));
 
-		insertAndDynamicallyPropose(
-				new ClassEntry(PAINTING_BLOCK_ENTITY_RENDERER_NAME),
-				new EntryMapping("PaintingBlockEntityRenderer"),
-				asserter.remapper()
+		asserter.remapper().putMapping(
+				context, new ClassEntry(PAINTING_BLOCK_ENTITY_RENDERER_NAME),
+				new EntryMapping("PaintingBlockEntityRenderer")
 		);
 
 		asserter.assertDynamicProposal("PAINTING_RENDERER", fieldOf(testClass, "g", PAINTING_BLOCK_ENTITY_RENDERER));
@@ -206,10 +207,11 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 
 		final var testClass = new ClassEntry(SIMPLE_SUBTYPE_NAMES_TEST_NAME);
 
-		insertAndDynamicallyPropose(
-				new ClassEntry(DUPLICATE_BLOCK_ENTITY_RENDERER_NAME),
-				new EntryMapping("DuplicateBlockEntityRenderer"),
-				asserter.remapper()
+		final var context = new ValidationContext(null);
+
+		asserter.remapper().putMapping(
+				context, new ClassEntry(DUPLICATE_BLOCK_ENTITY_RENDERER_NAME),
+				new EntryMapping("DuplicateBlockEntityRenderer")
 		);
 
 		// DUPLICATE_1
@@ -242,22 +244,20 @@ public class SimpleSubtypeFieldNameProposerTest implements ConventionalNamePropo
 
 		final var testClass = new ClassEntry(SIMPLE_SUBTYPE_NAMES_TEST_NAME);
 
-		insertAndDynamicallyPropose(
-				new ClassEntry(SPECIFIC_ENTITY_NAME),
-				new EntryMapping("SpecificEntity"),
-				asserter.remapper()
+		final var context = new ValidationContext(null);
+		asserter.remapper().putMapping(
+				context, new ClassEntry(SPECIFIC_ENTITY_NAME),
+				new EntryMapping("SpecificEntity")
 		);
 
-		insertAndDynamicallyPropose(
-				new ClassEntry(ENTITY_MARKER_NAME),
-				new EntryMapping("EntityMarker"),
-				asserter.remapper()
+		asserter.remapper().putMapping(
+				context, new ClassEntry(ENTITY_MARKER_NAME),
+				new EntryMapping("EntityMarker")
 		);
 
-		insertAndDynamicallyPropose(
-				new ClassEntry(ENTITY_SPECIFIC_ENTITY_NAME),
-				new EntryMapping("EntitySpecificEntity"),
-				asserter.remapper()
+		asserter.remapper().putMapping(
+				context, new ClassEntry(ENTITY_SPECIFIC_ENTITY_NAME),
+				new EntryMapping("EntitySpecificEntity")
 		);
 
 		// method: eatSpecificEntity

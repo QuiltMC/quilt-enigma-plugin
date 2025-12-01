@@ -183,9 +183,4 @@ public final class TestUtil {
 			);
 		}
 	}
-
-	public static void insertAndDynamicallyPropose(Entry<?> entry, EntryMapping mapping, EntryRemapper remapper) {
-		remapper.getMappings().insert(entry, mapping);
-		remapper.insertDynamicallyProposedMappings(entry, EntryMapping.OBFUSCATED, mapping);
-	}
 }
