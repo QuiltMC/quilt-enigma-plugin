@@ -49,16 +49,16 @@ public class LambdaParametersProposerTest implements ConventionalNameProposerTes
 
 		final String targetName = "dinner";
 		asserter.remapper().putMapping(
-			new ValidationContext(null),
-			localOf(methodOf(testClass, "eat", V, STR), 1),
-			new EntryMapping(targetName)
+				new ValidationContext(null),
+				localOf(methodOf(testClass, "eat", V, STR), 1),
+				new EntryMapping(targetName)
 		);
 
 		Stream.of("a", "b", "c", "d", "e").forEach(minArgsMethodName ->
-			asserter.assertDynamicProposal(
-				targetName,
-				localOf(methodOf(testClass, minArgsMethodName, V, STR), 0)
-			)
+				asserter.assertDynamicProposal(
+					targetName,
+					localOf(methodOf(testClass, minArgsMethodName, V, STR), 0)
+				)
 		);
 
 		asserter.assertDynamicProposal(targetName, localOf(methodOf(testClass, "a", V, Z, I, STR), 2));
