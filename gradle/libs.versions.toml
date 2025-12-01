@@ -2,7 +2,7 @@
 enigma = "2.7.1"
 
 asm = "9.9"
-quilt_json_parser = "0.3.0"
+quilt_json_parser = "0.3.1"
 tinylog = "2.7.0"
 annotations = "23.0.0"
 gson = "2.13.2"
@@ -10,7 +10,7 @@ gson = "2.13.2"
 junit = "6.0.1"
 hamcrest = "3.0"
 
-dfu = "4.1.27"
+dfu = "8.0.16"
 
 [libraries]
 enigma = { module = "org.quiltmc:enigma", version.ref = "enigma" }
