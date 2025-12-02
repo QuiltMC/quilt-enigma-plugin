@@ -16,7 +16,7 @@
 
 package org.quiltmc.enigma_plugin.index;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;

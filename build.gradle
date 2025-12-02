@@ -70,11 +70,12 @@ dependencies {
 	implementation libs.quilt.json5
 	implementation libs.tinylog
 	implementation libs.annotations
+	implementation libs.jspecify
 	implementation libs.gson
 
 	testImplementation libs.junit
 	testImplementation libs.hamcrest
-	testRuntimeOnly libs.junit.engine
+	testRuntimeOnly libs.bundles.junit.runtime
 	testImplementation libs.enigma.swing
 
 	enigmaRuntime libs.dfu

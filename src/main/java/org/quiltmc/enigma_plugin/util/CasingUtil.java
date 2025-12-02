@@ -16,7 +16,7 @@
 
 package org.quiltmc.enigma_plugin.util;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class CasingUtil {
 	public static String toCamelCase(String name) {

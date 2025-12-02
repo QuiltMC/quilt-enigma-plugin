@@ -16,7 +16,7 @@
 
 package org.quiltmc.enigma_plugin.util;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.quiltmc.enigma.api.source.TokenType;
 import org.quiltmc.enigma.api.translation.mapping.EntryMapping;
 import org.quiltmc.enigma.api.translation.mapping.EntryRemapper;
