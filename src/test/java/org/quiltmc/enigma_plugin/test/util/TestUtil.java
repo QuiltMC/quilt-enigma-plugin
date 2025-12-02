@@ -64,28 +64,6 @@ public final class TestUtil {
 		return BUILD.resolve(("test-obf/%s" + TEST_OBF_SUFFIX + ".jar").formatted(namePrefix));
 	}
 
-	public static String unCapitalize(String string) {
-		if (string.isEmpty()) {
-			return string;
-		}
-
-		final char first = string.charAt(0);
-		final char firstLower = Character.toLowerCase(first);
-
-		if (first == firstLower) {
-			return string;
-		} else {
-			final var builder = new StringBuilder();
-			builder.append(firstLower);
-
-			for (int i = 1; i < string.length(); i++) {
-				builder.append(string.charAt(i));
-			}
-
-			return builder.toString();
-		}
-	}
-
 	public static EntryRemapper setupEnigma(Path jar, Path profile) {
 		final EnigmaProfile enigmaProfile;
 		try {

@@ -56,4 +56,29 @@ public final class StringUtil {
 
 		return true;
 	}
+
+	/**
+	 * Un-capitalized the first character of the passed {@code string}.
+	 */
+	public static String unCapitalize(String string) {
+		if (string.isEmpty()) {
+			return string;
+		}
+
+		final char first = string.charAt(0);
+		final char firstLower = Character.toLowerCase(first);
+
+		if (first == firstLower) {
+			return string;
+		} else {
+			final var builder = new StringBuilder();
+			builder.append(firstLower);
+
+			for (int i = 1; i < string.length(); i++) {
+				builder.append(string.charAt(i));
+			}
+
+			return builder.toString();
+		}
+	}
 }

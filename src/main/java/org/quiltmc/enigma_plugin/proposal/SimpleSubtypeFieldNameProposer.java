@@ -39,16 +39,6 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 	public static final String ID = "simple_subtype_field_names";
 	private final SimpleSubtypeSingleIndex index;
 
-	private static String unCapitalize(String string) {
-		final var builder = new StringBuilder();
-		builder.append(Character.toLowerCase(string.charAt(0)));
-		for (int i = 1; i < string.length(); i++) {
-			builder.append(string.charAt(i));
-		}
-
-		return builder.toString();
-	}
-
 	public SimpleSubtypeFieldNameProposer(JarIndexer index) {
 		super(ID);
 		this.index = index.getIndex(SimpleSubtypeSingleIndex.class);
@@ -79,7 +69,7 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 			if (remapper.getMapping(type).targetName() != null) {
 				getSimpleTargetName(remapper, type)
 						.flatMap(info.entry().renamer()::rename)
-						.map(name -> info.isConstant() ? toScreamingSnakeCase(name) : unCapitalize(name))
+						.map(name -> info.isConstant() ? toScreamingSnakeCase(name) : StringUtil.unCapitalize(name))
 						.filter(StringUtil::isValidJavaIdentifier)
 						.ifPresent(name -> this.insertDynamicProposal(mappings, field, name));
 			}
@@ -93,7 +83,7 @@ public class SimpleSubtypeFieldNameProposer extends NameProposer {
 		if (!this.hasJarProposal(remapper, param)) {
 			getSimpleTargetName(remapper, type)
 					.flatMap(entry.renamer()::rename)
-					.map(SimpleSubtypeFieldNameProposer::unCapitalize)
+					.map(StringUtil::unCapitalize)
 					.filter(StringUtil::isValidJavaIdentifier)
 					.ifPresent(name -> this.insertDynamicProposal(mappings, param, name));
 		}
