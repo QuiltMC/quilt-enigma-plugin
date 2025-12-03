@@ -18,6 +18,7 @@ package org.quiltmc.enigma_plugin.proposal;
 
 import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
 import org.quiltmc.enigma_plugin.test.util.TestUtil;
+import org.quiltmc.enigma_plugin.util.StringUtil;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -73,6 +74,6 @@ public interface ConventionalNameProposerTest {
 	}
 
 	private String getUnCapitalizedTarget() {
-		return TestUtil.unCapitalize(this.getTarget().getSimpleName());
+		return StringUtil.unCapitalize(this.getTarget().getSimpleName());
 	}
 }

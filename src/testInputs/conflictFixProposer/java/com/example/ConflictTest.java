@@ -1,6 +1,12 @@
 package com.example;
 
 public class ConflictTest {
+	public static void delegateParamsSource(int integer, Identified identified) { }
+
+	public static void delegateParams(int integer, Identified identified) {
+		delegateParamsSource(integer, identified);
+	}
+
 	public final int integer;
 	public final Identifiable idAble;
 

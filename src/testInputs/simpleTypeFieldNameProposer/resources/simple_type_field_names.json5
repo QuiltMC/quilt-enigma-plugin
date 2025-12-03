@@ -1,5 +1,5 @@
 {
-    $schema: "../../src/main/resources/simple_type_field_names_schema.json",
+    $schema: "../../../../src/main/resources/simple_type_field_names_schema.json",
 
     "a/a/a/a": "config",
 
@@ -70,11 +70,19 @@
     "a/a/a/j": { // ValueD
         local_name: "valueD",
         exclusive: true,
-        inherit: true
+        inherit: {
+            "type": "DIRECT"
+        }
     },
-    "a/a/a/l": { // ValueE
+    "a/a/a/n": { // ValueE
         local_name: "valueE",
         exclusive: true
     },
-    "not/present": "missing"
+    "a/a/a/l": { // ValueDSpecific
+        local_name: "specific",
+        exclusive: true,
+        inherit: {
+            "type": "DIRECT"
+        }
+    }
 }

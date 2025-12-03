@@ -17,6 +17,7 @@
 package org.quiltmc.enigma_plugin.test.util;
 
 import org.junit.jupiter.api.Assertions;
+import org.opentest4j.AssertionFailedError;
 import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.EnigmaProfile;
 import org.quiltmc.enigma.api.EnigmaProject;
@@ -38,6 +39,7 @@ import org.quiltmc.enigma_plugin.proposal.ConventionalNameProposerTest;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public final class TestUtil {
 	private static final String TEST_OBF_SUFFIX = "-test-obf";
@@ -60,28 +62,6 @@ public final class TestUtil {
 	 */
 	public static Path obfJarPathOf(String namePrefix) {
 		return BUILD.resolve(("test-obf/%s" + TEST_OBF_SUFFIX + ".jar").formatted(namePrefix));
-	}
-
-	public static String unCapitalize(String string) {
-		if (string.isEmpty()) {
-			return string;
-		}
-
-		final char first = string.charAt(0);
-		final char firstLower = Character.toLowerCase(first);
-
-		if (first == firstLower) {
-			return string;
-		} else {
-			final var builder = new StringBuilder();
-			builder.append(firstLower);
-
-			for (int i = 1; i < string.length(); i++) {
-				builder.append(string.charAt(i));
-			}
-
-			return builder.toString();
-		}
 	}
 
 	public static EntryRemapper setupEnigma(Path jar, Path profile) {
@@ -167,5 +147,18 @@ public final class TestUtil {
 
 	public static String javaLangDescOf(String simpleName) {
 		return typeDescOf("java/lang/" + simpleName);
+	}
+
+	public static <T> T requireNonNull(T t, String name) {
+		return Objects.requireNonNull(t, name + " must not be null!");
+	}
+
+	public static void assertContains(String string, String substring) {
+		if (!requireNonNull(string, "string").contains(requireNonNull(substring, "substring"))) {
+			throw new AssertionFailedError(
+				"String does not contain substring \"%s\":%n\t%s"
+					.formatted(substring, string)
+			);
+		}
 	}
 }
