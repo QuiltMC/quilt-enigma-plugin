@@ -40,51 +40,43 @@
                     "description": "Whether the default name should be used if there's only a single entry using that name. Only applies if there is any fallback name"
                 },
                 "inherit": {
-                    "oneOf": [
-                        {
-                            "type": "boolean",
-                            "description": "Whether subtypes should inherit this simple type name."
+                    "type": "object",
+                    "description": "How to handle subtype naming.",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "description": "The kind of subtype name handling to perform. Must be the first property.",
+                            "anyOf": [
+                                { "const": "NONE", "description": "Do not name subtypes." },
+                                { "const": "DIRECT", "description": "Subtypes inherit this simple type name." },
+                                { "const": "TRUNCATED_SUBTYPE_NAME", "description": "Use a suffix to identify and truncate the names of subtypes." },
+                                { "const": "TRANSFORMED_SUBTYPE_NAME", "description": "Use a regex pattern and a replacement string to identify and transform the names of subtypes." }
+                            ]
                         },
-                        {
-                            "type": "object",
-                            "description": "How to handle subtype naming.",
-                            "properties": {
-                                "type": {
-                                    "type": "string",
-                                    "description": "The kind of subtype name handling to perform. Must be the first property.",
-                                    "anyOf": [
-                                        { "const": "NONE", "description": "Do not name subtypes." },
-                                        { "const": "DIRECT", "description": "Subtypes inherit this simple type name." },
-                                        { "const": "TRUNCATED_SUBTYPE_NAME", "description": "Use a suffix to identify and truncate the names of subtypes." },
-                                        { "const": "TRANSFORMED_SUBTYPE_NAME", "description": "Use a regex pattern and a replacement string to identify and transform the names of subtypes." }
-                                    ]
-                                },
-                                "suffix": {
-                                    "type": "string",
-                                    "description": "Used by TRUNCATED_SUBTYPE_NAME to recognize and truncate subtypes.",
-                                    "minLength": 1,
-                                    "pattern": "[_$a-zA-Z0-9]+"
-                                },
-                                "pattern": {
-                                    "type": "string",
-                                    "description": "Regex used by TRANSFORMED_SUBTYPE_NAME to match subtypes.",
-                                    "minLength": 1
-                                },
-                                "replacement": {
-                                    "type": "string",
-                                    "description": "Replacement string used by TRANSFORMED_SUBTYPE_NAME to generate a name when \"pattern\" matches a subtype. May reference capturing groups defined in \"pattern\".",
-                                    "minLength": 1
-                                }
-                            },
-                            "required": [ "type" ],
-                            "if": { "properties": { "type": { "const": "TRUNCATED_SUBTYPE_NAME" }  } },
-                            "then": { "required": [ "suffix" ] },
-                            "else": {
-                                "if": { "properties": { "type": { "const": "TRANSFORMED_SUBTYPE_NAME" } } },
-                                "then": { "required": [ "pattern", "replacement" ] }
-                            }
+                        "suffix": {
+                            "type": "string",
+                            "description": "Used by TRUNCATED_SUBTYPE_NAME to recognize and truncate subtypes.",
+                            "minLength": 1,
+                            "pattern": "[_$a-zA-Z0-9]+"
+                        },
+                        "pattern": {
+                            "type": "string",
+                            "description": "Regex used by TRANSFORMED_SUBTYPE_NAME to match subtypes.",
+                            "minLength": 1
+                        },
+                        "replacement": {
+                            "type": "string",
+                            "description": "Replacement string used by TRANSFORMED_SUBTYPE_NAME to generate a name when \"pattern\" matches a subtype. May reference capturing groups defined in \"pattern\".",
+                            "minLength": 1
                         }
-                    ]
+                    },
+                    "required": [ "type" ],
+                    "if": { "properties": { "type": { "const": "TRUNCATED_SUBTYPE_NAME" }  } },
+                    "then": { "required": [ "suffix" ] },
+                    "else": {
+                        "if": { "properties": { "type": { "const": "TRANSFORMED_SUBTYPE_NAME" } } },
+                        "then": { "required": [ "pattern", "replacement" ] }
+                    }
                 },
                 "fallback": {
                     "type": "array",

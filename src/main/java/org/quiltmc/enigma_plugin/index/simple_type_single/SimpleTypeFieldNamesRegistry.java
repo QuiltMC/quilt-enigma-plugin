@@ -244,48 +244,42 @@ public final class SimpleTypeFieldNamesRegistry {
 		String MISSING_REQUIREMENT_MESSAGE_TEMPLATE = "%s requires a %s";
 
 		static Result<? extends Inherit, String> read(JsonReader reader) throws IOException {
-			switch (reader.peek()) {
-				case BOOLEAN -> {
-					return Result.ok(reader.nextBoolean() ? Direct.INSTANCE : None.INSTANCE);
-				}
-				case BEGIN_OBJECT -> {
-					reader.beginObject();
+			if (reader.peek() == JsonToken.BEGIN_OBJECT) {
+				reader.beginObject();
 
-					if (reader.hasNext() && reader.nextName().equals(TYPE_KEY)) {
-						String typeName = reader.nextString();
-						final Type type;
-						try {
-							type = Type.valueOf(typeName);
-						} catch (IllegalArgumentException e) {
-							skipToObjectEnd(reader);
-
-							return Result.err(
-								"Invalid \"%s\" object \"%s\"; must be one of: %s".formatted(
-									KEY, TYPE_KEY,
-									Arrays.stream(Type.values())
-										.map(Object::toString)
-										.map(name -> "\"" + name + "\"")
-										.collect(Collectors.joining(", "))
-								)
-							);
-						}
-
-						Result<? extends Inherit, String> inherit = type.read(reader);
-
+				if (reader.hasNext() && reader.nextName().equals(TYPE_KEY)) {
+					String typeName = reader.nextString();
+					final Type type;
+					try {
+						type = Type.valueOf(typeName);
+					} catch (IllegalArgumentException e) {
 						skipToObjectEnd(reader);
 
-						return inherit;
-					} else {
-						reader.skipValue();
-						skipToObjectEnd(reader);
-
-						return Result.err("\"%s\" must be the first property of an \"%s\" object".formatted(TYPE_KEY, KEY));
+						return Result.err(
+							"Invalid \"%s\" object \"%s\"; must be one of: %s".formatted(
+								KEY, TYPE_KEY,
+								Arrays.stream(Type.values())
+									.map(Object::toString)
+									.map(name -> "\"" + name + "\"")
+									.collect(Collectors.joining(", "))
+							)
+						);
 					}
-				}
-				default -> {
+
+					Result<? extends Inherit, String> inherit = type.read(reader);
+
+					skipToObjectEnd(reader);
+
+					return inherit;
+				} else {
 					reader.skipValue();
-					return Result.err("must be BOOLEAN or OBJECT");
+					skipToObjectEnd(reader);
+
+					return Result.err("\"%s\" must be the first property of an \"%s\" object".formatted(TYPE_KEY, KEY));
 				}
+			} else {
+				reader.skipValue();
+				return Result.err("must be OBJECT");
 			}
 		}
 

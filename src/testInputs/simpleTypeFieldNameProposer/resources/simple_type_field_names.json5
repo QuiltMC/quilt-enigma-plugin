@@ -70,7 +70,9 @@
     "a/a/a/j": { // ValueD
         local_name: "valueD",
         exclusive: true,
-        inherit: true
+        inherit: {
+            "type": "DIRECT"
+        }
     },
     "a/a/a/n": { // ValueE
         local_name: "valueE",
@@ -79,6 +81,8 @@
     "a/a/a/l": { // ValueDSpecific
         local_name: "specific",
         exclusive: true,
-        inherit: true
+        inherit: {
+            "type": "DIRECT"
+        }
     }
 }
