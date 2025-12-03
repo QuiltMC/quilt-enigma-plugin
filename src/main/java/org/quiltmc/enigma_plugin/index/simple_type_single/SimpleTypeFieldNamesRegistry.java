@@ -241,8 +241,6 @@ public final class SimpleTypeFieldNamesRegistry {
 		String KEY = "inherit";
 		String TYPE_KEY = "type";
 
-		String MISSING_REQUIREMENT_MESSAGE_TEMPLATE = "%s requires a %s";
-
 		static Result<? extends Inherit, String> read(JsonReader reader) throws IOException {
 			if (reader.peek() == JsonToken.BEGIN_OBJECT) {
 				reader.beginObject();
@@ -281,6 +279,10 @@ public final class SimpleTypeFieldNamesRegistry {
 				reader.skipValue();
 				return Result.err("must be OBJECT");
 			}
+		}
+
+		private static <T> Result<T, String> missingRequirementErrOf(String requirer, String required) {
+			return Result.err("%s requires a %s".formatted(requirer, required));
 		}
 
 		enum Type {
@@ -329,9 +331,7 @@ public final class SimpleTypeFieldNamesRegistry {
 					}
 				}
 
-				return Result.err(MISSING_REQUIREMENT_MESSAGE_TEMPLATE.formatted(
-					Type.TRUNCATED_SUBTYPE_NAME.toString(), SUFFIX_KEY
-				));
+				return missingRequirementErrOf(Type.TRUNCATED_SUBTYPE_NAME.toString(), SUFFIX_KEY);
 			}
 		}
 
@@ -352,15 +352,11 @@ public final class SimpleTypeFieldNamesRegistry {
 				}
 
 				if (pattern == null) {
-					return Result.err(MISSING_REQUIREMENT_MESSAGE_TEMPLATE.formatted(
-						Type.TRANSFORMED_SUBTYPE_NAME, PATTERN_KEY
-					));
+					return missingRequirementErrOf(Type.TRANSFORMED_SUBTYPE_NAME.toString(), PATTERN_KEY);
 				}
 
 				if (replacement == null) {
-					return Result.err(MISSING_REQUIREMENT_MESSAGE_TEMPLATE.formatted(
-						Type.TRANSFORMED_SUBTYPE_NAME, REPLACEMENT_KEY
-					));
+					return missingRequirementErrOf(Type.TRANSFORMED_SUBTYPE_NAME.toString(), REPLACEMENT_KEY);
 				}
 
 				return Result.ok(new TransformedSubtypeName(pattern, replacement));
