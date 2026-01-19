@@ -145,7 +145,6 @@ public class LambdaParametersIndex extends Index {
 		final List<LocalVariableEntry> params = new ArrayList<>();
 		final MethodEntry parentEntry = entryOf(parent, funcMethod);
 
-		// TODO unnecessary? always static?
 		int i = matchAccess(funcMethod, ACC_STATIC) ? 0 : 1;
 		for (final ArgumentDescriptor paramDesc : parentEntry.getDesc().getArgumentDescs()) {
 			params.add(new LocalVariableEntry(parentEntry, i));
