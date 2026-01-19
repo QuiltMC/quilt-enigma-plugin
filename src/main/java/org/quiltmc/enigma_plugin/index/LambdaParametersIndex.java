@@ -98,7 +98,7 @@ public class LambdaParametersIndex extends Index {
 										owner.methods.stream()
 												.filter(handleMethod -> handleMethod.name.equals(handle.getName()))
 												.filter(handleMethod -> handleMethod.desc.equals(handle.getDesc()))
-												.filter(handleMethod -> matchAccess(handleMethod, ACC_SYNTHETIC))
+												.filter(handleMethod -> matchAccess(handleMethod, ACC_PRIVATE, ACC_SYNTHETIC))
 												.findAny()
 												.ifPresent(lambda -> {
 													final List<LocalVariableEntry> functionalParams = this
