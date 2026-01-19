@@ -87,45 +87,45 @@ public class LambdaParametersIndex extends Index {
 					}
 
 					getReturnType(invokeDynamic.desc).map(provider::get).ifPresent(invokeDynamicReturnType -> {
-						getFunctionalMethod(invokeDynamicReturnType).ifPresent(functionalMethod -> Arrays
-								.stream(invokeDynamic.bsmArgs)
-								.flatMap(arg -> arg instanceof Handle handle ? Stream.of(handle) : Stream.empty())
-								// TODO confirm LambdaMetaFactory bsm extra args contain at most one Handle
-								.findAny()
-								.ifPresent(handle -> {
-									final ClassNode owner = provider.get(handle.getOwner());
-									if (owner != null) {
-										owner.methods.stream()
-												.filter(handleMethod -> handleMethod.name.equals(handle.getName()))
-												.filter(handleMethod -> handleMethod.desc.equals(handle.getDesc()))
-												.filter(handleMethod -> matchAccess(handleMethod, ACC_PRIVATE, ACC_SYNTHETIC))
-												.findAny()
-												.ifPresent(lambda -> {
-													final List<LocalVariableEntry> functionalParams = this
-															.functionalMethodParams
-															.computeIfAbsent(functionalMethod, funcMethod ->
-																	createParamEntries(invokeDynamicReturnType, funcMethod)
-															);
+						getFunctionalMethod(invokeDynamicReturnType).ifPresent(functionalMethod -> {
+							final List<Handle> handles = Arrays
+									.stream(invokeDynamic.bsmArgs)
+									.flatMap(arg -> arg instanceof Handle handle ? Stream.of(handle) : Stream.empty())
+									.toList();
+							if (handles.size() == 1) {
+								final Handle handle = handles.get(0);
 
-													final List<LocalVariableEntry> lambdaParams =
-															createParamEntries(owner, lambda);
+								final ClassNode owner = provider.get(handle.getOwner());
+								if (owner != null) {
+									owner.methods.stream()
+											.filter(handleMethod -> handleMethod.name.equals(handle.getName()))
+											.filter(handleMethod -> handleMethod.desc.equals(handle.getDesc()))
+											.filter(handleMethod -> matchAccess(handleMethod, ACC_PRIVATE, ACC_SYNTHETIC))
+											.findAny()
+											.ifPresent(lambda -> {
+												final List<LocalVariableEntry> functionalParams = this
+														.functionalMethodParams
+														.computeIfAbsent(functionalMethod, funcMethod ->
+															createParamEntries(invokeDynamicReturnType, funcMethod)
+														);
 
-													final int lambdaParamOffset =
-															lambdaParams.size() - functionalParams.size();
-													assert lambdaParamOffset >= 0;
+												final List<LocalVariableEntry> lambdaParams = createParamEntries(owner, lambda);
 
-													for (int i = 0; i < functionalParams.size(); i++) {
-														this.lambdaParamsByFunctionalParam
-																.computeIfAbsent(
-																	functionalParams.get(i),
-																	ignored -> new ArrayList<>()
-																)
-																.add(lambdaParams.get(i + lambdaParamOffset));
-													}
-												});
-									}
-								})
-						);
+												final int lambdaParamOffset = lambdaParams.size() - functionalParams.size();
+												assert lambdaParamOffset >= 0;
+
+												for (int i = 0; i < functionalParams.size(); i++) {
+													this.lambdaParamsByFunctionalParam
+															.computeIfAbsent(
+																functionalParams.get(i),
+																ignored -> new ArrayList<>()
+															)
+															.add(lambdaParams.get(i + lambdaParamOffset));
+												}
+											});
+								}
+							}
+						});
 					});
 				}
 			}
