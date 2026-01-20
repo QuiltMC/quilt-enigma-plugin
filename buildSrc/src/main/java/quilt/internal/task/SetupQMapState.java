@@ -28,7 +28,7 @@ public record SetupQMapState(
 	boolean qMapMatchesDefault
 ) implements Serializable {
 	public interface Source extends ValueSource<SetupQMapState, Params>, ExecAware {
-		Pattern DEFAULT_BRANCH_IN_SHOW_OUTPUT_PATTERN = Pattern.compile("(?m)^\\s*HEAD branch: (\\w+)");
+		Pattern DEFAULT_BRANCH_IN_SHOW_OUTPUT_PATTERN = Pattern.compile("(?m)^\\s*HEAD branch: (.+)$");
 
 		@Override
 		default SetupQMapState obtain() {
