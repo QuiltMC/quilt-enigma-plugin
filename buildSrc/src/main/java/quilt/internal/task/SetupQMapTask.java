@@ -85,7 +85,7 @@ public abstract class SetupQMapTask extends DefaultTask implements ExecAware, Pr
 
 			Util.clearDirectory(qMapDest);
 
-			this.execGit(qMapDest, "clone", QMAP_REMOTE, qMapDest);
+			this.execGit(qMapDest, "clone", "--depth", 1, QMAP_REMOTE, qMapDest);
 		} else {
 			final boolean discard = this.getDiscardQMapChanges().getOrElse(false);
 
