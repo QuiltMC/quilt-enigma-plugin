@@ -16,7 +16,7 @@
 
 package org.quiltmc.enigma_plugin.index.simple_type_single;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.quiltmc.enigma_plugin.util.CasingUtil;
 import org.quiltmc.parsers.json.JsonReader;
 import org.quiltmc.parsers.json.JsonToken;
