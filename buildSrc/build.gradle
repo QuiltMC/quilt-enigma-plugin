@@ -1,0 +1,14 @@
+plugins {
+	id 'java'
+	id 'java-gradle-plugin'
+}
+
+gradlePlugin {
+	plugins {
+		final pluginPackage = 'quilt.internal.plugin.'
+		qMapDiff {
+			id = 'qmap-diff'
+			implementationClass = pluginPackage + 'QMapDiffPlugin'
+		}
+	}
+}
