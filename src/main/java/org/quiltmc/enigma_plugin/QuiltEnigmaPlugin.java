@@ -17,7 +17,6 @@
 package org.quiltmc.enigma_plugin;
 
 import org.jspecify.annotations.NonNull;
-import org.quiltmc.enigma.api.Enigma;
 import org.quiltmc.enigma.api.EnigmaPlugin;
 import org.quiltmc.enigma.api.EnigmaPluginContext;
 import org.quiltmc.enigma.api.service.JarIndexerService;
@@ -50,8 +49,10 @@ public class QuiltEnigmaPlugin implements EnigmaPlugin {
 
 	@Override
 	public boolean supportsEnigmaVersion(@NonNull Version enigmaVersion) {
-		return Enigma.MAJOR_VERSION == enigmaVersion.major()
-				&& Enigma.MINOR_VERSION == enigmaVersion.minor();
+		return enigmaVersion.major() == 2
+				&& enigmaVersion.minor() == 7
+				// Enigma 2.7.2 adds InheritanceIndex::streamAncestors
+				&& enigmaVersion.patch() >= 2;
 	}
 
 	@Override
