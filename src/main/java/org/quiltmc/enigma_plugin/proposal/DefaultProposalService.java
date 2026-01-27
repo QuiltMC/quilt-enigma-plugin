@@ -21,6 +21,7 @@ import org.quiltmc.enigma.api.service.NameProposalService;
 import org.quiltmc.enigma_plugin.Arguments;
 import org.quiltmc.enigma_plugin.QuiltEnigmaPlugin;
 import org.quiltmc.enigma_plugin.index.JarIndexer;
+import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleSubtypeSingleIndex;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeSingleIndex;
 
 public class DefaultProposalService extends NameProposerService {
@@ -34,6 +35,10 @@ public class DefaultProposalService extends NameProposerService {
 
 		if (indexer.getIndex(SimpleTypeSingleIndex.class).isEnabled()) {
 			this.add(indexer, SimpleTypeFieldNameProposer::new);
+		}
+
+		if (indexer.getIndex(SimpleSubtypeSingleIndex.class).isEnabled()) {
+			this.add(indexer, SimpleSubtypeFieldNameProposer::new);
 		}
 
 		this.addIfEnabled(context, indexer, Arguments.DISABLE_CONSTRUCTOR_PARAMS, ConstructorParamsNameProposer::new);

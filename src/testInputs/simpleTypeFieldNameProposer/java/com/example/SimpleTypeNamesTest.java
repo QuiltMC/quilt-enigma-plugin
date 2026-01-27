@@ -11,6 +11,8 @@ import com.example.named.ValueB;
 import com.example.named.ValueC;
 import com.example.named.ValueD;
 import com.example.named.ValueDD;
+import com.example.named.ValueDSpecific;
+import com.example.named.ValueDSpecificInheritor;
 import com.example.named.ValueE;
 import com.example.named.ValueEE;
 
@@ -23,14 +25,14 @@ public class SimpleTypeNamesTest {
 
 		public static class Fallbacks {
 			public static final Pos POS = new Pos();
-			public final Position position = new Position();
-			public final RandomPosition randomPosition = new RandomPosition();
+			public static final Position POSITION = new Position();
+			public static final RandomPosition RANDOM_POSITION = new RandomPosition();
 
 			public static final StateA STATIC_STATE_A = new StateA();
 			public static final StateB STATIC_STATE_B = new StateB();
 
-			public static final ValueA VALUE_A = new ValueA();
-			public static final ValueB VALUE_B = new ValueB();
+			public final ValueA valueA = new ValueA();
+			public final ValueB valueB = new ValueB();
 			public final ValueC valueC = new ValueC();
 		}
 
@@ -85,5 +87,9 @@ public class SimpleTypeNamesTest {
 
 		public static void value(ValueEE valueD) {
 		}
+
+		public static void valueSpecific(ValueDSpecific specific) { }
+
+		public static void valueSpecificInheritor(ValueDSpecificInheritor specific) { }
 	}
 }

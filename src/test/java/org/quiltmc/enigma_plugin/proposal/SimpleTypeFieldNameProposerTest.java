@@ -16,15 +16,11 @@
 
 package org.quiltmc.enigma_plugin.proposal;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
 import org.quiltmc.enigma_plugin.test.util.CommonDescriptors;
 import org.quiltmc.enigma_plugin.test.util.ProposalAsserter;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.fieldOf;
 import static org.quiltmc.enigma_plugin.test.util.TestUtil.localOf;
@@ -46,8 +42,10 @@ public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposer
 	private static final String VALUE_C = typeDescOf("a/a/a/i");
 	private static final String VALUE_D = typeDescOf(VALUE_D_NAME);
 	private static final String VALUE_DD = typeDescOf("a/a/a/k");
-	private static final String VALUE_E = typeDescOf("a/a/a/l");
-	private static final String VALUE_EE = typeDescOf("a/a/a/m");
+	private static final String VALUE_E = typeDescOf("a/a/a/n");
+	private static final String VALUE_EE = typeDescOf("a/a/a/o");
+	private static final String VALUE_D_SPECIFIC = typeDescOf("a/a/a/l");
+	private static final String VALUE_D_SPECIFIC_INHERITOR = typeDescOf("a/a/a/m");
 
 	@Override
 	public Class<? extends NameProposer> getTarget() {
@@ -74,12 +72,12 @@ public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposer
 
 		final var fallbacks = new ClassEntry(fields, "b");
 		asserter.assertProposal("POS", fieldOf(fallbacks, "a", POS));
-		asserter.assertProposal("position", fieldOf(fallbacks, "b", POSITION));
-		asserter.assertProposal("randomPosition", fieldOf(fallbacks, "c", RANDOM_POSITION));
+		asserter.assertProposal("POSITION", fieldOf(fallbacks, "b", POSITION));
+		asserter.assertProposal("RANDOM_POSITION", fieldOf(fallbacks, "c", RANDOM_POSITION));
 		asserter.assertProposal("STATIC_STATE_A", fieldOf(fallbacks, "d", STATE_A));
 		asserter.assertProposal("STATIC_STATE_B", fieldOf(fallbacks, "e", STATE_B));
-		asserter.assertProposal("VALUE_A", fieldOf(fallbacks, "f", VALUE_A));
-		asserter.assertProposal("VALUE_B", fieldOf(fallbacks, "g", VALUE_B));
+		asserter.assertProposal("valueA", fieldOf(fallbacks, "f", VALUE_A));
+		asserter.assertProposal("valueB", fieldOf(fallbacks, "g", VALUE_B));
 		asserter.assertProposal("valueC", fieldOf(fallbacks, "h", VALUE_C));
 
 		final var inheritance = new ClassEntry(fields, "c");
@@ -155,19 +153,17 @@ public class SimpleTypeFieldNameProposerTest implements ConventionalNameProposer
 	}
 
 	@Test
-	void testTypeVerification() {
-		PrintStream originalErr = System.err;
+	void testInheritanceOverride() {
+		final ProposalAsserter asserter = this.createAsserter();
 
-		try {
-			ByteArrayOutputStream testErr = new ByteArrayOutputStream();
-			System.setErr(new PrintStream(testErr));
+		final var testClass = new ClassEntry(SIMPLE_TYPES_NAMES_TEST_NAME);
 
-			this.createAsserter();
+		final var parameters = new ClassEntry(testClass, "b");
 
-			// simple_type_field_names_type_verification warning
-			Assertions.assertTrue(testErr.toString().contains("[WARN]: The following simple type field name type is missing: not/present"));
-		} finally {
-			System.setErr(originalErr);
-		}
+		final String specific = "specific";
+		// should have ValueDSpecific's type name, not inherited ValueD type name
+		// valueSpecific
+		asserter.assertProposal(specific, localOf(methodOf(parameters, "a", V, VALUE_D_SPECIFIC), 0));
+		asserter.assertProposal(specific, localOf(methodOf(parameters, "a", V, VALUE_D_SPECIFIC_INHERITOR), 0));
 	}
 }

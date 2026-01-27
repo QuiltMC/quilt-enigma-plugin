@@ -56,26 +56,30 @@ public class AsmUtil implements Opcodes {
 		return -1;
 	}
 
-	public static boolean maskMatch(int value, int... masks) {
-		boolean matched = true;
-
+	public static boolean masksMatch(int value, int... masks) {
 		for (int mask : masks) {
-			matched &= (value & mask) != 0;
+			if ((value & mask) == 0) {
+				return false;
+			}
 		}
 
-		return matched;
+		return true;
 	}
 
 	public static boolean matchAccess(FieldNode node, int... masks) {
-		return maskMatch(node.access, masks);
+		return masksMatch(node.access, masks);
 	}
 
 	public static boolean matchAccess(MethodNode node, int... masks) {
-		return maskMatch(node.access, masks);
+		return masksMatch(node.access, masks);
 	}
 
 	public static boolean matchAccess(ParameterNode node, int... masks) {
-		return maskMatch(node.access, masks);
+		return masksMatch(node.access, masks);
+	}
+
+	public static boolean matchAccess(ClassNode node, int... masks) {
+		return masksMatch(node.access, masks);
 	}
 
 	public static Optional<FieldNode> getField(ClassNode node, String name, String desc) {

@@ -1,0 +1,27 @@
+{
+    $schema: "../../../../src/main/resources/simple_type_field_names_schema.json",
+
+    "a/a/b/b": { // Entity
+        local_name: "entity",
+        inherit: {
+            type: "TRUNCATED_SUBTYPE_NAME",
+            suffix: "Entity"
+        }
+    },
+    "a/a/a/a": { // BlockEntityRenderer
+        local_name: "blockEntityRenderer",
+        inherit: {
+            type: "TRANSFORMED_SUBTYPE_NAME",
+            "pattern": "(.+)BlockEntityRenderer",
+            "replacement": "$1Renderer"
+        }
+    },
+    "a/a/b/a/c": { // SpecificEntity
+        local_name: "specificEntity",
+        inherit: {
+            type: "TRANSFORMED_SUBTYPE_NAME",
+            "pattern": "Entity(.+)",
+            "replacement": "$1"
+        }
+    }
+}
