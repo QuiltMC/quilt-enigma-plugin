@@ -39,7 +39,6 @@ import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRe
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Name;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.Descriptors;
-import org.quiltmc.enigma_plugin.util.EntryUtil;
 import org.tinylog.Logger;
 
 import java.nio.file.Path;
@@ -358,7 +357,8 @@ public class SimpleTypeSingleIndex extends Index {
 		}
 
 		// Check all parent classes for an entry. This goes in order of super/interface, supersuper/interfacesuper, etc
-		return EntryUtil.streamAncestors(new ClassEntry(type), this.inheritance)
+		return this.inheritance
+			.streamAncestors(new ClassEntry(type))
 			.flatMap(ancestor -> Optional
 				.ofNullable(this.registry.getEntry(ancestor.getFullName()))
 				// Only return if the entry allows inheritance

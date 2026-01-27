@@ -37,7 +37,6 @@ import org.quiltmc.enigma_plugin.index.Index;
 import org.quiltmc.enigma_plugin.index.simple_type_single.SimpleTypeFieldNamesRegistry.Inherit;
 import org.quiltmc.enigma_plugin.util.AsmUtil;
 import org.quiltmc.enigma_plugin.util.Descriptors;
-import org.quiltmc.enigma_plugin.util.EntryUtil;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -250,22 +249,23 @@ public class SimpleSubtypeSingleIndex extends Index {
 
 		// Check all parent classes for an entry. This goes in order of super/interface, supersuper/interfacesuper, etc
 		final ClassEntry typeEntry = new ClassEntry(type);
-		return EntryUtil.streamAncestors(typeEntry, this.inheritance)
-			.flatMap(ancestor -> {
-				var entry = this.registry.getEntry(ancestor.getFullName());
+		return this.inheritance
+				.streamAncestors(typeEntry)
+				.flatMap(ancestor -> {
+					var entry = this.registry.getEntry(ancestor.getFullName());
 
-				if (entry != null) {
-					if (entry.inherit() instanceof Inherit.TruncatedSubtypeName truncated) {
-						return Stream.of(new SubtypeEntry(entry.type(), new Renamer.Truncate(truncated.suffix())));
-					} else if (entry.inherit() instanceof Inherit.TransformedSubtypeName transformed) {
-						return Stream.of(new SubtypeEntry(entry.type(), new Renamer.Transform(transformed.pattern(), transformed.replacement())));
+					if (entry != null) {
+						if (entry.inherit() instanceof Inherit.TruncatedSubtypeName truncated) {
+							return Stream.of(new SubtypeEntry(entry.type(), new Renamer.Truncate(truncated.suffix())));
+						} else if (entry.inherit() instanceof Inherit.TransformedSubtypeName transformed) {
+							return Stream.of(new SubtypeEntry(entry.type(), new Renamer.Transform(transformed.pattern(), transformed.replacement())));
+						}
 					}
-				}
 
-				return Stream.empty();
-			})
-			.findFirst()
-			.orElse(null);
+					return Stream.empty();
+				})
+				.findFirst()
+				.orElse(null);
 	}
 
 	public record FieldInfo(SubtypeEntry entry, boolean isConstant) { }
