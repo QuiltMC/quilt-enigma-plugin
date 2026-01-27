@@ -16,6 +16,7 @@
 
 package org.quiltmc.enigma_plugin.index.simple_type_single;
 
+import org.jspecify.annotations.Nullable;
 import org.quiltmc.enigma.api.analysis.index.jar.InheritanceIndex;
 import org.quiltmc.enigma.api.analysis.index.jar.JarIndex;
 import org.quiltmc.enigma.api.class_provider.ClassProvider;
@@ -27,7 +28,6 @@ import org.quiltmc.enigma.api.translation.representation.entry.ClassEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.FieldEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.LocalVariableEntry;
 import org.quiltmc.enigma.api.translation.representation.entry.MethodEntry;
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -349,8 +349,7 @@ public class SimpleTypeSingleIndex extends Index {
 		return knownParameters;
 	}
 
-	@Nullable
-	private SimpleTypeFieldNamesRegistry.Entry getEntry(String type) {
+	private SimpleTypeFieldNamesRegistry.@Nullable Entry getEntry(String type) {
 		// Default to returning this if it is specified
 		var entry = this.registry.getEntry(type);
 

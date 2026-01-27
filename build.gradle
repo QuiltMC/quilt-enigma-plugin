@@ -1,4 +1,3 @@
-import java.nio.file.Files
 import proguard.gradle.ProGuardTask
 
 buildscript {
@@ -15,19 +14,23 @@ plugins {
 	id 'maven-publish'
 	id 'checkstyle'
 	id 'org.quiltmc.gradle.licenser' version '2.0.1'
+	id 'qmap-diff'
 }
 
 version '2.4.0'
 group 'org.quiltmc'
 
 final ENV = System.getenv()
-interface ExecProvider {
-	@javax.inject.Inject
-	ExecOperations getOperations()
-}
-final EXEC = objects.newInstance(ExecProvider).operations
 
 version = version + (ENV.GITHUB_ACTIONS ? '' : '+local')
+
+qMapDiff {
+	projectVersion = project.version.toString()
+}
+
+sourceSets {
+	testInputs
+}
 
 repositories {
 	mavenCentral()
@@ -70,11 +73,12 @@ dependencies {
 	implementation libs.quilt.json5
 	implementation libs.tinylog
 	implementation libs.annotations
+	implementation libs.jspecify
 	implementation libs.gson
 
 	testImplementation libs.junit
 	testImplementation libs.hamcrest
-	testRuntimeOnly libs.junit.engine
+	testRuntimeOnly libs.bundles.junit.runtime
 	testImplementation libs.enigma.swing
 
 	enigmaRuntime libs.dfu
@@ -190,106 +194,6 @@ tasks.register('testEnigma', JavaExec) {
 			'--development'
 		)
 		mappings.mkdirs()
-	}
-}
-
-static void replaceRegion(File file, String replacement, int start, int end) {
-	file.text = replaceRegion(file.text, replacement, start, end)
-}
-
-static String replaceRegion(String string, String replacement, int start, int end) {
-	return string.substring(0, start) + replacement + string.substring(end)
-}
-
-final qmapDest = layout.buildDirectory.dir('quilt-mappings')
-tasks.register('setupQMap') {
-	final projectVersion = project.version
-
-	dependsOn publishToMavenLocal
-
-	final execGit = { Action<ExecSpec> action ->
-		final dest = qmapDest.get().asFile
-		dest.mkdirs()
-
-		EXEC.exec {
-			workingDir dest
-			executable 'git'
-			action(it)
-		}
-	}
-
-	inputs.property('projectVersion', projectVersion)
-	outputs.tap {
-		dir(qmapDest)
-		upToDateWhen {
-			final dest = qmapDest.get().asFile.toPath()
-			if (!Files.exists(dest.resolve('.git'))) {
-				return false
-			}
-
-			execGit { it.args 'fetch' }
-
-			final localHash = new ByteArrayOutputStream()
-			execGit {
-				it.args 'rev-parse', 'HEAD'
-				it.standardOutput = localHash
-			}
-
-			final originHash = new ByteArrayOutputStream()
-			execGit {
-				it.args 'rev-parse', 'origin/HEAD'
-				it.standardOutput = originHash
-			}
-
-			return originHash.toString() == localHash.toString()
-		}
-	}
-
-	doLast {
-		final dest = qmapDest.get().asFile.toPath()
-
-		if (Files.isDirectory(dest.resolve('.git'))) {
-			execGit {
-				it.args 'reset', '--hard', 'origin/HEAD'
-			}
-		} else {
-			EXEC.exec {
-				executable 'chmod'
-				args '-Rf', '+w', dest
-			}
-
-			dest.deleteDir()
-
-			execGit {
-				it.args 'clone', 'https://github.com/QuiltMC/quilt-mappings', dest
-			}
-		}
-
-		final versionsFile = dest.resolve('gradle/libs.versions.toml').toFile()
-		final enigmaPlugin = 'enigma_plugin'
-		final versionMatcher = versionsFile.text =~ /(?<=$enigmaPlugin = ").*(?=")/
-		if (versionMatcher.find()) {
-			replaceRegion(versionsFile, projectVersion.toString(), versionMatcher.start(), versionMatcher.end())
-		} else {
-			throw new GradleException("Cannot find $enigmaPlugin version.")
-		}
-	}
-}
-
-tasks.register('diffQMap') {
-	dependsOn(setupQMap)
-
-	final output = layout.buildDirectory.file('qmap.diff')
-	outputs.file(output)
-
-	doLast {
-		EXEC.exec {
-			workingDir(qmapDest.get().asFile)
-
-			executable System.properties['os.name'].toLowerCase().contains('windows') ? './gradlew.bat' : './gradlew'
-
-			args 'diffTarget', '--refresh-dependencies', '--dest', output.get().asFile
-		}
 	}
 }
 
